@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "climategpt"
+version = "0.1.0"
+description = "ClimateGPT ETL + MCP servers (data-less)"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+
+# Pin versions for reproducible builds
+dependencies = [
+  "altair>=5.5.0",
+  "duckdb>=1.4.1",
+  "fastapi==0.117.1",
+  "geopandas==1.1.1",
+  "h5netcdf==1.6.4",
+  "numpy==2.3.3",
+  "openai>=2.2.0",
+  "pandas==2.3.2",
+  "plotly==6.3.0",
+  "pyarrow==21.0.0",
+  "pyproj==3.7.2",
+  "python-dotenv==1.1.1",
+  "requests==2.32.5",
+  "rtree==1.4.1",
+  "shapely==2.1.1",
+  "streamlit==1.50.0",
+  "uvicorn[standard]==0.37.0",
+  "xarray==2025.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.3.3",
+  "ruff==0.6.9",
+  "black==24.8.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
