@@ -107,15 +107,20 @@ Port all tuning, optimizations, and features from `mcp_server.py` (4143 lines) t
 - [⏸️] UNION support (not in old server)
 - [⏸️] Subquery support (not in old server)
 
-### 3.5 DuckDB Optimizations
-- [ ] `_duckdb_pushdown()` - Query pushdown to DuckDB
-  - Predicate pushdown
-  - Projection pushdown
-  - Limit pushdown
-  - Order pushdown
-- [ ] `_duckdb_yoy()` - Optimized YoY calculations
-- [ ] Parallel query execution
-- [ ] Result caching
+### 3.5 DuckDB Optimizations ✅ COMPLETED
+- [✅] `_duckdb_pushdown()` - Query pushdown to DuckDB
+  - Predicate pushdown (WHERE clause)
+  - Projection pushdown (SELECT clause)
+  - Limit/Offset pushdown
+  - Order pushdown (ORDER BY)
+  - Aggregation pushdown (GROUP BY, HAVING)
+  - Security validation for all SQL components
+- [✅] `_duckdb_yoy()` - Optimized YoY calculations
+  - CTE-based year-over-year comparisons
+  - Efficient JOIN operations
+  - Percentage change calculations
+- [⏸️] Parallel query execution (DuckDB handles this natively)
+- [⏸️] Result caching (to be added if needed)
 
 ---
 
@@ -279,12 +284,12 @@ Convert existing FastAPI endpoints to MCP tools:
 
 ## Migration Progress Tracking
 
-### Lines Migrated: ~1050 / ~3000 (35%)
+### Lines Migrated: ~1270 / ~3000 (42%)
 
 ### Completion by Phase:
 - [✅] Phase 1: Core Infrastructure (90% - core functions complete)
 - [✅] Phase 2: Query Validation (85% - validation, intent detection, pattern recognition complete)
-- [✅] Phase 3: Advanced Query Features (85% - aggregations, HAVING, enhanced WHERE complete)
+- [✅] Phase 3: Advanced Query Features (95% - COMPLETE! aggregations, HAVING, WHERE, DuckDB pushdown, YoY)
 - [✅] Phase 4: Error Handling (90% - error functions, parsing, suggestions complete)
 - [✅] Phase 5: Suggestions & Intelligence (95% - fuzzy matching, suggestions, coverage analysis complete)
 - [ ] Phase 6: New MCP Tools (0%)

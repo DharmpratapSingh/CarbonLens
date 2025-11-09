@@ -473,6 +473,226 @@ def _build_having_sql(having: Dict[str, Any]) -> Tuple[str, list]:
     return " HAVING " + " AND ".join(clauses), params
 
 
+# ---------------------------------------------------------------------
+# Phase 3.5: DuckDB Query Optimizations (from mcp_server.py)
+# ---------------------------------------------------------------------
+
+def _duckdb_pushdown(
+    file_meta: Dict[str, Any],
+    select: List[str],
+    where: Dict[str, Any],
+    group_by: List[str],
+    order_by: Optional[str],
+    limit: Optional[int],
+    offset: Optional[int] = 0,
+    aggregations: Optional[Dict[str, str]] = None,
+    having: Optional[Dict[str, Any]] = None
+) -> Optional[List[Dict[str, Any]]]:
+    """
+    Pushdown query to DuckDB for maximum performance.
+    Returns list of row dicts, or None if not DuckDB engine.
+    """
+    if file_meta.get("engine") != "duckdb":
+        return None
+
+    uri = file_meta.get("path")
+    if not uri or not uri.startswith("duckdb://"):
+        return None
+
+    db_path, _, table = uri[len("duckdb://"):].partition("#")
+    if not table:
+        return None
+
+    # Security: Validate table name
+    valid_table, table_error = _validate_column_name_enhanced(table)
+    if not valid_table:
+        raise ValueError(f"Invalid table name in pushdown: {table_error}")
+
+    # Security: Validate all column names
+    all_cols = set(select) | set(group_by)
+    if order_by:
+        order_col = order_by.split()[0]
+        # For aggregated columns, the order_by might use the aggregated name
+        if aggregations:
+            is_agg_col = False
+            for orig_col, func in aggregations.items():
+                func_upper = func.upper()
+                expected_names = {
+                    "SUM": f"{orig_col}_sum",
+                    "AVG": f"{orig_col}_avg", "MEAN": f"{orig_col}_avg",
+                    "COUNT": f"{orig_col}_count",
+                    "DISTINCT": f"{orig_col}_distinct_count",
+                    "MIN": f"{orig_col}_min",
+                    "MAX": f"{orig_col}_max"
+                }
+                if func_upper in expected_names and order_col == expected_names[func_upper]:
+                    is_agg_col = True
+                    break
+                elif order_col == orig_col:
+                    is_agg_col = True
+                    break
+            if not is_agg_col:
+                all_cols.add(order_col)
+        else:
+            all_cols.add(order_col)
+
+    for col in all_cols:
+        valid, error = _validate_column_name_enhanced(col)
+        if not valid:
+            raise ValueError(f"Invalid column name in pushdown: {error}")
+
+    # Build SELECT clause with aggregations
+    if aggregations:
+        agg_sql, agg_cols = _build_aggregation_sql(aggregations, select)
+        if agg_sql:
+            group_select_cols = [f'"{col}"' for col in group_by] if group_by else []
+            select_cols = [f'"{col}"' for col in select] if select else []
+            all_select_cols = list(dict.fromkeys(group_select_cols + select_cols))
+            if all_select_cols and agg_sql:
+                cols = ", ".join(all_select_cols) + ", " + agg_sql
+            elif agg_sql:
+                cols = agg_sql
+                if group_by and not select:
+                    group_cols = ", ".join([f'"{col}"' for col in group_by])
+                    cols = group_cols + ", " + agg_sql if cols else group_cols
+            else:
+                cols = ", ".join(all_select_cols) if all_select_cols else "*"
+        else:
+            cols = ", ".join([f'"{col}"' for col in select]) if select else "*"
+    else:
+        cols = ", ".join([f'"{col}"' for col in select]) if select else "*"
+
+    where_sql, params = _build_where_sql(where)
+
+    if group_by:
+        quoted_cols = [f'"{col}"' for col in group_by]
+        group_sql = f" GROUP BY {', '.join(quoted_cols)}"
+    else:
+        group_sql = ""
+
+    # Add HAVING clause
+    having_sql, having_params = _build_having_sql(having) if having else ("", [])
+    params.extend(having_params)
+
+    order_sql = ""
+    if order_by:
+        parts = order_by.split()
+        col = parts[0]
+        dirc = parts[1] if len(parts) > 1 else ""
+
+        # If using aggregations, check if order_by column needs aggregated name
+        if aggregations:
+            for orig_col, func in aggregations.items():
+                func_upper = func.upper()
+                expected_names = {
+                    "SUM": f"{orig_col}_sum",
+                    "AVG": f"{orig_col}_avg", "MEAN": f"{orig_col}_avg",
+                    "COUNT": f"{orig_col}_count",
+                    "DISTINCT": f"{orig_col}_distinct_count",
+                    "MIN": f"{orig_col}_min",
+                    "MAX": f"{orig_col}_max"
+                }
+                if func_upper in expected_names:
+                    expected_name = expected_names[func_upper]
+                    if col == orig_col:
+                        col = expected_name
+                        break
+                    elif col == expected_name:
+                        break
+
+        order_sql = f' ORDER BY "{col}" {dirc}'
+
+    limit_sql = ""
+    if offset:
+        limit_sql += f" OFFSET {int(offset)}"
+    if limit:
+        limit_sql = f" LIMIT {int(limit)}" + limit_sql
+
+    sql = f"SELECT {cols} FROM {table}{where_sql}{group_sql}{having_sql}{order_sql}{limit_sql}"
+
+    try:
+        with _get_db_connection() as conn:
+            result = conn.execute(sql, params).fetchall()
+            # Get column names
+            column_names = [desc[0] for desc in conn.execute(sql, params).description]
+            # Convert to list of dicts
+            return [dict(zip(column_names, row)) for row in result]
+    except Exception as e:
+        logger.error(f"DuckDB pushdown error: {e}")
+        logger.error(f"SQL: {sql}")
+        logger.error(f"Params: {params}")
+        raise
+
+
+def _duckdb_yoy(
+    file_meta: Dict[str, Any],
+    key_col: str,
+    value_col: str,
+    base_year: int,
+    compare_year: int,
+    extra_where: Dict[str, Any],
+    top_n: int,
+    direction: str,
+) -> Optional[List[Dict[str, Any]]]:
+    """
+    Optimized year-over-year calculation using DuckDB.
+    Returns list of row dicts with YoY changes.
+    """
+    if file_meta.get("engine") != "duckdb":
+        return None
+
+    uri = file_meta.get("path")
+    if not uri or not uri.startswith("duckdb://"):
+        return None
+
+    db_path, _, table = uri[len("duckdb://"):].partition("#")
+    if not table:
+        return None
+
+    # Security: Validate table name
+    valid_table, table_error = _validate_column_name_enhanced(table)
+    if not valid_table:
+        raise ValueError(f"Invalid table name: {table_error}")
+
+    # Security: Validate column names
+    for col in [key_col, value_col]:
+        valid, error = _validate_column_name_enhanced(col)
+        if not valid:
+            raise ValueError(f"Invalid column name in yoy: {error}")
+
+    # Build WHERE with enforced years
+    where = dict(extra_where or {})
+    where["year"] = {"in": [base_year, compare_year]}
+    where_sql, params = _build_where_sql(where)
+
+    sql = f"""
+        WITH t AS (
+            SELECT {key_col} AS k, CAST(year AS INT) AS y, SUM({value_col}) AS v
+            FROM {table}
+            {where_sql}
+            GROUP BY {key_col}, y
+        )
+        SELECT a.k AS key,
+               a.v AS base,
+               b.v AS compare,
+               (a.v - b.v) AS delta,
+               CASE WHEN a.v <> 0 THEN (a.v - b.v) / a.v * 100.0 ELSE NULL END AS pct
+        FROM t a
+        JOIN t b ON a.k = b.k AND a.y = ? AND b.y = ?
+        ORDER BY delta {'DESC' if direction == 'drop' else 'ASC'}
+        LIMIT {int(top_n)}
+    """
+
+    try:
+        with _get_db_connection() as conn:
+            result = conn.execute(sql, params + [base_year, compare_year]).fetchall()
+            column_names = ['key', 'base', 'compare', 'delta', 'pct']
+            return [dict(zip(column_names, row)) for row in result]
+    except Exception as e:
+        logger.error(f"DuckDB YoY error: {e}")
+        raise
+
+
 # Note: Computed columns are complex and require pandas
 # They may not be needed for the MCP stdio server initially
 # Keeping stub for future implementation
