@@ -497,6 +497,202 @@ def _validate_computed_expression(expression: str, available_columns: List[str])
     return True, None
 
 
+# ---------------------------------------------------------------------
+# Phase 5: Suggestions & Intelligence (from mcp_server.py)
+# ---------------------------------------------------------------------
+
+def _get_distinct_values(file_meta: Dict[str, Any], column: str, limit: int = 100) -> List[str]:
+    """
+    Get distinct values for a column from a table.
+    Returns list of distinct values (sorted, limited).
+    """
+    if not file_meta:
+        return []
+
+    # Validate column name (enhanced validation)
+    valid, error = _validate_column_name_enhanced(column)
+    if not valid:
+        return []
+
+    try:
+        if file_meta.get("engine") == "duckdb":
+            uri = file_meta.get("path")
+            db_path, _, table = uri[len("duckdb://"):].partition("#")
+            if not table:
+                return []
+
+            # Validate table name
+            valid_table, _ = _validate_column_name_enhanced(table)
+            if not valid_table:
+                return []
+
+            # Security: validate column again for SQL
+            sql = f'SELECT DISTINCT "{column}" FROM {table} WHERE "{column}" IS NOT NULL ORDER BY "{column}" LIMIT {limit}'
+            with _get_db_connection() as conn:
+                result = conn.execute(sql).fetchall()
+                if result:
+                    values = [str(row[0]) for row in result]
+                    return sorted(values)[:limit]
+    except Exception as e:
+        logger.warning(f"Error getting distinct values for {column}: {e}")
+        return []
+
+    return []
+
+
+def _fuzzy_match(query: str, options: List[str], limit: int = 5) -> List[str]:
+    """
+    Find similar strings using simple string matching.
+    Returns list of matching options sorted by similarity.
+    """
+    if not query or not options:
+        return []
+
+    query_lower = query.lower().strip()
+    if not query_lower:
+        return options[:limit]
+
+    # Simple scoring: exact match > starts with > contains
+    scores = []
+    for opt in options:
+        opt_lower = opt.lower()
+        if opt_lower == query_lower:
+            scores.append((0, opt))  # Exact match - highest priority
+        elif opt_lower.startswith(query_lower):
+            scores.append((1, opt))  # Starts with - high priority
+        elif query_lower in opt_lower:
+            scores.append((2, opt))  # Contains - medium priority
+        elif query_lower[:3] in opt_lower or opt_lower[:3] in query_lower:
+            scores.append((3, opt))  # Partial match - low priority
+
+    # Sort by score, then alphabetically
+    scores.sort(key=lambda x: (x[0], x[1].lower()))
+    return [opt for _, opt in scores[:limit]]
+
+
+def _get_suggestions_for_column(file_meta: Dict[str, Any], column: str,
+                                query: Optional[str] = None, limit: int = 10) -> Dict[str, Any]:
+    """
+    Get suggestions for a column, optionally filtered by query string.
+    Returns dict with suggestions and metadata.
+    """
+    if not file_meta:
+        return {"suggestions": [], "column": column, "total_available": 0}
+
+    # Get all distinct values
+    all_values = _get_distinct_values(file_meta, column, limit=500)  # Get more for filtering
+    total_available = len(all_values)
+
+    if not all_values:
+        return {"suggestions": [], "column": column, "total_available": 0}
+
+    # If query provided, do fuzzy matching
+    if query:
+        suggestions = _fuzzy_match(query, all_values, limit=limit)
+    else:
+        # No query - return first N values
+        suggestions = all_values[:limit]
+
+    return {
+        "suggestions": suggestions,
+        "column": column,
+        "total_available": total_available,
+        "showing": len(suggestions)
+    }
+
+
+def _get_cities_data_coverage() -> Dict[str, Any]:
+    """Get cities dataset coverage information"""
+    return {
+        "available_countries": [
+            "Azerbaijan", "India", "Kazakhstan", "Madagascar",
+            "People's Republic of China", "Samoa", "Somalia", "South Africa",
+            "France", "Germany", "United States of America", "United Kingdom",
+            "Italy", "Spain", "Japan", "Brazil", "Canada"
+        ],
+        "total_countries": 17,
+        "total_cities": 116,
+        "coverage_period": "2000-2023",
+        "status": "comprehensive",
+        "major_cities_included": [
+            "Paris", "London", "New York", "Tokyo", "Berlin", "Rome", "Madrid",
+            "São Paulo", "Toronto", "Mumbai", "Beijing"
+        ]
+    }
+
+
+def _get_cities_suggestions(country_name: str) -> Dict[str, Any]:
+    """Get smart suggestions for unavailable cities data"""
+    available_countries = [
+        "Azerbaijan", "India", "Kazakhstan", "Madagascar",
+        "People's Republic of China", "Samoa", "Somalia", "South Africa",
+        "France", "Germany", "United States of America", "United Kingdom",
+        "Italy", "Spain", "Japan", "Brazil", "Canada"
+    ]
+
+    return {
+        "message": f"City data is not available for {country_name}",
+        "available_alternatives": [
+            "Which Indian city has the highest emissions?",
+            "Which Chinese city has the highest emissions?",
+            f"What are {country_name}'s total transport emissions by year?"
+        ],
+        "available_countries": available_countries,
+        "suggestions": [
+            f"Try asking about one of these countries: {', '.join(available_countries[:3])}",
+            "Ask about country-level emissions instead of city-level",
+            "Check if the country is available in the country dataset"
+        ]
+    }
+
+
+@lru_cache(maxsize=1)
+def _coverage_index() -> Dict[str, List[str]]:
+    """Build coverage index for all datasets (cached)"""
+    idx = {"city": set(), "admin1": set(), "country": set()}
+
+    for file_meta in MANIFEST.get("files", []):
+        try:
+            if file_meta.get("engine") == "duckdb":
+                uri = file_meta.get("path")
+                db_path, _, table = uri[len("duckdb://"):].partition("#")
+                if not table:
+                    continue
+
+                with _get_db_connection() as conn:
+                    # Check which columns exist
+                    table_info_sql = f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table}'"
+                    columns_result = conn.execute(table_info_sql).fetchall()
+                    cols = {row[0] for row in columns_result}
+
+                    if "city_name" in cols:
+                        result = conn.execute(f'SELECT DISTINCT city_name FROM {table} WHERE city_name IS NOT NULL').fetchall()
+                        idx["city"].update(str(row[0]) for row in result)
+                    if "admin1_name" in cols:
+                        result = conn.execute(f'SELECT DISTINCT admin1_name FROM {table} WHERE admin1_name IS NOT NULL').fetchall()
+                        idx["admin1"].update(str(row[0]) for row in result)
+                    if "country_name" in cols:
+                        result = conn.execute(f'SELECT DISTINCT country_name FROM {table} WHERE country_name IS NOT NULL').fetchall()
+                        idx["country"].update(str(row[0]) for row in result)
+        except Exception as e:
+            logger.warning(f"Error building coverage index for {file_meta.get('file_id', 'unknown')}: {e}")
+            continue
+
+    return {k: sorted(v) for k, v in idx.items()}
+
+
+def _top_matches(name: str, pool: List[str], k: int = 5) -> List[str]:
+    """Find top matching strings from a pool"""
+    nm = (name or "").lower()
+    scored = []
+    for p in pool:
+        pl = p.lower()
+        score = 0 if pl == nm else (1 if nm in pl else 2)
+        scored.append((p, score, len(p)))
+    scored.sort(key=lambda x: (x[1], x[2]))
+    return [p for p, _, _ in scored[:k]]
+
+
 class DuckDBConnectionPool:
     """
     Thread-safe connection pool for DuckDB connections.
