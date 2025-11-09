@@ -353,6 +353,150 @@ def _validate_query_complexity(
     return True, None, None
 
 
+# ---------------------------------------------------------------------
+# Phase 3: Advanced Query Features (from mcp_server.py)
+# ---------------------------------------------------------------------
+
+def _validate_aggregation_function(func: str) -> Tuple[bool, Optional[str]]:
+    """Validate aggregation function name."""
+    valid_functions = {"sum", "avg", "mean", "min", "max", "count", "distinct", "std", "stddev", "variance"}
+    if func.lower() not in valid_functions:
+        return False, f"Invalid aggregation function: {func}. Allowed: {', '.join(sorted(valid_functions))}"
+    return True, None
+
+
+def _build_aggregation_sql(aggregations: Dict[str, str], select: List[str]) -> Tuple[str, List[str]]:
+    """
+    Build SQL for aggregations.
+    Returns (SQL fragment, list of aggregated columns for SELECT).
+    """
+    if not aggregations:
+        return "", select if select else []
+
+    agg_parts = []
+    agg_cols = []
+
+    for col, func in aggregations.items():
+        # Validate column name (basic validation - schema check happens later)
+        valid_col, col_error = _validate_column_name_enhanced(col)
+        if not valid_col:
+            raise ValueError(f"Invalid column in aggregation: {col_error}")
+
+        # Validate function
+        valid_func, func_error = _validate_aggregation_function(func)
+        if not valid_func:
+            raise ValueError(func_error)
+
+        func_upper = func.upper()
+        # Quote column name for safety
+        quoted_col = f'"{col}"'
+        if func_upper == "DISTINCT":
+            agg_parts.append(f"COUNT(DISTINCT {quoted_col}) AS \"{col}_distinct_count\"")
+            agg_cols.append(f"{col}_distinct_count")
+        elif func_upper == "COUNT":
+            agg_parts.append(f"COUNT({quoted_col}) AS \"{col}_count\"")
+            agg_cols.append(f"{col}_count")
+        elif func_upper in ("AVG", "MEAN"):
+            agg_parts.append(f"AVG({quoted_col}) AS \"{col}_avg\"")
+            agg_cols.append(f"{col}_avg")
+        elif func_upper == "SUM":
+            agg_parts.append(f"SUM({quoted_col}) AS \"{col}_sum\"")
+            agg_cols.append(f"{col}_sum")
+        elif func_upper == "MIN":
+            agg_parts.append(f"MIN({quoted_col}) AS \"{col}_min\"")
+            agg_cols.append(f"{col}_min")
+        elif func_upper == "MAX":
+            agg_parts.append(f"MAX({quoted_col}) AS \"{col}_max\"")
+            agg_cols.append(f"{col}_max")
+        elif func_upper in ("STD", "STDDEV"):
+            agg_parts.append(f"STDDEV({quoted_col}) AS \"{col}_stddev\"")
+            agg_cols.append(f"{col}_stddev")
+        elif func_upper == "VARIANCE":
+            agg_parts.append(f"VAR({quoted_col}) AS \"{col}_variance\"")
+            agg_cols.append(f"{col}_variance")
+
+    # Combine with regular select columns
+    all_cols = (select if select else []) + agg_cols
+    sql_fragment = ", ".join(agg_parts) if agg_parts else ""
+
+    return sql_fragment, all_cols
+
+
+def _build_having_sql(having: Dict[str, Any]) -> Tuple[str, list]:
+    """
+    Build SQL HAVING clause for post-aggregation filtering.
+    Similar to WHERE but for aggregated columns.
+    """
+    if not having:
+        return "", []
+
+    clauses = []
+    params = []
+
+    for key, val in having.items():
+        # Validate column name (can be aggregated column alias)
+        valid, error = _validate_column_name_enhanced(key)
+        if not valid:
+            raise ValueError(f"Invalid column in HAVING: {error}")
+
+        if isinstance(val, dict):
+            if "in" in val:
+                placeholders = ", ".join(["?" for _ in val["in"]])
+                clauses.append(f'"{key}" IN ({placeholders})')
+                params.extend(val["in"])
+            elif "between" in val:
+                lo, hi = val["between"]
+                clauses.append(f'"{key}" BETWEEN ? AND ?')
+                params.extend([lo, hi])
+            elif "gte" in val:
+                clauses.append(f'"{key}" >= ?')
+                params.append(val["gte"])
+            elif "lte" in val:
+                clauses.append(f'"{key}" <= ?')
+                params.append(val["lte"])
+            elif "gt" in val:
+                clauses.append(f'"{key}" > ?')
+                params.append(val["gt"])
+            elif "lt" in val:
+                clauses.append(f'"{key}" < ?')
+                params.append(val["lt"])
+            elif "contains" in val:
+                clauses.append(f'CAST("{key}" AS VARCHAR) LIKE ?')
+                params.append(f"%{val['contains']}%")
+        else:
+            # Equality
+            clauses.append(f'"{key}" = ?')
+            params.append(val)
+
+    if not clauses:
+        return "", []
+    return " HAVING " + " AND ".join(clauses), params
+
+
+# Note: Computed columns are complex and require pandas
+# They may not be needed for the MCP stdio server initially
+# Keeping stub for future implementation
+def _validate_computed_expression(expression: str, available_columns: List[str]) -> Tuple[bool, Optional[str]]:
+    """
+    Validate computed column expression for security.
+    Placeholder for future implementation.
+    """
+    import ast
+
+    # Length limit to prevent abuse
+    if len(expression) > 500:
+        return False, "Expression too long (max 500 characters)"
+
+    # Forbidden patterns (case-insensitive)
+    forbidden = ['import', 'exec', 'eval', '__', 'compile', 'globals', 'locals', 'open', 'file']
+    expr_lower = expression.lower()
+    for pattern in forbidden:
+        if pattern in expr_lower:
+            return False, f"Forbidden pattern '{pattern}' in expression"
+
+    return True, None
+
+
 class DuckDBConnectionPool:
     """
     Thread-safe connection pool for DuckDB connections.
@@ -528,7 +672,10 @@ def _get_table_name(file_meta: dict) -> Optional[str]:
     return None
 
 def _build_where_sql(where: dict[str, Any]) -> tuple[str, list]:
-    """Build WHERE clause SQL with parameters"""
+    """
+    Build WHERE clause SQL with parameterized queries (enhanced version).
+    Supports: equality, in, between, comparisons, contains/ILIKE
+    """
     if not where:
         return "", []
 
@@ -537,28 +684,43 @@ def _build_where_sql(where: dict[str, Any]) -> tuple[str, list]:
 
     for key, value in where.items():
         if isinstance(value, list):
+            # List values are treated as IN operator
             placeholders = ",".join(["?"] * len(value))
             conditions.append(f"{key} IN ({placeholders})")
             params.extend(value)
         elif isinstance(value, dict):
-            # Support operators like {"$gt": 1000}
-            for op, val in value.items():
-                if op == "$gt":
-                    conditions.append(f"{key} > ?")
-                    params.append(val)
-                elif op == "$lt":
-                    conditions.append(f"{key} < ?")
-                    params.append(val)
-                elif op == "$gte":
-                    conditions.append(f"{key} >= ?")
-                    params.append(val)
-                elif op == "$lte":
-                    conditions.append(f"{key} <= ?")
-                    params.append(val)
-                elif op == "$ne":
-                    conditions.append(f"{key} != ?")
-                    params.append(val)
+            # Support various operators
+            if "in" in value and isinstance(value["in"], list):
+                placeholders = ",".join(["?"] * len(value["in"]))
+                conditions.append(f"{key} IN ({placeholders})")
+                params.extend(value["in"])
+            elif "between" in value and isinstance(value["between"], (list, tuple)) and len(value["between"]) == 2:
+                conditions.append(f"{key} BETWEEN ? AND ?")
+                params.extend(list(value["between"]))
+            elif "gte" in value:
+                conditions.append(f"{key} >= ?")
+                params.append(value["gte"])
+            elif "lte" in value:
+                conditions.append(f"{key} <= ?")
+                params.append(value["lte"])
+            elif "gt" in value or "$gt" in value:
+                val = value.get("gt", value.get("$gt"))
+                conditions.append(f"{key} > ?")
+                params.append(val)
+            elif "lt" in value or "$lt" in value:
+                val = value.get("lt", value.get("$lt"))
+                conditions.append(f"{key} < ?")
+                params.append(val)
+            elif "ne" in value or "$ne" in value:
+                val = value.get("ne", value.get("$ne"))
+                conditions.append(f"{key} != ?")
+                params.append(val)
+            elif "contains" in value:
+                # Case-insensitive substring search
+                conditions.append(f"CAST({key} AS VARCHAR) ILIKE ?")
+                params.append(f"%{value['contains']}%")
         else:
+            # Simple equality
             conditions.append(f"{key} = ?")
             params.append(value)
 
