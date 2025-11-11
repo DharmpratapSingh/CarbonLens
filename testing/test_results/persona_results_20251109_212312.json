@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "generated_at": "2025-11-09T21:23:12.004354",
+    "total_question_groups": 1,
+    "total_persona_runs": 1,
+    "mcp_health_url": "http://127.0.0.1:8010/health"
+  },
+  "results": [
+    {
+      "question_id": 1,
+      "persona": "Climate Analyst",
+      "prompt": "Identify the top three countries with the largest increase in transport emissions between 2020 and 2023. Highlight priority areas for mitigation.",
+      "success": true,
+      "response_time_ms": 1623.7,
+      "used_tool": "query",
+      "answer": "I encountered an error while processing your question: HTTP error 422: {\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file_id\"],\"msg\":\"Field required\",\"input\":{\"select\":\"country_name, year, emissions_tonnes, MtCO2\",\"from\":\"transport-year\",\"where\":\"year IN (2020, 2023)\",\"order_by\":\"MtCO2 DESC\",\"limit\":3,\"assist\":true}},{\"type\":\"list_type\",\"loc\":[\"body\",\"select\"],\"msg\":\"Input should be a valid list\",\"input\":\"country_name, year, emissions_tonnes, MtCO2\"},{\"type\":\"dict_type\",\"loc\":[\"body\",\"where\"],\"msg\":\"Input should be a valid dictionary\",\"input\":\"year IN (2020, 2023)\"}]}",
+      "data_context": {
+        "row_count": 0,
+        "meta": null
+      },
+      "error": null,
+      "category": "trend_hotspot",
+      "notes": "Should emphasise actionable mitigation focus.",
+      "timestamp": "2025-11-09T21:23:12.003917"
+    }
+  ]
+}

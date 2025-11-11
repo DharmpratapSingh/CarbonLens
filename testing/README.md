@@ -15,6 +15,7 @@ testing/
 ├── analyze_results.py                 # Results analysis and visualization
 ├── verify_setup.py                    # Pre-flight checks
 ├── extract_ground_truth.py            # Ground truth data extractor
+├── run_persona_tests.py               # Persona-specific ClimateGPT regression runner
 │
 ├── Configuration
 ├── test_config.json                   # Test configuration
@@ -143,6 +144,9 @@ python analyze_results.py --report
 
 # All at once
 python analyze_results.py --visualize --report
+
+# Persona regression (ClimateGPT only)
+python run_persona_tests.py
 ```
 
 ### Verification

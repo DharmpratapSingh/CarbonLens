@@ -1271,6 +1271,11 @@ async def handle_list_tools() -> list[Tool]:
         Tool(
             name="list_emissions_datasets",
             description="List all available emissions datasets with sectors, resolutions, and temporal coverage",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            },
         ),
         Tool(
             name="get_dataset_schema",
@@ -2357,6 +2362,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 

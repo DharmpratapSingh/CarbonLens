@@ -142,7 +142,7 @@ uv run pytest tests/ -m integration -v
 uv run pytest tests/ -n 4 -v
 
 # Stop server
-pkill -f "uvicorn mcp_server"
+pkill -f "mcp_http_bridge"
 ```
 
 ## Environment Setup
@@ -162,8 +162,8 @@ MODEL=gpt-4
 
 ```
 ClimateGPT/
-├── mcp_server.py                    # FastAPI REST API
-├── mcp_server_stdio.py              # MCP protocol server
+├── mcp_http_bridge.py               # HTTP bridge that launches the MCP stdio server
+├── mcp_server_stdio.py              # MCP protocol server (stdio)
 ├── enhanced_climategpt_with_personas.py  # Streamlit UI
 ├── run_llm.py                       # CLI LLM harness
 │

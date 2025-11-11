@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "description": "Persona-focused ClimateGPT prompts for regression testing",
+    "version": "2025-11-10",
+    "personas": [
+      "Climate Analyst",
+      "Research Scientist",
+      "Financial Analyst",
+      "Student"
+    ]
+  },
+  "questions": [
+    {
+      "id": 1,
+      "prompt": "Identify the top three countries with the largest increase in transport emissions between 2020 and 2023. Highlight priority areas for mitigation.",
+      "personas": ["Climate Analyst"],
+      "category": "trend_hotspot",
+      "notes": "Should emphasise actionable mitigation focus."
+    },
+    {
+      "id": 2,
+      "prompt": "Evaluate the reliability of EDGAR v2024 monthly power-sector data for France in 2022 and discuss any methodological caveats.",
+      "personas": ["Research Scientist"],
+      "category": "methodology_review",
+      "notes": "Expect references to data provenance and uncertainty."
+    },
+    {
+      "id": 3,
+      "prompt": "Summarise the most recent signals in US state-level industrial-combustion emissions, focusing on concentration and momentum.",
+      "personas": ["Financial Analyst"],
+      "category": "risk_signal",
+      "notes": "Should surface concentration metrics and direction of change."
+    },
+    {
+      "id": 4,
+      "prompt": "Explain how Germany's power-sector emissions changed in 2023 compared with 2022 in simple terms.",
+      "personas": ["Student"],
+      "category": "foundational_explanation",
+      "notes": "Expect definitions and plain-language framing."
+    },
+    {
+      "id": 5,
+      "prompt": "Compare 2023 transport emissions for Florida and Illinois and describe what the difference means.",
+      "personas": [
+        "Climate Analyst",
+        "Research Scientist",
+        "Financial Analyst",
+        "Student"
+      ],
+      "category": "shared_comparison",
+      "notes": "Shared prompt to evaluate persona tone differences."
+    },
+    {
+      "id": 6,
+      "prompt": "Describe seasonal patterns in Tokyo's city-level waste emissions for 2021 and indicate how a policy team might respond.",
+      "personas": [
+        "Climate Analyst",
+        "Research Scientist",
+        "Financial Analyst",
+        "Student"
+      ],
+      "category": "shared_seasonality",
+      "notes": "Shared prompt emphasising different audience needs."
+    }
+  ]
+}
+
+
+
+
+

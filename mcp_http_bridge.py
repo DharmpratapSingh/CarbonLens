@@ -9,8 +9,8 @@ Architecture:
   HTTP Client (Streamlit) → FastAPI Bridge → MCP Server (stdio) → DuckDB
 """
 
-import json
 import asyncio
+import json
 import logging
 import os
 import sys
@@ -49,6 +49,50 @@ app.add_middleware(
 # MCP Server Process
 mcp_process: Optional[asyncio.subprocess.Process] = None
 request_counter = 0
+
+
+# ============================================================================
+# JSON parsing helpers
+# ============================================================================
+
+def _safe_json_loads(payload: str) -> Any:
+    """
+    Load JSON with resilience to stray characters or multiple objects.
+    Falls back to extracting the first valid JSON object/array.
+    """
+    if payload is None:
+        return {}
+
+    text = payload.strip()
+    if not text:
+        return {}
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Attempt to locate the first JSON object or array
+        for opener, closer in (("{", "}"), ("[", "]")):
+            start = text.find(opener)
+            end = text.rfind(closer)
+            if start != -1 and end != -1 and end > start:
+                candidate = text[start : end + 1]
+                try:
+                    return json.loads(candidate)
+                except json.JSONDecodeError:
+                    continue
+
+        # Attempt to parse line by line (NDJSON style)
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                return json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+        logger.error("Unparseable JSON payload snippet: %s", text[:200])
+        raise
 
 
 # ============================================================================
@@ -148,7 +192,11 @@ async def list_files():
             content = result["content"]
             if isinstance(content, list) and len(content) > 0:
                 text_content = content[0].get("text", "{}")
-                return json.loads(text_content)
+                try:
+                    return _safe_json_loads(text_content)
+                except json.JSONDecodeError as exc:
+                    logger.error(f"Failed to parse list_files payload: {exc}")
+                    raise HTTPException(status_code=500, detail=f"Invalid MCP response: {exc}") from exc
 
         return result
 
@@ -174,7 +222,11 @@ async def get_schema(file_id: str):
             if isinstance(content, list) and len(content) > 0:
                 # Extract text from content
                 text_content = content[0].get("text", "{}")
-                return json.loads(text_content)
+                try:
+                    return _safe_json_loads(text_content)
+                except json.JSONDecodeError as exc:
+                    logger.error(f"Failed to parse get_schema payload: {exc}")
+                    raise HTTPException(status_code=500, detail=f"Invalid MCP response: {exc}") from exc
 
         return result
 
@@ -187,7 +239,7 @@ async def get_schema(file_id: str):
 
 class QueryRequest(BaseModel):
     file_id: str
-    select: list
+    select: Optional[list] = None
     where: Optional[dict] = None
     group_by: Optional[list] = None
     order_by: Optional[str] = None
@@ -200,7 +252,7 @@ async def query_data(request: QueryRequest):
     try:
         result = await send_mcp_request("tools/call", {
             "name": "query_emissions",
-            "arguments": request.dict()
+            "arguments": request.dict(exclude_none=True)
         })
 
         # Parse the result content
@@ -208,7 +260,11 @@ async def query_data(request: QueryRequest):
             content = result["content"]
             if isinstance(content, list) and len(content) > 0:
                 text_content = content[0].get("text", "{}")
-                return json.loads(text_content)
+                try:
+                    return _safe_json_loads(text_content)
+                except json.JSONDecodeError as exc:
+                    logger.error(f"Failed to parse query payload: {exc}")
+                    raise HTTPException(status_code=500, detail=f"Invalid MCP response: {exc}") from exc
 
         return result
 
@@ -235,7 +291,7 @@ async def yoy_metrics(request: YoYMetricsRequest):
     try:
         result = await send_mcp_request("tools/call", {
             "name": "calculate_yoy_change",
-            "arguments": request.dict()
+            "arguments": request.dict(exclude_none=True)
         })
 
         # Parse the result content
@@ -243,7 +299,11 @@ async def yoy_metrics(request: YoYMetricsRequest):
             content = result["content"]
             if isinstance(content, list) and len(content) > 0:
                 text_content = content[0].get("text", "{}")
-                return json.loads(text_content)
+                try:
+                    return _safe_json_loads(text_content)
+                except json.JSONDecodeError as exc:
+                    logger.error(f"Failed to parse yearly metrics payload: {exc}")
+                    raise HTTPException(status_code=500, detail=f"Invalid MCP response: {exc}") from exc
 
         return result
 
@@ -278,7 +338,11 @@ async def batch_query(request: BatchQueryRequest):
                     content = result["content"]
                     if isinstance(content, list) and len(content) > 0:
                         text_content = content[0].get("text", "{}")
-                        data = json.loads(text_content)
+                        try:
+                            data = _safe_json_loads(text_content)
+                        except json.JSONDecodeError as exc:
+                            logger.error(f"Failed to parse batch query payload: {exc}")
+                            raise HTTPException(status_code=500, detail=f"Invalid MCP response: {exc}") from exc
 
                 results.append({
                     "status": "success",

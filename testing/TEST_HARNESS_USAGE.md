@@ -33,7 +33,7 @@ uv pip install -r requirements_testing.txt
 make serve
 
 # Or manually
-uv run uvicorn mcp_server:app --host 127.0.0.1 --port 8010
+uv run python mcp_http_bridge.py
 ```
 
 ### 3. Start LM Studio (for Llama testing)
@@ -361,7 +361,7 @@ lsof -i :8010
 make serve
 
 # Or manually
-uv run uvicorn mcp_server:app --host 127.0.0.1 --port 8010
+uv run python mcp_http_bridge.py
 ```
 
 **Error**: `✗ LM Studio is not reachable at http://localhost:1234`

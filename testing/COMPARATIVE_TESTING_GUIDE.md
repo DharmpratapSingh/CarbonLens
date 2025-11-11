@@ -61,7 +61,7 @@ This guide provides instructions for testing ClimateGPT against other LLMs (prim
    cd /Users/dharmpratapsingh/Downloads/DataSets_ClimateGPT
    make serve
    # Or manually:
-   uv run uvicorn mcp_server:app --host 127.0.0.1 --port 8010
+   uv run python mcp_http_bridge.py
    ```
 
 2. **LM Studio Setup (for Meta Llama)**

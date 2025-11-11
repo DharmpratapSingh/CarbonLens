@@ -21,7 +21,7 @@ AI-powered emissions data analysis system for EDGAR v2024 datasets. Query histor
 
 ### Local Development
 
-1. **Start the MCP server** (port 8010):
+1. **Start the MCP bridge + MCP stdio server** (port 8010):
 
 ```bash
 make serve
@@ -42,27 +42,17 @@ docker compose up --build
 ```
 
 This will start both services:
-- **server**: FastAPI MCP server on port 8010
+- **server**: HTTP bridge (FastAPI) + true MCP stdio server on port 8010
 - **ui**: Streamlit interface on port 8501
 
 ## Architecture
 
-### MCP Server (`mcp_server.py`)
+### MCP Server Stack (`mcp_http_bridge.py` + `mcp_server_stdio.py`)
 
-FastAPI-based server providing:
-- `/health` - Health check endpoint
-- `/list_files` - List available datasets
-- `/get_schema/{id}` - Get dataset schema
-- `/query` - Execute SQL queries on emissions data
-- `/metrics/yoy` - Year-over-year growth metrics
-- `/metrics/rankings` - Country/region rankings
-- `/metrics/trends` - Time-series trend analysis
+- `mcp_http_bridge.py`: FastAPI bridge that exposes the legacy HTTP REST surface (`/query`, `/list_files`, etc.) while proxying every request to the real MCP stdio server.
+- `mcp_server_stdio.py`: The fully featured MCP implementation that speaks the Model Context Protocol over stdio and executes all DuckDB queries.
 
-Features:
-- Rate limiting (60 requests per 5 minutes per IP)
-- Gzip compression
-- DuckDB backend for fast analytical queries
-- Configurable via environment variables
+The bridge automatically spawns `mcp_server_stdio.py` on startup and relays JSON-RPC traffic between HTTP clients (UI, automation) and the MCP server. This keeps existing HTTP integrations working while using the canonical MCP runtime under the hood.
 
 ### UI (`enhanced_climategpt_with_personas.py`)
 
@@ -158,8 +148,8 @@ For automated testing tools and scripts, see the `testing/` directory.
 
 ```
 .
-├── mcp_server.py                          # FastAPI MCP server
-├── mcp_server_stdio.py                    # MCP stdio protocol server
+├── mcp_http_bridge.py                     # HTTP bridge that wraps the MCP stdio server
+├── mcp_server_stdio.py                    # MCP stdio protocol server (source of truth)
 ├── enhanced_climategpt_with_personas.py   # Streamlit UI
 ├── run_llm.py                             # LLM integration harness
 ├── src/
