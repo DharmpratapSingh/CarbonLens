@@ -39,7 +39,7 @@ jobs:
       continue-on-error: true
 
     - name: Upload pip-audit report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: pip-audit-report
         path: pip-audit-report.json
@@ -79,7 +79,7 @@ jobs:
           || true
 
     - name: Upload Bandit report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: bandit-report
         path: bandit-report.json
@@ -135,7 +135,7 @@ jobs:
         echo "✅ License compliance check complete"
 
     - name: Upload license report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: license-report
         path: licenses.json
