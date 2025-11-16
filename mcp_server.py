@@ -1000,30 +1000,11 @@ def _build_computed_columns_sql(computed_columns: Dict[str, str], df: pd.DataFra
             raise ValueError(f"Invalid expression for '{alias}': {expr_error}")
 
         # Simple expression evaluation (basic math operations only)
-        # Security: Only allow basic operations on existing columns
+        # Security: Use pandas.eval() which is safer than Python's eval()
         try:
-            # Replace column references in expression (re is imported at module level)
-            safe_expr = expression
-            for col in df.columns:
-                if col in safe_expr and f"df['{col}']" not in safe_expr and f'df["{col}"]' not in safe_expr:
-                    # Replace simple column name with df reference using word boundaries
-                    pattern = r'\b' + re.escape(col) + r'\b'
-                    safe_expr = re.sub(pattern, f"df['{col}']", safe_expr)
-
-            # Evaluate with very limited scope - only allow safe math operations
-            # Security: __builtins__ is explicitly set to empty dict to disable all built-ins
-            allowed_names = {
-                "__builtins__": {},  # Critical: disable all built-in functions
-                "df": result_df,
-                "abs": abs,
-                "round": round,
-                "min": min,
-                "max": max,
-                "sum": sum,
-                "float": float,
-                "int": int,
-            }
-            result_df[alias] = eval(safe_expr, allowed_names, {})
+            # pandas.eval() is designed for DataFrame expressions and is much safer
+            # It doesn't allow arbitrary code execution, only mathematical expressions
+            result_df[alias] = result_df.eval(expression, engine='python')
         except Exception as e:
             raise ValueError(f"Error evaluating computed column '{alias}': {str(e)}")
 

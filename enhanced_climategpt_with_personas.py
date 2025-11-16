@@ -15,6 +15,9 @@ import pandas as pd
 import altair as alt
 import logging
 import re
+import threading
+from collections import OrderedDict
+from requests.auth import HTTPBasicAuth
 
 # Optional: Response metrics evaluation (for testing/development)
 try:
@@ -150,9 +153,13 @@ def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs
 # Configuration
 MCP_URL = os.environ.get("MCP_URL", "http://127.0.0.1:8010")
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://erasmus.ai/models/climategpt_8b_test/v1")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "ai:4climate")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is required")
+if ":" not in OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY must be in format 'username:password'")
 MODEL = os.environ.get("MODEL", "/cache/climategpt_8b_test")
-USER, PASS = OPENAI_API_KEY.split(":", 1) if ":" in OPENAI_API_KEY else ("", "")
+USER, PASS = OPENAI_API_KEY.split(":", 1)
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -313,61 +320,92 @@ def apply_level_constraints_to_tool(tool_json: str, constraints: Dict[str, Any])
 
 # Circuit breaker for MCP server calls
 class CircuitBreaker:
+    """Thread-safe circuit breaker implementation"""
     def __init__(self, max_failures: int = 5, timeout: int = 60):
         self.max_failures = max_failures
         self.timeout = timeout
         self.failures = 0
         self.last_failure_time = 0
         self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
-    
+        self._lock = threading.Lock()
+
     def call(self, func, *args, **kwargs):
         current_time = time.time()
-        
-        # Reset circuit breaker if timeout has passed
-        if current_time - self.last_failure_time > self.timeout and self.state == "OPEN":
-            self.state = "HALF_OPEN"
-            self.failures = 0
-        
-        # Check if circuit is open
-        if self.state == "OPEN":
-            return {"error": "Service temporarily unavailable (circuit breaker open)", "retry_after": self.timeout - (current_time - self.last_failure_time)}
-        
+
+        # Thread-safe state check and transition
+        with self._lock:
+            # Reset circuit breaker if timeout has passed
+            if current_time - self.last_failure_time > self.timeout and self.state == "OPEN":
+                self.state = "HALF_OPEN"
+                self.failures = 0
+
+            # Check if circuit is open
+            if self.state == "OPEN":
+                retry_after = self.timeout - (current_time - self.last_failure_time)
+                return {
+                    "error": "Service temporarily unavailable (circuit breaker open)",
+                    "retry_after": retry_after
+                }
+
+            # Store current state for decision making after function call
+            was_half_open = (self.state == "HALF_OPEN")
+
+        # Execute function outside of lock to avoid holding lock during I/O
         try:
             result = func(*args, **kwargs)
-            if self.state == "HALF_OPEN":
-                self.state = "CLOSED"
-            self.failures = 0
+
+            # Success: update state atomically
+            with self._lock:
+                if was_half_open:
+                    self.state = "CLOSED"
+                self.failures = 0
+
             return result
         except Exception as e:
-            self.failures += 1
-            self.last_failure_time = current_time
-            
-            if self.failures >= self.max_failures:
-                self.state = "OPEN"
-            
+            # Failure: update state atomically
+            with self._lock:
+                self.failures += 1
+                self.last_failure_time = current_time
+
+                if self.failures >= self.max_failures:
+                    self.state = "OPEN"
+
             raise e
 
 # Global circuit breaker instance
 mcp_circuit_breaker = CircuitBreaker()
 
 class SimpleLRUCache:
+    """Thread-safe LRU cache implementation"""
     def __init__(self, maxsize: int = 128):
         self.maxsize = maxsize
         self._store = OrderedDict()
         self._lock = threading.Lock()
-    
+
     def get(self, key: str):
+        """Get value from cache, moving to end (most recently used)"""
         with self._lock:
-            if key in self._store:
-                self._store.move_to_end(key)
-                return self._store[key]
-            return None
-    
+            try:
+                # Move to end before getting to ensure atomicity
+                value = self._store.pop(key)
+                self._store[key] = value
+                return value
+            except KeyError:
+                return None
+
     def set(self, key: str, value: Any):
+        """Set value in cache, evicting oldest if necessary"""
         with self._lock:
-            if key in self._store:
-                self._store.move_to_end(key)
+            try:
+                # If key exists, remove it first (will be re-added at end)
+                self._store.pop(key)
+            except KeyError:
+                pass
+
+            # Add to end (most recently used)
             self._store[key] = value
+
+            # Evict oldest if over capacity
             if len(self._store) > self.maxsize:
                 self._store.popitem(last=False)
 
