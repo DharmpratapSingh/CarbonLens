@@ -1,0 +1,5009 @@
+================================================================================
+CLIMATEGPT DATABASE ANALYSIS REPORT
+================================================================================
+
+1. DATABASE OVERVIEW
+--------------------------------------------------------------------------------
+Database File Size: 0.52 GB (554,708,992 bytes)
+
+Total Tables: 48
+Table Names: agriculture_admin1_month, agriculture_admin1_year, agriculture_city_month, agriculture_city_year, agriculture_country_month, agriculture_country_year, buildings_admin1_month, buildings_admin1_year, buildings_city_month, buildings_city_year, buildings_country_month, buildings_country_year, fuel_exploitation_admin1_month, fuel_exploitation_admin1_year, fuel_exploitation_city_month, fuel_exploitation_city_year, fuel_exploitation_country_month, fuel_exploitation_country_year, ind_combustion_admin1_month, ind_combustion_admin1_year, ind_combustion_city_month, ind_combustion_city_year, ind_combustion_country_month, ind_combustion_country_year, ind_processes_admin1_month, ind_processes_admin1_year, ind_processes_city_month, ind_processes_city_year, ind_processes_country_month, ind_processes_country_year, power_admin1_month, power_admin1_year, power_city_month, power_city_year, power_country_month, power_country_year, transport_admin1_month, transport_admin1_year, transport_city_month, transport_city_year, transport_country_month, transport_country_year, waste_admin1_month, waste_admin1_year, waste_city_month, waste_city_year, waste_country_month, waste_country_year
+
+
+2. DETAILED TABLE ANALYSIS
+--------------------------------------------------------------------------------
+
+📊 TABLE: agriculture_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 949,128
+  Columns (12):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: IND-3253
+      admin1_name: Uttar Pradesh
+      country_name: India
+      iso3: IND
+      year: 2000
+      emissions_tonnes: 185554.46171314368
+      MtCO2: 0.18555446171314366
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      admin1_geoid: IND-3253
+      admin1_name: Uttar Pradesh
+      country_name: India
+      iso3: IND
+      year: 2000
+      emissions_tonnes: 190065.41544713275
+      MtCO2: 0.19006541544713274
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      admin1_geoid: IND-3253
+      admin1_name: Uttar Pradesh
+      country_name: India
+      iso3: IND
+      year: 2000
+      emissions_tonnes: 218342.47373369103
+      MtCO2: 0.21834247373369103
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 165
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 58,200 rows
+      Latvia: 34,800 rows
+      Italy: 33,000 rows
+      Slovenia: 31,500 rows
+      Philippines: 30,900 rows
+      France: 28,800 rows
+      Turkey: 24,300 rows
+      Russia: 23,436 rows
+      Thailand: 23,100 rows
+      North Macedonia: 22,644 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,226
+    NULL Values: 0
+    Top 10 (by row count):
+      Amazonas: 1,200 rows
+      Central: 1,200 rows
+      Western: 1,200 rows
+      Córdoba: 900 rows
+      Eastern: 900 rows
+      La Paz: 852 rows
+      Lankaran: 732 rows
+      Misiones: 600 rows
+      Cotabato: 600 rows
+      León: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 477,756.54
+    Average: 3,602.22
+    Median: 370.84
+    Std Dev: 15,161.95
+    NULL Count: 0
+
+
+📊 TABLE: agriculture_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 79,094
+  Columns (11):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: IND-3253
+      admin1_name: Uttar Pradesh
+      country_name: India
+      iso3: IND
+      year: 2000
+      emissions_tonnes: 2328399.935863495
+      MtCO2: 2.328399935863495
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      admin1_geoid: PAK-1113
+      admin1_name: Punjab
+      country_name: Pakistan
+      iso3: PAK
+      year: 2000
+      emissions_tonnes: 2069059.7427985668
+      MtCO2: 2.069059742798567
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      admin1_geoid: IND-2447
+      admin1_name: Maharashtra
+      country_name: India
+      iso3: IND
+      year: 2000
+      emissions_tonnes: 1640873.453913689
+      MtCO2: 1.6408734539136889
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 165
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 4,850 rows
+      Latvia: 2,900 rows
+      Italy: 2,750 rows
+      Slovenia: 2,625 rows
+      Philippines: 2,575 rows
+      France: 2,400 rows
+      Turkey: 2,025 rows
+      Russia: 1,953 rows
+      Thailand: 1,925 rows
+      North Macedonia: 1,887 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,226
+    NULL Values: 0
+    Top 10 (by row count):
+      Central: 100 rows
+      Amazonas: 100 rows
+      Western: 100 rows
+      Córdoba: 75 rows
+      Eastern: 75 rows
+      La Paz: 71 rows
+      Lankaran: 61 rows
+      Centre: 50 rows
+      Misiones: 50 rows
+      Santa Cruz: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 4,622,947.17
+    Average: 39,765.57
+    Median: 4,109.16
+    Std Dev: 166,735.55
+    NULL Count: 0
+
+
+📊 TABLE: agriculture_city_month
+  ----------------------------------------------------------------------------
+  Rows: 954,408
+  Columns (13):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 6090.0
+      city_name: Dhaka
+      admin1_name: Chittagong
+      country_name: Bangladesh
+      iso3: Bangladesh
+      year: 2000
+      emissions_tonnes: 6354.570853174588
+      MtCO2: 0.006354570853174588
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      city_id: 6090.0
+      city_name: Dhaka
+      admin1_name: Chittagong
+      country_name: Bangladesh
+      iso3: Bangladesh
+      year: 2000
+      emissions_tonnes: 7074.626249193238
+      MtCO2: 0.007074626249193239
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      city_id: 6090.0
+      city_name: Dhaka
+      admin1_name: Chittagong
+      country_name: Bangladesh
+      iso3: Bangladesh
+      year: 2000
+      emissions_tonnes: 7317.669903785102
+      MtCO2: 0.007317669903785103
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 115
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 187,200 rows
+      India: 149,100 rows
+      United States: 61,500 rows
+      Brazil: 34,200 rows
+      Bangladesh: 31,500 rows
+      Russia: 31,500 rows
+      Nigeria: 26,700 rows
+      Indonesia: 26,400 rows
+      Pakistan: 21,600 rows
+      Japan: 20,700 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,108
+    NULL Values: 0
+    Top 10 (by row count):
+      Bihar: 29,100 rows
+      Uttar Pradesh: 24,900 rows
+      Unknown: 20,592 rows
+      Shandong: 16,800 rows
+      Henan: 15,300 rows
+      Jiangsu: 15,000 rows
+      Hebei: 14,400 rows
+      West Bengal: 14,400 rows
+      Punjab: 13,200 rows
+      Zhejiang: 11,400 rows
+
+  City Name Coverage:
+    Distinct Values: 3,194
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 900 rows
+      Rochester: 600 rows
+      Dhaka: 600 rows
+      Xingtai: 600 rows
+      Guiyang: 600 rows
+      Lanxi: 600 rows
+      Jinzhou: 600 rows
+      Shahe: 600 rows
+      Naples: 600 rows
+      Nankang: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 10,829.09
+    Average: 94.28
+    Median: 33.81
+    Std Dev: 261.39
+    NULL Count: 0
+
+
+📊 TABLE: agriculture_city_year
+  ----------------------------------------------------------------------------
+  Rows: 79,534
+  Columns (12):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 6090.0
+      city_name: Dhaka
+      admin1_name: Chittagong
+      country_name: Bangladesh
+      iso3: Bangladesh
+      year: 2000
+      emissions_tonnes: 80198.7275390625
+      MtCO2: 0.0801987275390625
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      city_id: 5472.0
+      city_name: Jakarta
+      admin1_name: Jawa Barat
+      country_name: Indonesia
+      iso3: Indonesia
+      year: 2000
+      emissions_tonnes: 47123.884452819824
+      MtCO2: 0.0471238844528198
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      city_id: 5402.0
+      city_name: Mexico City
+      admin1_name: Distrito Federal
+      country_name: México
+      iso3: Mexico
+      year: 2000
+      emissions_tonnes: 36804.19634997845
+      MtCO2: 0.0368041963499784
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 115
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 15,600 rows
+      India: 12,425 rows
+      United States: 5,125 rows
+      Brazil: 2,850 rows
+      Russia: 2,625 rows
+      Bangladesh: 2,625 rows
+      Nigeria: 2,225 rows
+      Indonesia: 2,200 rows
+      Pakistan: 1,800 rows
+      Japan: 1,725 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,108
+    NULL Values: 0
+    Top 10 (by row count):
+      Bihar: 2,425 rows
+      Uttar Pradesh: 2,075 rows
+      Unknown: 1,716 rows
+      Shandong: 1,400 rows
+      Henan: 1,275 rows
+      Jiangsu: 1,250 rows
+      West Bengal: 1,200 rows
+      Hebei: 1,200 rows
+      Punjab: 1,100 rows
+      Zhejiang: 950 rows
+
+  City Name Coverage:
+    Distinct Values: 3,194
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 75 rows
+      Chengde: 50 rows
+      Worcester: 50 rows
+      Portland: 50 rows
+      Lanxi: 50 rows
+      Xinyi: 50 rows
+      Xingtai: 50 rows
+      Shahe: 50 rows
+      Wilmington: 50 rows
+      Valencia: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 109,073.36
+    Average: 1,039.57
+    Median: 379.03
+    Std Dev: 2,868.88
+    NULL Count: 0
+
+
+📊 TABLE: agriculture_country_month
+  ----------------------------------------------------------------------------
+  Rows: 49,152
+  Columns (10):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 1964241.8904436105
+      MtCO2: 1.9642418904436103
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 1942323.0104278629
+      MtCO2: 1.9423230104278626
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 2109607.2642822424
+      MtCO2: 2.109607264282242
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 166
+    NULL Values: 0
+    Top 10 (by row count):
+      Denmark: 300 rows
+      Afghanistan: 300 rows
+      Hungary: 300 rows
+      Rwanda: 300 rows
+      Kuwait: 300 rows
+      San Marino: 300 rows
+      Nicaragua: 300 rows
+      Thailand: 300 rows
+      Oman: 300 rows
+      Romania: 300 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.06
+    Max: 3,422,488.62
+    Average: 69,562.21
+    Median: 4,765.90
+    Std Dev: 254,296.33
+    NULL Count: 0
+
+
+📊 TABLE: agriculture_country_year
+  ----------------------------------------------------------------------------
+  Rows: 4,096
+  Columns (9):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 24045832.548096195
+      MtCO2: 24.045832548096193
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      iso3: IND
+      country_name: India
+      year: 2000
+      emissions_tonnes: 16792405.64398081
+      MtCO2: 16.792405643980807
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 5375698.313247548
+      MtCO2: 5.375698313247549
+      units: tonnes CO2
+      source: EDGAR v2024 agriculture
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 166
+    NULL Values: 0
+    Top 10 (by row count):
+      Brazil: 25 rows
+      Poland: 25 rows
+      Italy: 25 rows
+      South Korea: 25 rows
+      Cuba: 25 rows
+      Tunisia: 25 rows
+      Kenya: 25 rows
+      Algeria: 25 rows
+      Libya: 25 rows
+      North Macedonia: 25 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.74
+    Max: 32,610,829.77
+    Average: 767,879.79
+    Median: 52,322.62
+    Std Dev: 2,791,917.52
+    NULL Count: 0
+
+
+📊 TABLE: buildings_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 1,230,216
+  Columns (12):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: USA-3521
+      admin1_name: California
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 5027513.37553377
+      MtCO2: 5.02751337553377
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      admin1_geoid: USA-3521
+      admin1_name: California
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 5431527.09218383
+      MtCO2: 5.4315270921838295
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      admin1_geoid: USA-3521
+      admin1_name: California
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 5956185.2099414645
+      MtCO2: 5.956185209941465
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 219
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 63,000 rows
+      Slovenia: 39,300 rows
+      Latvia: 34,800 rows
+      Uganda: 33,600 rows
+      Italy: 33,000 rows
+      Philippines: 31,800 rows
+      France: 29,700 rows
+      Russia: 25,500 rows
+      Turkey: 24,300 rows
+      Thailand: 23,100 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,991
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 2,400 rows
+      Central: 2,400 rows
+      Northern: 2,100 rows
+      Eastern: 2,100 rows
+      Southern: 1,500 rows
+      Amazonas: 1,200 rows
+      Nord: 1,200 rows
+      Santa Cruz: 900 rows
+      Saint Andrew: 900 rows
+      Sud: 900 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 6,712,696.44
+    Average: 70,268.76
+    Median: 7,776.43
+    Std Dev: 269,376.27
+    NULL Count: 0
+
+
+📊 TABLE: buildings_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 102,518
+  Columns (11):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: USA-3521
+      admin1_name: California
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 63073769.53823725
+      MtCO2: 63.07376953823725
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      admin1_geoid: USA-3559
+      admin1_name: New York
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 40692622.39294207
+      MtCO2: 40.69262239294207
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 39894283.74852174
+      MtCO2: 39.89428374852174
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 219
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 5,250 rows
+      Slovenia: 3,275 rows
+      Latvia: 2,900 rows
+      Uganda: 2,800 rows
+      Italy: 2,750 rows
+      Philippines: 2,650 rows
+      France: 2,475 rows
+      Russia: 2,125 rows
+      Turkey: 2,025 rows
+      Thailand: 1,925 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,991
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 200 rows
+      Central: 200 rows
+      Northern: 175 rows
+      Eastern: 175 rows
+      Southern: 125 rows
+      Nord: 100 rows
+      Amazonas: 100 rows
+      Santa Cruz: 75 rows
+      Centre: 75 rows
+      Saint Andrew: 75 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.04
+    Max: 64,079,332.80
+    Average: 774,306.44
+    Median: 86,516.41
+    Std Dev: 2,952,176.84
+    NULL Count: 0
+
+
+📊 TABLE: buildings_city_month
+  ----------------------------------------------------------------------------
+  Rows: 1,103,400
+  Columns (13):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 2801732.5984654445
+      MtCO2: 2.8017325984654446
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 2889982.6436422267
+      MtCO2: 2.8899826436422265
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 3150412.8962561255
+      MtCO2: 3.1504128962561255
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 170
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 194,400 rows
+      India: 150,600 rows
+      United States: 64,200 rows
+      Brazil: 36,000 rows
+      Russia: 35,400 rows
+      Bangladesh: 31,800 rows
+      Indonesia: 28,500 rows
+      Nigeria: 27,300 rows
+      Japan: 24,300 rows
+      United Kingdom: 21,900 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,336
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 35,400 rows
+      Bihar: 29,100 rows
+      Uttar Pradesh: 24,900 rows
+      Shandong: 16,800 rows
+      Jiangsu: 15,600 rows
+      Henan: 15,300 rows
+      Hebei: 14,400 rows
+      West Bengal: 14,400 rows
+      Punjab: 13,200 rows
+      Zhejiang: 12,000 rows
+
+  City Name Coverage:
+    Distinct Values: 3,628
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 1,200 rows
+      Fuzhou: 600 rows
+      Jizhou: 600 rows
+      Lincoln: 600 rows
+      Xinyi: 600 rows
+      Valencia: 600 rows
+      Worcester: 600 rows
+      Portland: 600 rows
+      Salem: 600 rows
+      Saint Petersburg: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 3,866,605.64
+    Average: 21,694.37
+    Median: 5,341.68
+    Std Dev: 97,726.29
+    NULL Count: 0
+
+
+📊 TABLE: buildings_city_year
+  ----------------------------------------------------------------------------
+  Rows: 91,950
+  Columns (12):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 35129818.484375
+      MtCO2: 35.129818484375
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      city_id: 8099.0
+      city_name: New York City
+      admin1_name: New Jersey
+      country_name: United States
+      iso3: United States of America
+      year: 2000
+      emissions_tonnes: 27809036.25
+      MtCO2: 27.80903625
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      city_id: 348.0
+      city_name: Seoul
+      admin1_name: Gyeonggi
+      country_name: South Korea
+      iso3: Republic of Korea
+      year: 2000
+      emissions_tonnes: 24338740.40625
+      MtCO2: 24.33874040625
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 170
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 16,200 rows
+      India: 12,550 rows
+      United States: 5,350 rows
+      Brazil: 3,000 rows
+      Russia: 2,950 rows
+      Bangladesh: 2,650 rows
+      Indonesia: 2,375 rows
+      Nigeria: 2,275 rows
+      Japan: 2,025 rows
+      United Kingdom: 1,825 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,336
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 2,950 rows
+      Bihar: 2,425 rows
+      Uttar Pradesh: 2,075 rows
+      Shandong: 1,400 rows
+      Jiangsu: 1,300 rows
+      Henan: 1,275 rows
+      West Bengal: 1,200 rows
+      Hebei: 1,200 rows
+      Punjab: 1,100 rows
+      Zhejiang: 1,000 rows
+
+  City Name Coverage:
+    Distinct Values: 3,628
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 100 rows
+      Saint Petersburg: 50 rows
+      Valencia: 50 rows
+      Portland: 50 rows
+      Yingkou: 50 rows
+      Worcester: 50 rows
+      Xinyi: 50 rows
+      Yulin: 50 rows
+      Panama City: 50 rows
+      Fengcheng: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 37,297,533.46
+    Average: 239,121.90
+    Median: 59,268.15
+    Std Dev: 1,070,558.73
+    NULL Count: 0
+
+
+📊 TABLE: buildings_country_month
+  ----------------------------------------------------------------------------
+  Rows: 65,832
+  Columns (10):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 47837694.96630386
+      MtCO2: 47.83769496630386
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 54874468.27299574
+      MtCO2: 54.87446827299574
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 55726637.45104
+      MtCO2: 55.72663745104
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 220
+    NULL Values: 0
+    Top 10 (by row count):
+      Hungary: 300 rows
+      Denmark: 300 rows
+      Oman: 300 rows
+      Afghanistan: 300 rows
+      Kuwait: 300 rows
+      Nicaragua: 300 rows
+      Rwanda: 300 rows
+      San Marino: 300 rows
+      Saint Lucia: 300 rows
+      Dhekelia: 300 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.09
+    Max: 74,721,209.17
+    Average: 1,312,759.77
+    Median: 50,843.66
+    Std Dev: 5,455,045.85
+    NULL Count: 0
+
+
+📊 TABLE: buildings_country_year
+  ----------------------------------------------------------------------------
+  Rows: 5,486
+  Columns (9):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 625046055.0955719
+      MtCO2: 625.0460550955719
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 365658775.33661926
+      MtCO2: 365.65877533661927
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      iso3: RUS
+      country_name: Russia
+      year: 2000
+      emissions_tonnes: 189694651.5709695
+      MtCO2: 189.69465157096948
+      units: tonnes CO2
+      source: EDGAR v2024 buildings
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 220
+    NULL Values: 0
+    Top 10 (by row count):
+      Hungary: 25 rows
+      Denmark: 25 rows
+      Oman: 25 rows
+      Afghanistan: 25 rows
+      Kuwait: 25 rows
+      Nicaragua: 25 rows
+      Rwanda: 25 rows
+      San Marino: 25 rows
+      Saint Lucia: 25 rows
+      Dhekelia: 25 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 1.23
+    Max: 715,446,513.54
+    Average: 14,469,678.11
+    Median: 563,663.49
+    Std Dev: 59,820,383.31
+    NULL Count: 0
+
+
+📊 TABLE: fuel_exploitation_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 1,066,536
+  Columns (12):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 4195596.276233418
+      MtCO2: 4.195596276233418
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 4597899.126536017
+      MtCO2: 4.597899126536017
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 4803358.434349148
+      MtCO2: 4.803358434349148
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 204
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 63,000 rows
+      Slovenia: 38,724 rows
+      Latvia: 34,800 rows
+      Italy: 33,000 rows
+      Philippines: 31,488 rows
+      France: 29,400 rows
+      Russia: 25,500 rows
+      Turkey: 24,300 rows
+      Thailand: 23,100 rows
+      North Macedonia: 22,500 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,634
+    NULL Values: 0
+    Top 10 (by row count):
+      Central: 1,788 rows
+      Northern: 1,584 rows
+      Western: 1,524 rows
+      Eastern: 1,332 rows
+      Amazonas: 1,200 rows
+      Southern: 1,164 rows
+      Nord: 924 rows
+      Lankaran: 900 rows
+      Córdoba: 900 rows
+      Centre: 708 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 12,526,213.95
+    Average: 53,951.10
+    Median: 1,148.03
+    Std Dev: 276,238.06
+    NULL Count: 0
+
+
+📊 TABLE: fuel_exploitation_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 88,878
+  Columns (11):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 54053793.72102046
+      MtCO2: 54.05379372102046
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      admin1_geoid: USA-3535
+      admin1_name: Louisiana
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 33917840.2463161
+      MtCO2: 33.917840246316096
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      admin1_geoid: USA-3521
+      admin1_name: California
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 28672779.17059738
+      MtCO2: 28.672779170597376
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 204
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 5,250 rows
+      Slovenia: 3,227 rows
+      Latvia: 2,900 rows
+      Italy: 2,750 rows
+      Philippines: 2,624 rows
+      France: 2,450 rows
+      Russia: 2,125 rows
+      Turkey: 2,025 rows
+      Thailand: 1,925 rows
+      North Macedonia: 1,875 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,634
+    NULL Values: 0
+    Top 10 (by row count):
+      Central: 149 rows
+      Northern: 132 rows
+      Western: 127 rows
+      Eastern: 111 rows
+      Amazonas: 100 rows
+      Southern: 97 rows
+      Nord: 77 rows
+      Córdoba: 75 rows
+      Lankaran: 75 rows
+      Centre: 59 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 121,063,769.71
+    Average: 602,821.81
+    Median: 12,928.44
+    Std Dev: 3,072,582.37
+    NULL Count: 0
+
+
+📊 TABLE: fuel_exploitation_city_month
+  ----------------------------------------------------------------------------
+  Rows: 1,020,264
+  Columns (13):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 11345.0
+      city_name: Shanghai
+      admin1_name: Shanghai
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 1120473.4569798207
+      MtCO2: 1.1204734569798207
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      city_id: 11345.0
+      city_name: Shanghai
+      admin1_name: Shanghai
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 1150926.7451795263
+      MtCO2: 1.1509267451795262
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      city_id: 11345.0
+      city_name: Shanghai
+      admin1_name: Shanghai
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 1253605.5259007516
+      MtCO2: 1.2536055259007517
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 152
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 194,100 rows
+      India: 141,048 rows
+      United States: 64,200 rows
+      Brazil: 36,000 rows
+      Russia: 35,400 rows
+      Indonesia: 28,200 rows
+      Japan: 24,300 rows
+      Nigeria: 21,984 rows
+      United Kingdom: 21,900 rows
+      México: 21,000 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,272
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 34,608 rows
+      Bihar: 26,100 rows
+      Uttar Pradesh: 22,800 rows
+      Shandong: 16,800 rows
+      Jiangsu: 15,600 rows
+      Henan: 15,300 rows
+      Hebei: 14,400 rows
+      Punjab: 13,200 rows
+      Zhejiang: 12,000 rows
+      West Bengal: 12,000 rows
+
+  City Name Coverage:
+    Distinct Values: 3,404
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 900 rows
+      Yingkou: 600 rows
+      Jizhou: 600 rows
+      Supaul: 600 rows
+      La Paz: 600 rows
+      Fuyang: 600 rows
+      Fuzhou: 600 rows
+      Lincoln: 600 rows
+      Guiyang: 600 rows
+      Naples: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 7,523,874.81
+    Average: 16,140.14
+    Median: 884.01
+    Std Dev: 105,103.52
+    NULL Count: 0
+
+
+📊 TABLE: fuel_exploitation_city_year
+  ----------------------------------------------------------------------------
+  Rows: 85,022
+  Columns (12):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 11345.0
+      city_name: Shanghai
+      admin1_name: Shanghai
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 13838936.453125
+      MtCO2: 13.838936453125
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      city_id: 2007.0
+      city_name: Los Angeles
+      admin1_name: California
+      country_name: United States
+      iso3: United States of America
+      year: 2000
+      emissions_tonnes: 12380074.645507812
+      MtCO2: 12.380074645507811
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      city_id: 3512.0
+      city_name: Johannesburg
+      admin1_name: Gauteng
+      country_name: South Africa
+      iso3: South Africa
+      year: 2000
+      emissions_tonnes: 12026497.6328125
+      MtCO2: 12.0264976328125
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 152
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 16,175 rows
+      India: 11,754 rows
+      United States: 5,350 rows
+      Brazil: 3,000 rows
+      Russia: 2,950 rows
+      Indonesia: 2,350 rows
+      Japan: 2,025 rows
+      Nigeria: 1,832 rows
+      United Kingdom: 1,825 rows
+      México: 1,750 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,272
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 2,884 rows
+      Bihar: 2,175 rows
+      Uttar Pradesh: 1,900 rows
+      Shandong: 1,400 rows
+      Jiangsu: 1,300 rows
+      Henan: 1,275 rows
+      Hebei: 1,200 rows
+      Punjab: 1,100 rows
+      West Bengal: 1,000 rows
+      Zhejiang: 1,000 rows
+
+  City Name Coverage:
+    Distinct Values: 3,404
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 75 rows
+      Lanxi: 50 rows
+      Xingtai: 50 rows
+      Yulin: 50 rows
+      Shahe: 50 rows
+      Chengde: 50 rows
+      Rochester: 50 rows
+      Kingston: 50 rows
+      Santa Cruz: 50 rows
+      Nankang: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 72,180,164.61
+    Average: 180,312.36
+    Median: 9,962.44
+    Std Dev: 1,168,143.54
+    NULL Count: 0
+
+
+📊 TABLE: fuel_exploitation_country_month
+  ----------------------------------------------------------------------------
+  Rows: 56,400
+  Columns (10):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 22768541.20208914
+      MtCO2: 22.76854120208914
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 22672474.086872865
+      MtCO2: 22.672474086872867
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 25180064.321239453
+      MtCO2: 25.180064321239456
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 205
+    NULL Values: 0
+    Top 10 (by row count):
+      Iran: 300 rows
+      Argentina: 300 rows
+      Slovakia: 300 rows
+      Liechtenstein: 300 rows
+      Norway: 300 rows
+      Dominican Rep.: 300 rows
+      Moldova: 300 rows
+      New Zealand: 300 rows
+      Ecuador: 300 rows
+      Algeria: 300 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 81,782,472.21
+    Average: 1,020,391.79
+    Median: 23,965.54
+    Std Dev: 4,267,146.76
+    NULL Count: 0
+
+
+📊 TABLE: fuel_exploitation_country_year
+  ----------------------------------------------------------------------------
+  Rows: 4,700
+  Columns (9):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 279123103.28875047
+      MtCO2: 279.1231032887505
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 232027376.18283463
+      MtCO2: 232.02737618283464
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      iso3: RUS
+      country_name: Russia
+      year: 2000
+      emissions_tonnes: 182003897.64423883
+      MtCO2: 182.00389764423883
+      units: tonnes CO2
+      source: EDGAR v2024 fuel_exploitation
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 205
+    NULL Values: 0
+    Top 10 (by row count):
+      Venezuela: 25 rows
+      Brunei: 25 rows
+      Estonia: 25 rows
+      Azerbaijan: 25 rows
+      Papua New Guinea: 25 rows
+      Hong Kong: 25 rows
+      Ireland: 25 rows
+      Slovenia: 25 rows
+      Cambodia: 25 rows
+      Puerto Rico: 25 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 797,584,152.60
+    Average: 11,399,489.06
+    Median: 270,893.10
+    Std Dev: 47,477,777.03
+    NULL Count: 0
+
+
+📊 TABLE: ind_combustion_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 1,200,216
+  Columns (12):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 7264420.836945787
+      MtCO2: 7.264420836945786
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 7758417.080858692
+      MtCO2: 7.75841708085869
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 8212726.90658894
+      MtCO2: 8.212726906588937
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 212
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 63,000 rows
+      Slovenia: 38,700 rows
+      Latvia: 34,500 rows
+      Italy: 33,000 rows
+      Uganda: 31,872 rows
+      Philippines: 31,500 rows
+      France: 29,700 rows
+      Russia: 25,500 rows
+      Turkey: 24,300 rows
+      Thailand: 23,100 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,902
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 2,400 rows
+      Northern: 2,100 rows
+      Central: 2,100 rows
+      Eastern: 1,800 rows
+      Southern: 1,500 rows
+      Amazonas: 1,200 rows
+      Nord: 1,200 rows
+      Santa Cruz: 900 rows
+      Saint Andrew: 900 rows
+      Córdoba: 900 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 40,151,578.64
+    Average: 119,055.91
+    Median: 3,690.47
+    Std Dev: 888,436.84
+    NULL Count: 0
+
+
+📊 TABLE: ind_combustion_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 100,018
+  Columns (11):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 91752725.49316968
+      MtCO2: 91.75272549316966
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      admin1_geoid: CHN-1811
+      admin1_name: Hebei
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 84796577.2132811
+      MtCO2: 84.7965772132811
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      admin1_geoid: CHN-1818
+      admin1_name: Jiangsu
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 80478924.35654414
+      MtCO2: 80.47892435654414
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 212
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 5,250 rows
+      Slovenia: 3,225 rows
+      Latvia: 2,875 rows
+      Italy: 2,750 rows
+      Uganda: 2,656 rows
+      Philippines: 2,625 rows
+      France: 2,475 rows
+      Russia: 2,125 rows
+      Turkey: 2,025 rows
+      Thailand: 1,925 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 3,902
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 200 rows
+      Central: 175 rows
+      Northern: 175 rows
+      Eastern: 150 rows
+      Southern: 125 rows
+      Nord: 100 rows
+      Amazonas: 100 rows
+      Sud: 75 rows
+      Córdoba: 75 rows
+      La Paz: 75 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.01
+    Max: 392,417,285.84
+    Average: 1,331,116.73
+    Median: 41,376.42
+    Std Dev: 9,901,231.69
+    NULL Count: 0
+
+
+📊 TABLE: ind_combustion_city_month
+  ----------------------------------------------------------------------------
+  Rows: 1,010,676
+  Columns (13):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 4399.0
+      city_name: Osaka
+      admin1_name: Ōsaka
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 2391966.6445875354
+      MtCO2: 2.3919666445875354
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      city_id: 4399.0
+      city_name: Osaka
+      admin1_name: Ōsaka
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 2675396.063967576
+      MtCO2: 2.675396063967576
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      city_id: 4399.0
+      city_name: Osaka
+      admin1_name: Ōsaka
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 2619629.9797348646
+      MtCO2: 2.6196299797348646
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 170
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 193,800 rows
+      India: 107,592 rows
+      United States: 64,200 rows
+      Brazil: 36,000 rows
+      Russia: 35,400 rows
+      Indonesia: 28,200 rows
+      Japan: 24,300 rows
+      Bangladesh: 22,800 rows
+      United Kingdom: 21,900 rows
+      México: 21,000 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,316
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 35,400 rows
+      Shandong: 16,800 rows
+      Jiangsu: 15,600 rows
+      Henan: 15,300 rows
+      Uttar Pradesh: 14,952 rows
+      Hebei: 14,400 rows
+      Punjab: 12,000 rows
+      Zhejiang: 12,000 rows
+      Bihar: 11,604 rows
+      California: 11,100 rows
+
+  City Name Coverage:
+    Distinct Values: 3,341
+    NULL Values: 0
+    Top 10 (by row count):
+      Valencia: 600 rows
+      Saint Petersburg: 600 rows
+      Portland: 600 rows
+      Xinyi: 600 rows
+      Worcester: 600 rows
+      Panama City: 600 rows
+      Yingkou: 600 rows
+      Fengcheng: 600 rows
+      Guadalajara: 600 rows
+      Rongcheng: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 4,996,283.61
+    Average: 41,204.97
+    Median: 3,544.71
+    Std Dev: 187,082.98
+    NULL Count: 0
+
+
+📊 TABLE: ind_combustion_city_year
+  ----------------------------------------------------------------------------
+  Rows: 84,223
+  Columns (12):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 4399.0
+      city_name: Osaka
+      admin1_name: Ōsaka
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 30314927.3515625
+      MtCO2: 30.3149273515625
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      city_id: 5472.0
+      city_name: Jakarta
+      admin1_name: Jawa Barat
+      country_name: Indonesia
+      iso3: Indonesia
+      year: 2000
+      emissions_tonnes: 20427049.850585938
+      MtCO2: 20.427049850585934
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      city_id: 1919.0
+      city_name: Kaohsiung
+      admin1_name: Kaohsiung City
+      country_name: Taiwan
+      iso3: China, Taiwan Province of China
+      year: 2000
+      emissions_tonnes: 17797915.875
+      MtCO2: 17.797915875
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 170
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 16,150 rows
+      India: 8,966 rows
+      United States: 5,350 rows
+      Brazil: 3,000 rows
+      Russia: 2,950 rows
+      Indonesia: 2,350 rows
+      Japan: 2,025 rows
+      Bangladesh: 1,900 rows
+      United Kingdom: 1,825 rows
+      México: 1,750 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,316
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 2,950 rows
+      Shandong: 1,400 rows
+      Jiangsu: 1,300 rows
+      Henan: 1,275 rows
+      Uttar Pradesh: 1,246 rows
+      Hebei: 1,200 rows
+      Zhejiang: 1,000 rows
+      Punjab: 1,000 rows
+      Bihar: 967 rows
+      California: 925 rows
+
+  City Name Coverage:
+    Distinct Values: 3,341
+    NULL Values: 0
+    Top 10 (by row count):
+      Kochi: 50 rows
+      Naples: 50 rows
+      Guiyang: 50 rows
+      La Paz: 50 rows
+      Suzhou: 50 rows
+      Dongying: 50 rows
+      Taizhou: 50 rows
+      Lanxi: 50 rows
+      Kingston: 50 rows
+      Rochester: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 47,862,486.77
+    Average: 460,472.57
+    Median: 39,895.12
+    Std Dev: 2,076,949.06
+    NULL Count: 0
+
+
+📊 TABLE: ind_combustion_country_month
+  ----------------------------------------------------------------------------
+  Rows: 63,636
+  Columns (10):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 70818310.7179634
+      MtCO2: 70.8183107179634
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 74788249.54437092
+      MtCO2: 74.78824954437093
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 77361888.5691698
+      MtCO2: 77.36188856916979
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 213
+    NULL Values: 0
+    Top 10 (by row count):
+      Kuwait: 300 rows
+      Hungary: 300 rows
+      Denmark: 300 rows
+      Oman: 300 rows
+      Nicaragua: 300 rows
+      Afghanistan: 300 rows
+      Rwanda: 300 rows
+      San Marino: 300 rows
+      Saint Lucia: 300 rows
+      Dhekelia: 300 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.07
+    Max: 308,304,964.77
+    Average: 2,248,749.51
+    Median: 87,877.96
+    Std Dev: 15,340,505.82
+    NULL Count: 0
+
+
+📊 TABLE: ind_combustion_country_year
+  ----------------------------------------------------------------------------
+  Rows: 5,303
+  Columns (9):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 861160836.5772878
+      MtCO2: 861.1608365772878
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 562530345.5971401
+      MtCO2: 562.5303455971401
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      iso3: JPN
+      country_name: Japan
+      year: 2000
+      emissions_tonnes: 189824919.98564887
+      MtCO2: 189.82491998564888
+      units: tonnes CO2
+      source: EDGAR v2024 ind_combustion
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 213
+    NULL Values: 0
+    Top 10 (by row count):
+      Kuwait: 25 rows
+      Hungary: 25 rows
+      Denmark: 25 rows
+      Oman: 25 rows
+      Nicaragua: 25 rows
+      Afghanistan: 25 rows
+      Rwanda: 25 rows
+      San Marino: 25 rows
+      Saint Lucia: 25 rows
+      Dhekelia: 25 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.88
+    Max: 2,967,379,585.26
+    Average: 25,105,725.42
+    Median: 992,966.71
+    Std Dev: 170,378,205.81
+    NULL Count: 0
+
+
+📊 TABLE: ind_processes_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 1,233,900
+  Columns (12):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 6005266.45606274
+      MtCO2: 6.005266456062739
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 6469668.28140214
+      MtCO2: 6.46966828140214
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 6507236.724967399
+      MtCO2: 6.507236724967399
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 227
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 63,000 rows
+      Slovenia: 39,300 rows
+      Latvia: 34,800 rows
+      Uganda: 33,600 rows
+      Italy: 33,000 rows
+      Philippines: 31,800 rows
+      France: 30,000 rows
+      Russia: 25,500 rows
+      Turkey: 24,300 rows
+      Thailand: 23,100 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 4,000
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 2,700 rows
+      Central: 2,400 rows
+      Eastern: 2,100 rows
+      Northern: 2,100 rows
+      Southern: 1,500 rows
+      Nord: 1,200 rows
+      Amazonas: 1,200 rows
+      Santa Cruz: 900 rows
+      Centre: 900 rows
+      Sud: 900 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 26,161,198.98
+    Average: 53,877.21
+    Median: 1,039.74
+    Std Dev: 430,894.16
+    NULL Count: 0
+
+
+📊 TABLE: ind_processes_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 102,825
+  Columns (11):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 75928729.1774609
+      MtCO2: 75.9287291774609
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      admin1_geoid: CHN-1812
+      admin1_name: Henan
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 38636774.64957676
+      MtCO2: 38.63677464957676
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      admin1_geoid: CHN-1818
+      admin1_name: Jiangsu
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 36835093.083162375
+      MtCO2: 36.83509308316238
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 227
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 5,250 rows
+      Slovenia: 3,275 rows
+      Latvia: 2,900 rows
+      Uganda: 2,800 rows
+      Italy: 2,750 rows
+      Philippines: 2,650 rows
+      France: 2,500 rows
+      Russia: 2,125 rows
+      Turkey: 2,025 rows
+      Thailand: 1,925 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 4,000
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 225 rows
+      Central: 200 rows
+      Northern: 175 rows
+      Eastern: 175 rows
+      Southern: 125 rows
+      Nord: 100 rows
+      Amazonas: 100 rows
+      La Paz: 75 rows
+      Santa Cruz: 75 rows
+      Lankaran: 75 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.01
+    Max: 258,909,322.28
+    Average: 602,905.76
+    Median: 11,772.32
+    Std Dev: 4,806,920.47
+    NULL Count: 0
+
+
+📊 TABLE: ind_processes_city_month
+  ----------------------------------------------------------------------------
+  Rows: 1,103,556
+  Columns (13):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 10195.0
+      city_name: Jiawang
+      admin1_name: Jiangsu
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 473531.84708898835
+      MtCO2: 0.4735318470889884
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      city_id: 10195.0
+      city_name: Jiawang
+      admin1_name: Jiangsu
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 525495.2275982447
+      MtCO2: 0.5254952275982446
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      city_id: 10195.0
+      city_name: Jiawang
+      admin1_name: Jiangsu
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 533775.8748070621
+      MtCO2: 0.5337758748070621
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 170
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 194,400 rows
+      India: 150,600 rows
+      United States: 64,200 rows
+      Brazil: 36,000 rows
+      Russia: 35,400 rows
+      Bangladesh: 31,740 rows
+      Indonesia: 28,500 rows
+      Nigeria: 27,300 rows
+      Japan: 24,300 rows
+      United Kingdom: 21,900 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,336
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 35,400 rows
+      Bihar: 29,100 rows
+      Uttar Pradesh: 24,900 rows
+      Shandong: 16,800 rows
+      Jiangsu: 15,600 rows
+      Henan: 15,300 rows
+      West Bengal: 14,400 rows
+      Hebei: 14,400 rows
+      Punjab: 13,200 rows
+      Zhejiang: 12,000 rows
+
+  City Name Coverage:
+    Distinct Values: 3,628
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 1,200 rows
+      Valencia: 600 rows
+      Portland: 600 rows
+      Xinyi: 600 rows
+      Supaul: 600 rows
+      Worcester: 600 rows
+      Yingkou: 600 rows
+      Fengcheng: 600 rows
+      Lawrence: 600 rows
+      Hyderabad: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.11
+    Max: 1,997,415.50
+    Average: 12,458.05
+    Median: 687.28
+    Std Dev: 64,665.91
+    NULL Count: 0
+
+
+📊 TABLE: ind_processes_city_year
+  ----------------------------------------------------------------------------
+  Rows: 91,963
+  Columns (12):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 10195.0
+      city_name: Jiawang
+      admin1_name: Jiangsu
+      country_name: China
+      iso3: China
+      year: 2000
+      emissions_tonnes: 5921266.0
+      MtCO2: 5.921266
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      city_id: 5472.0
+      city_name: Jakarta
+      admin1_name: Jawa Barat
+      country_name: Indonesia
+      iso3: Indonesia
+      year: 2000
+      emissions_tonnes: 5291775.332763672
+      MtCO2: 5.291775332763672
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      city_id: 2668.0
+      city_name: Shunan
+      admin1_name: Unknown
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 5242177.0
+      MtCO2: 5.242177
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 170
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 16,200 rows
+      India: 12,550 rows
+      United States: 5,350 rows
+      Brazil: 3,000 rows
+      Russia: 2,950 rows
+      Bangladesh: 2,645 rows
+      Indonesia: 2,375 rows
+      Nigeria: 2,275 rows
+      Japan: 2,025 rows
+      United Kingdom: 1,825 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 1,336
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 2,950 rows
+      Bihar: 2,425 rows
+      Uttar Pradesh: 2,075 rows
+      Shandong: 1,400 rows
+      Jiangsu: 1,300 rows
+      Henan: 1,275 rows
+      Hebei: 1,200 rows
+      West Bengal: 1,200 rows
+      Punjab: 1,100 rows
+      Zhejiang: 1,000 rows
+
+  City Name Coverage:
+    Distinct Values: 3,628
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 100 rows
+      Dongying: 50 rows
+      Dhaka: 50 rows
+      Guiyang: 50 rows
+      Jinzhou: 50 rows
+      Suzhou: 50 rows
+      La Paz: 50 rows
+      Taizhou: 50 rows
+      Fuyang: 50 rows
+      Naples: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 2.33
+    Max: 19,523,020.00
+    Average: 139,391.13
+    Median: 7,731.61
+    Std Dev: 720,927.30
+    NULL Count: 0
+
+
+📊 TABLE: ind_processes_country_month
+  ----------------------------------------------------------------------------
+  Rows: 68,400
+  Columns (10):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 35289078.115241006
+      MtCO2: 35.289078115241004
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 39478225.233334914
+      MtCO2: 39.47822523333491
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 38048844.78328156
+      MtCO2: 38.04884478328156
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 228
+    NULL Values: 0
+    Top 10 (by row count):
+      Hungary: 300 rows
+      Kuwait: 300 rows
+      Denmark: 300 rows
+      Oman: 300 rows
+      Nicaragua: 300 rows
+      Afghanistan: 300 rows
+      Rwanda: 300 rows
+      San Marino: 300 rows
+      Saint Lucia: 300 rows
+      Guam: 300 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 149,264,159.21
+    Average: 971,799.27
+    Median: 43,980.70
+    Std Dev: 6,943,885.85
+    NULL Count: 0
+
+
+📊 TABLE: ind_processes_country_year
+  ----------------------------------------------------------------------------
+  Rows: 5,700
+  Columns (9):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 442731728.7118404
+      MtCO2: 442.7317287118404
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 160251126.3546689
+      MtCO2: 160.25112635466888
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      iso3: RUS
+      country_name: Russia
+      year: 2000
+      emissions_tonnes: 77726635.43469381
+      MtCO2: 77.72663543469382
+      units: tonnes CO2
+      source: EDGAR v2024 ind_processes
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 228
+    NULL Values: 0
+    Top 10 (by row count):
+      Iran: 25 rows
+      Norway: 25 rows
+      Argentina: 25 rows
+      Slovakia: 25 rows
+      New Zealand: 25 rows
+      Ecuador: 25 rows
+      Dominican Rep.: 25 rows
+      Moldova: 25 rows
+      St-Martin: 25 rows
+      Liechtenstein: 25 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.01
+    Max: 1,516,263,235.03
+    Average: 10,876,105.42
+    Median: 497,079.26
+    Std Dev: 77,579,617.94
+    NULL Count: 0
+
+
+📊 TABLE: power_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 597,516
+  Columns (8):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 21436461.740652673
+      MtCO2: 21.43646174065267
+      month: 1
+    Row 2:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 21462662.428116504
+      MtCO2: 21.462662428116506
+      month: 2
+    Row 3:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 17578558.065564815
+      MtCO2: 17.578558065564813
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 206
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 47,028 rows
+      France: 24,264 rows
+      Russia: 20,316 rows
+      Italy: 19,884 rows
+      United States of America: 14,496 rows
+      Spain: 13,224 rows
+      Japan: 12,912 rows
+      Turkey: 11,244 rows
+      Mexico: 8,928 rows
+      Latvia: 8,040 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,354
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 1,560 rows
+      Central: 1,500 rows
+      Eastern: 984 rows
+      Nord: 972 rows
+      Southern: 936 rows
+      Northern: 876 rows
+      Santa Cruz: 864 rows
+      Saint Andrew: 864 rows
+      Sud: 864 rows
+      Córdoba: 684 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 60,264,247.36
+    Average: 418,687.43
+    Median: 18,684.17
+    Std Dev: 1,720,354.91
+    NULL Count: 0
+
+
+📊 TABLE: power_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 49,793
+  Columns (7):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: USA-3536
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 216834328.72045895
+      MtCO2: 216.83432872045896
+    Row 2:
+      admin1_geoid: USA-3547
+      admin1_name: Indiana
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 188358160.5068359
+      MtCO2: 188.35816050683593
+    Row 3:
+      admin1_geoid: CHN-1814
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 165554815.44308472
+      MtCO2: 165.55481544308472
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+
+  Country Name Coverage:
+    Distinct Values: 206
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 3,919 rows
+      France: 2,022 rows
+      Russia: 1,693 rows
+      Italy: 1,657 rows
+      United States of America: 1,208 rows
+      Spain: 1,102 rows
+      Japan: 1,076 rows
+      Turkey: 937 rows
+      Mexico: 744 rows
+      Latvia: 670 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,354
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 130 rows
+      Central: 125 rows
+      Eastern: 82 rows
+      Nord: 81 rows
+      Southern: 78 rows
+      Northern: 73 rows
+      Sud: 72 rows
+      Santa Cruz: 72 rows
+      Saint Andrew: 72 rows
+      Córdoba: 57 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 587,187,019.10
+    Average: 5,000,961.99
+    Median: 225,024.83
+    Std Dev: 20,452,656.49
+    NULL Count: 0
+
+
+📊 TABLE: power_city_month
+  ----------------------------------------------------------------------------
+  Rows: 1,764,984
+  Columns (9):
+    - city_id (BIGINT) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 6770
+      city_name: Texas District
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 7000232.412132667
+      MtCO2: 7.000232412132667
+      month: 1
+    Row 2:
+      city_id: 6770
+      city_name: Texas District
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 7080364.066021523
+      MtCO2: 7.080364066021524
+      month: 2
+    Row 3:
+      city_id: 6770
+      city_name: Texas District
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 6286357.723348332
+      MtCO2: 6.286357723348331
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 206
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 140,436 rows
+      France: 78,300 rows
+      Russia: 59,688 rows
+      Italy: 58,404 rows
+      United States of America: 40,416 rows
+      Turkey: 36,540 rows
+      Japan: 36,384 rows
+      Spain: 36,216 rows
+      Mexico: 23,904 rows
+      Latvia: 23,664 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,354
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 5,952 rows
+      Central: 4,860 rows
+      Santa Cruz: 3,168 rows
+      Southern: 3,168 rows
+      Northern: 2,616 rows
+      Sud: 2,592 rows
+      Toledo: 2,592 rows
+      Eastern: 2,496 rows
+      Centre: 2,400 rows
+      Nord-Ouest: 2,304 rows
+
+  City Name Coverage:
+    Distinct Values: 2,359
+    NULL Values: 0
+    Top 10 (by row count):
+      Western District: 5,952 rows
+      Central Urban: 4,860 rows
+      Santa Cruz District: 3,168 rows
+      Southern Urban: 3,168 rows
+      Northern City: 2,616 rows
+      Sud City: 2,592 rows
+      Toledo Metro: 2,592 rows
+      Eastern Metro: 2,496 rows
+      Centre Urban: 2,400 rows
+      Nord-Ouest District: 2,304 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 18,053,716.39
+    Average: 101,015.50
+    Median: 4,044.41
+    Std Dev: 441,693.90
+    NULL Count: 0
+
+
+📊 TABLE: power_city_year
+  ----------------------------------------------------------------------------
+  Rows: 147,082
+  Columns (8):
+    - city_id (BIGINT) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 6770
+      city_name: Texas District
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 72145710.51060663
+      MtCO2: 72.14571051060663
+    Row 2:
+      city_id: 1045
+      city_name: Shandong Center
+      admin1_name: Shandong
+      country_name: China
+      iso3: CHN
+      year: 2000
+      emissions_tonnes: 61646805.2415714
+      MtCO2: 61.6468052415714
+    Row 3:
+      city_id: 6769
+      city_name: Texas District
+      admin1_name: Texas
+      country_name: United States of America
+      iso3: USA
+      year: 2000
+      emissions_tonnes: 59812208.80889844
+      MtCO2: 59.81220880889844
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+
+  Country Name Coverage:
+    Distinct Values: 206
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 11,703 rows
+      France: 6,525 rows
+      Russia: 4,974 rows
+      Italy: 4,867 rows
+      United States of America: 3,368 rows
+      Turkey: 3,045 rows
+      Japan: 3,032 rows
+      Spain: 3,018 rows
+      Mexico: 1,992 rows
+      Latvia: 1,972 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,354
+    NULL Values: 0
+    Top 10 (by row count):
+      Western: 496 rows
+      Central: 405 rows
+      Santa Cruz: 264 rows
+      Southern: 264 rows
+      Northern: 218 rows
+      Toledo: 216 rows
+      Sud: 216 rows
+      Eastern: 208 rows
+      Centre: 200 rows
+      Limburg: 192 rows
+
+  City Name Coverage:
+    Distinct Values: 2,359
+    NULL Values: 0
+    Top 10 (by row count):
+      Western District: 496 rows
+      Central Urban: 405 rows
+      Santa Cruz District: 264 rows
+      Southern Urban: 264 rows
+      Northern City: 218 rows
+      Sud City: 216 rows
+      Toledo Metro: 216 rows
+      Eastern Metro: 208 rows
+      Centre Urban: 200 rows
+      Limburg Center: 192 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 174,571,826.73
+    Average: 1,206,144.26
+    Median: 48,802.07
+    Std Dev: 5,244,083.16
+    NULL Count: 0
+
+
+📊 TABLE: power_country_month
+  ----------------------------------------------------------------------------
+  Rows: 57,624
+  Columns (6):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 242746920.36190733
+      MtCO2: 242.7469203619073
+      month: 1
+    Row 2:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 232204018.79047552
+      MtCO2: 232.20401879047552
+      month: 2
+    Row 3:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 208232998.07752445
+      MtCO2: 208.23299807752446
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 206
+    NULL Values: 0
+    Top 10 (by row count):
+      Iran: 288 rows
+      Argentina: 288 rows
+      Slovakia: 288 rows
+      Dominican Rep.: 288 rows
+      New Zealand: 288 rows
+      Ecuador: 288 rows
+      Moldova: 288 rows
+      St-Martin: 288 rows
+      Solomon Is.: 288 rows
+      Norway: 288 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.05
+    Max: 529,518,865.06
+    Average: 4,496,966.11
+    Median: 172,689.85
+    Std Dev: 24,426,395.96
+    NULL Count: 0
+
+
+📊 TABLE: power_country_year
+  ----------------------------------------------------------------------------
+  Rows: 5,522
+  Columns (5):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: USA
+      country_name: United States of America
+      year: 2000
+      emissions_tonnes: 2460433459.800293
+      MtCO2: 2460.433459800293
+    Row 2:
+      iso3: CHN
+      country_name: China
+      year: 2000
+      emissions_tonnes: 1235319208.1790104
+      MtCO2: 1235.3192081790105
+    Row 3:
+      iso3: RUS
+      country_name: Russia
+      year: 2000
+      emissions_tonnes: 863793444.8214178
+      MtCO2: 863.7934448214178
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+
+  Country Name Coverage:
+    Distinct Values: 236
+    NULL Values: 0
+    Top 10 (by row count):
+      Kuwait: 24 rows
+      Hungary: 24 rows
+      Denmark: 24 rows
+      Oman: 24 rows
+      Nicaragua: 24 rows
+      Afghanistan: 24 rows
+      Rwanda: 24 rows
+      Saint Lucia: 24 rows
+      Niue: 24 rows
+      Dhekelia: 24 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: NULL
+    Max: 5,292,859,421.71
+    Average: 46,742,608.19
+    Median: 1,072,436.10
+    Std Dev: 271,827,115.54
+    NULL Count: 0
+
+
+📊 TABLE: transport_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 692,352
+  Columns (8):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: ABW-5150|ABW
+      admin1_name: Aruba
+      country_name: Aruba
+      iso3: ABW
+      year: 2000
+      emissions_tonnes: 37501.97038491398
+      MtCO2: 0.03750197038491397
+      month: 1
+    Row 2:
+      admin1_geoid: ABW-5150|ABW
+      admin1_name: Aruba
+      country_name: Aruba
+      iso3: ABW
+      year: 2000
+      emissions_tonnes: 39157.98138973817
+      MtCO2: 0.03915798138973816
+      month: 2
+    Row 3:
+      admin1_geoid: ABW-5150|ABW
+      admin1_name: Aruba
+      country_name: Aruba
+      iso3: ABW
+      year: 2000
+      emissions_tonnes: 43184.00004818852
+      MtCO2: 0.043184000048188516
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 225
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 42,912 rows
+      Slovenia: 30,528 rows
+      Uganda: 26,208 rows
+      Latvia: 23,904 rows
+      North Macedonia: 18,432 rows
+      Turkey: 16,128 rows
+      Philippines: 15,840 rows
+      Russia: 15,840 rows
+      Italy: 14,976 rows
+      Thailand: 14,112 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,337
+    NULL Values: 0
+    Top 10 (by row count):
+      Valmiera: 5,760 rows
+      Central: 1,152 rows
+      Eastern: 1,152 rows
+      Saint David: 864 rows
+      Toamasina: 864 rows
+      Saint George: 864 rows
+      Santiago: 864 rows
+      Western: 864 rows
+      Rezina: 576 rows
+      Minsk: 576 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.44
+    Max: 7,958,819.77
+    Average: 114,762.13
+    Median: 18,888.96
+    Std Dev: 395,433.56
+    NULL Count: 0
+
+
+📊 TABLE: transport_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 57,696
+  Columns (7):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: ABW-5150|ABW
+      admin1_name: Aruba
+      country_name: Aruba
+      iso3: ABW
+      year: 2000
+      emissions_tonnes: 497895.84924316406
+      MtCO2: 0.497895849243164
+    Row 2:
+      admin1_geoid: ABW-5150|ABW
+      admin1_name: Aruba
+      country_name: Aruba
+      iso3: ABW
+      year: 2001
+      emissions_tonnes: 482108.0877342224
+      MtCO2: 0.4821080877342224
+    Row 3:
+      admin1_geoid: ABW-5150|ABW
+      admin1_name: Aruba
+      country_name: Aruba
+      iso3: ABW
+      year: 2002
+      emissions_tonnes: 506737.6171412468
+      MtCO2: 0.5067376171412468
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+
+  Country Name Coverage:
+    Distinct Values: 225
+    NULL Values: 0
+    Top 10 (by row count):
+      United Kingdom: 3,576 rows
+      Slovenia: 2,544 rows
+      Uganda: 2,184 rows
+      Latvia: 1,992 rows
+      North Macedonia: 1,536 rows
+      Turkey: 1,344 rows
+      Philippines: 1,320 rows
+      Russia: 1,320 rows
+      Italy: 1,248 rows
+      Thailand: 1,176 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,337
+    NULL Values: 0
+    Top 10 (by row count):
+      Valmiera: 480 rows
+      Eastern: 96 rows
+      Central: 96 rows
+      Toamasina: 72 rows
+      Saint David: 72 rows
+      Santiago: 72 rows
+      Saint George: 72 rows
+      Western: 72 rows
+      Southern: 48 rows
+      Córdoba: 48 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 6.12
+    Max: 75,018,183.60
+    Average: 1,341,187.25
+    Median: 225,911.59
+    Std Dev: 4,556,335.17
+    NULL Count: 0
+
+
+📊 TABLE: transport_city_month
+  ----------------------------------------------------------------------------
+  Rows: 2,938,164
+  Columns (9):
+    - city_id (BIGINT) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 1
+      city_name: Apia
+      admin1_name: Tuamasaga
+      country_name: Samoa
+      iso3: WSM
+      year: 2000
+      emissions_tonnes: 6366.162997752786
+      MtCO2: 0.006366162997752784
+      month: 1
+    Row 2:
+      city_id: 1
+      city_name: Apia
+      admin1_name: Tuamasaga
+      country_name: Samoa
+      iso3: WSM
+      year: 2000
+      emissions_tonnes: 6651.1766094561635
+      MtCO2: 0.006651176609456162
+      month: 2
+    Row 3:
+      city_id: 1
+      city_name: Apia
+      admin1_name: Tuamasaga
+      country_name: Samoa
+      iso3: WSM
+      year: 2000
+      emissions_tonnes: 7218.587873400209
+      MtCO2: 0.007218587873400207
+      month: 3
+
+  NULL Value Analysis:
+    - admin1_name: 21,312 (0.73%)
+    - country_name: 21,312 (0.73%)
+    - iso3: 21,312 (0.73%)
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 183
+    NULL Values: 21,312
+    Top 10 (by row count):
+      India: 496,512 rows
+      People's Republic of China: 439,776 rows
+      Nigeria: 110,064 rows
+      Brazil: 101,088 rows
+      United States of America: 95,616 rows
+      Indonesia: 92,736 rows
+      Pakistan: 74,304 rows
+      Russia: 74,016 rows
+      Bangladesh: 53,856 rows
+      Democratic Republic of the Congo: 51,840 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,140
+    NULL Values: 21,312
+    Top 10 (by row count):
+      Uttar Pradesh: 78,912 rows
+      Bihar: 56,736 rows
+      Punjab: 46,080 rows
+      Maharashtra: 44,640 rows
+      Shandong: 35,424 rows
+      Tamil Nadu: 34,560 rows
+      Hebei: 33,696 rows
+      Guangdong: 32,544 rows
+      Zhejiang: 28,512 rows
+      Madhya Pradesh: 27,648 rows
+
+  City Name Coverage:
+    Distinct Values: 9,971
+    NULL Values: 0
+    Top 10 (by row count):
+      Lawrence: 864 rows
+      Hamilton: 864 rows
+      Toledo: 864 rows
+      Meishan: 864 rows
+      Faridpur: 864 rows
+      Valencia: 864 rows
+      Santa Rosa: 864 rows
+      Concepción: 864 rows
+      Fatehpur: 864 rows
+      Mansa: 864 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.01
+    Max: 3,664,070.37
+    Average: 30,339.96
+    Median: 8,477.29
+    Std Dev: 81,582.34
+    NULL Count: 0
+
+
+📊 TABLE: transport_city_year
+  ----------------------------------------------------------------------------
+  Rows: 1,776
+  Columns (8):
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - city_name (VARCHAR) NULL
+    - city_id (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      country_name: France
+      iso3: FRA
+      admin1_name: Île-de-France
+      city_name: Paris
+      city_id: FR001
+      year: 2000
+      emissions_tonnes: 5174788.05
+      MtCO2: 5.174788
+    Row 2:
+      country_name: France
+      iso3: FRA
+      admin1_name: Île-de-France
+      city_name: Paris
+      city_id: FR001
+      year: 2001
+      emissions_tonnes: 5077408.96
+      MtCO2: 5.077409
+    Row 3:
+      country_name: France
+      iso3: FRA
+      admin1_name: Île-de-France
+      city_name: Paris
+      city_id: FR001
+      year: 2002
+      emissions_tonnes: 5272858.7
+      MtCO2: 5.272859
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+
+  Country Name Coverage:
+    Distinct Values: 9
+    NULL Values: 0
+    Top 10 (by row count):
+      United States of America: 240 rows
+      France: 192 rows
+      Canada: 192 rows
+      Germany: 192 rows
+      United Kingdom: 192 rows
+      Italy: 192 rows
+      Brazil: 192 rows
+      Spain: 192 rows
+      Japan: 192 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 56
+    NULL Values: 0
+    Top 10 (by row count):
+      England: 144 rows
+      Texas: 72 rows
+      California: 72 rows
+      North Rhine-Westphalia: 72 rows
+      Quebec: 48 rows
+      Provence-Alpes-Côte d'Azur: 48 rows
+      Scotland: 48 rows
+      Andalusia: 48 rows
+      Ontario: 48 rows
+      Alberta: 48 rows
+
+  City Name Coverage:
+    Distinct Values: 74
+    NULL Values: 0
+    Top 10 (by row count):
+      Nice: 24 rows
+      Montpellier: 24 rows
+      Berlin: 24 rows
+      Frankfurt: 24 rows
+      Düsseldorf: 24 rows
+      Phoenix: 24 rows
+      San Antonio: 24 rows
+      Dallas: 24 rows
+      Edinburgh: 24 rows
+      Tokyo: 24 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 557,212.17
+    Max: 20,294,535.45
+    Average: 4,850,805.50
+    Median: 3,563,564.85
+    Std Dev: 3,588,498.56
+    NULL Count: 0
+
+
+📊 TABLE: transport_country_month
+  ----------------------------------------------------------------------------
+  Rows: 64,452
+  Columns (6):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: ABW
+      country_name: Aruba
+      year: 2000
+      emissions_tonnes: 5230.208201330025
+      MtCO2: 0.005230208201330022
+      month: 1
+    Row 2:
+      iso3: ABW
+      country_name: Aruba
+      year: 2000
+      emissions_tonnes: 5646.996858768836
+      MtCO2: 0.005646996858768833
+      month: 2
+    Row 3:
+      iso3: ABW
+      country_name: Aruba
+      year: 2000
+      emissions_tonnes: 6457.365689999523
+      MtCO2: 0.006457365689999519
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 225
+    NULL Values: 0
+    Top 10 (by row count):
+      Afghanistan: 288 rows
+      Denmark: 288 rows
+      Western Sahara: 288 rows
+      Nicaragua: 288 rows
+      Hungary: 288 rows
+      Kuwait: 288 rows
+      Saint Lucia: 288 rows
+      Oman: 288 rows
+      Guam: 288 rows
+      Rwanda: 288 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 192,567,168.65
+    Average: 2,289,092.39
+    Median: 203,844.94
+    Std Dev: 10,956,344.45
+    NULL Count: 0
+
+
+📊 TABLE: transport_country_year
+  ----------------------------------------------------------------------------
+  Rows: 5,635
+  Columns (5):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (FLOAT) NULL
+    - MtCO2 (FLOAT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: AFG
+      country_name: Afghanistan
+      year: 2000
+      emissions_tonnes: 950845.25
+      MtCO2: 0.9508452415466309
+    Row 2:
+      iso3: -99
+      country_name: Akrotiri
+      year: 2000
+      emissions_tonnes: 50533.890625
+      MtCO2: 0.05053389072418213
+    Row 3:
+      iso3: ALB
+      country_name: Albania
+      year: 2000
+      emissions_tonnes: 1715997.625
+      MtCO2: 1.715997576713562
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2023
+    Distinct Years: 24
+
+  Country Name Coverage:
+    Distinct Values: 236
+    NULL Values: 0
+    Top 10 (by row count):
+      Afghanistan: 24 rows
+      Denmark: 24 rows
+      Dhekelia: 24 rows
+      Guam: 24 rows
+      Hungary: 24 rows
+      Kuwait: 24 rows
+      Nicaragua: 24 rows
+      Oman: 24 rows
+      Rwanda: 24 rows
+      Saint Lucia: 24 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.02
+    Max: 1,784,489,472.00
+    Average: 26,178,824.43
+    Median: 2,267,856.75
+    Std Dev: 123,430,746.52
+    NULL Count: 0
+
+
+📊 TABLE: waste_admin1_month
+  ----------------------------------------------------------------------------
+  Rows: 622,836
+  Columns (12):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: JPN-1840
+      admin1_name: Aichi
+      country_name: Japan
+      iso3: JPN
+      year: 2000
+      emissions_tonnes: 34404.00925983848
+      MtCO2: 0.03440400925983847
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      admin1_geoid: JPN-1840
+      admin1_name: Aichi
+      country_name: Japan
+      iso3: JPN
+      year: 2000
+      emissions_tonnes: 38443.2692519593
+      MtCO2: 0.038443269251959296
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      admin1_geoid: JPN-1840
+      admin1_name: Aichi
+      country_name: Japan
+      iso3: JPN
+      year: 2000
+      emissions_tonnes: 39648.31767770256
+      MtCO2: 0.039648317677702556
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 134
+    NULL Values: 0
+    Top 10 (by row count):
+      Latvia: 34,500 rows
+      Philippines: 31,500 rows
+      Turkey: 24,300 rows
+      Thailand: 23,100 rows
+      North Macedonia: 20,100 rows
+      Azerbaijan: 19,500 rows
+      Vietnam: 18,900 rows
+      Algeria: 14,400 rows
+      Japan: 14,100 rows
+      France: 12,372 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,107
+    NULL Values: 0
+    Top 10 (by row count):
+      Amazonas: 1,200 rows
+      Lankaran: 900 rows
+      Central: 900 rows
+      Córdoba: 672 rows
+      Western: 600 rows
+      San Juan: 600 rows
+      Río Negro: 600 rows
+      La Paz: 600 rows
+      Ash Sharqiyah: 600 rows
+      Saint Patrick: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 52,446.25
+    Average: 487.80
+    Median: 6.55
+    Std Dev: 2,159.93
+    NULL Count: 0
+
+
+📊 TABLE: waste_admin1_year
+  ----------------------------------------------------------------------------
+  Rows: 51,903
+  Columns (11):
+    - admin1_geoid (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      admin1_geoid: JPN-1840
+      admin1_name: Aichi
+      country_name: Japan
+      iso3: JPN
+      year: 2000
+      emissions_tonnes: 439722.46057105064
+      MtCO2: 0.4397224605710506
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      admin1_geoid: KOR-2498
+      admin1_name: Gyeonggi
+      country_name: South Korea
+      iso3: KOR
+      year: 2000
+      emissions_tonnes: 342797.80259275436
+      MtCO2: 0.3427978025927544
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      admin1_geoid: JPN-1852
+      admin1_name: Ōsaka
+      country_name: Japan
+      iso3: JPN
+      year: 2000
+      emissions_tonnes: 283171.65871334076
+      MtCO2: 0.2831716587133407
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 134
+    NULL Values: 0
+    Top 10 (by row count):
+      Latvia: 2,875 rows
+      Philippines: 2,625 rows
+      Turkey: 2,025 rows
+      Thailand: 1,925 rows
+      North Macedonia: 1,675 rows
+      Azerbaijan: 1,625 rows
+      Vietnam: 1,575 rows
+      Algeria: 1,200 rows
+      Japan: 1,175 rows
+      France: 1,031 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 2,107
+    NULL Values: 0
+    Top 10 (by row count):
+      Amazonas: 100 rows
+      Lankaran: 75 rows
+      Central: 75 rows
+      Córdoba: 56 rows
+      Daugavpils: 50 rows
+      Distrito Federal: 50 rows
+      Santa Cruz: 50 rows
+      San Juan: 50 rows
+      La Paz: 50 rows
+      Río Negro: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 507,304.42
+    Average: 5,381.14
+    Median: 72.77
+    Std Dev: 23,723.65
+    NULL Count: 0
+
+
+📊 TABLE: waste_city_month
+  ----------------------------------------------------------------------------
+  Rows: 517,920
+  Columns (13):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 47496.223369824846
+      MtCO2: 0.04749622336982484
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 54118.65487106248
+      MtCO2: 0.05411865487106247
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 56132.82074529032
+      MtCO2: 0.056132820745290316
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 88
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 193,800 rows
+      Brazil: 35,700 rows
+      Indonesia: 28,200 rows
+      Japan: 24,300 rows
+      México: 21,000 rows
+      Turkey: 15,600 rows
+      Vietnam: 12,900 rows
+      Philippines: 12,000 rows
+      Egypt: 10,800 rows
+      Canada: 10,200 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 667
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 23,088 rows
+      Shandong: 16,800 rows
+      Jiangsu: 15,600 rows
+      Henan: 15,300 rows
+      Hebei: 14,400 rows
+      Zhejiang: 12,000 rows
+      Guangdong: 10,500 rows
+      Jiangxi: 9,000 rows
+      Sichuan: 8,100 rows
+      Hunan: 7,500 rows
+
+  City Name Coverage:
+    Distinct Values: 1,722
+    NULL Values: 0
+    Top 10 (by row count):
+      Yingkou: 600 rows
+      Fengcheng: 600 rows
+      Jinzhou: 600 rows
+      Suzhou: 600 rows
+      Lanxi: 600 rows
+      Dongying: 600 rows
+      Guiyang: 600 rows
+      Taizhou: 600 rows
+      La Paz: 600 rows
+      Shahe: 600 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 62,695.87
+    Average: 266.17
+    Median: 16.87
+    Std Dev: 1,899.85
+    NULL Count: 0
+
+
+📊 TABLE: waste_city_year
+  ----------------------------------------------------------------------------
+  Rows: 43,160
+  Columns (12):
+    - city_id (DOUBLE) NULL
+    - city_name (VARCHAR) NULL
+    - admin1_name (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - iso3 (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      city_id: 5929.0
+      city_name: Tokyo
+      admin1_name: Kanagawa
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 619426.9268798828
+      MtCO2: 0.6194269268798828
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      city_id: 5213.0
+      city_name: Nagoya
+      admin1_name: Mie
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 414881.2534179687
+      MtCO2: 0.4148812534179688
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      city_id: 4399.0
+      city_name: Osaka
+      admin1_name: Ōsaka
+      country_name: Japan
+      iso3: Japan
+      year: 2000
+      emissions_tonnes: 409529.5322265625
+      MtCO2: 0.4095295322265625
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 88
+    NULL Values: 0
+    Top 10 (by row count):
+      China: 16,150 rows
+      Brazil: 2,975 rows
+      Indonesia: 2,350 rows
+      Japan: 2,025 rows
+      México: 1,750 rows
+      Turkey: 1,300 rows
+      Vietnam: 1,075 rows
+      Philippines: 1,000 rows
+      Egypt: 900 rows
+      Canada: 850 rows
+
+  Admin1 Name Coverage:
+    Distinct Values: 667
+    NULL Values: 0
+    Top 10 (by row count):
+      Unknown: 1,924 rows
+      Shandong: 1,400 rows
+      Jiangsu: 1,300 rows
+      Henan: 1,275 rows
+      Hebei: 1,200 rows
+      Zhejiang: 1,000 rows
+      Guangdong: 875 rows
+      Jiangxi: 750 rows
+      Sichuan: 675 rows
+      Anhui: 625 rows
+
+  City Name Coverage:
+    Distinct Values: 1,722
+    NULL Values: 0
+    Top 10 (by row count):
+      Quzhou: 50 rows
+      Chengde: 50 rows
+      Xinyi: 50 rows
+      Fuzhou: 50 rows
+      Jinzhou: 50 rows
+      Yulin: 50 rows
+      Xingtai: 50 rows
+      Fuyang: 50 rows
+      Kingston: 50 rows
+      Nankang: 50 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 619,426.93
+    Average: 2,933.10
+    Median: 187.95
+    Std Dev: 20,774.09
+    NULL Count: 0
+
+
+📊 TABLE: waste_country_month
+  ----------------------------------------------------------------------------
+  Rows: 39,972
+  Columns (10):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+    - month (BIGINT) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: JPN
+      country_name: Japan
+      year: 2000
+      emissions_tonnes: 354443.55315250903
+      MtCO2: 0.354443553152509
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 1
+    Row 2:
+      iso3: JPN
+      country_name: Japan
+      year: 2000
+      emissions_tonnes: 373917.10903185164
+      MtCO2: 0.3739171090318516
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 2
+    Row 3:
+      iso3: JPN
+      country_name: Japan
+      year: 2000
+      emissions_tonnes: 392010.1701300217
+      MtCO2: 0.39201017013002165
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+      month: 3
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+    Distinct Months: 12
+
+  Country Name Coverage:
+    Distinct Values: 134
+    NULL Values: 0
+    Top 10 (by row count):
+      Malaysia: 300 rows
+      Ukraine: 300 rows
+      Gabon: 300 rows
+      Baikonur: 300 rows
+      Saudi Arabia: 300 rows
+      Eritrea: 300 rows
+      Romania: 300 rows
+      Bulgaria: 300 rows
+      Sweden: 300 rows
+      Singapore: 300 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 453,664.91
+    Average: 7,596.47
+    Median: 77.77
+    Std Dev: 37,525.08
+    NULL Count: 0
+
+
+📊 TABLE: waste_country_year
+  ----------------------------------------------------------------------------
+  Rows: 3,331
+  Columns (9):
+    - iso3 (VARCHAR) NULL
+    - country_name (VARCHAR) NULL
+    - year (BIGINT) NULL
+    - emissions_tonnes (DOUBLE) NULL
+    - MtCO2 (DOUBLE) NULL
+    - units (VARCHAR) NULL
+    - source (VARCHAR) NULL
+    - spatial_res (VARCHAR) NULL
+    - temporal_res (VARCHAR) NULL
+
+  Sample Data (first 3 rows):
+    Row 1:
+      iso3: JPN
+      country_name: Japan
+      year: 2000
+      emissions_tonnes: 4369530.760089619
+      MtCO2: 4.369530760089619
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 2:
+      iso3: FRA
+      country_name: France
+      year: 2000
+      emissions_tonnes: 1546929.6449949986
+      MtCO2: 1.5469296449949983
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+    Row 3:
+      iso3: KOR
+      country_name: South Korea
+      year: 2000
+      emissions_tonnes: 1499305.1080736164
+      MtCO2: 1.4993051080736164
+      units: tonnes CO2
+      source: EDGAR v2024 waste
+      spatial_res: 0.1°
+      temporal_res: annual
+
+  NULL Value Analysis:
+    ✓ No NULL values found
+
+  Year Coverage:
+    Range: 2000 - 2024
+    Distinct Years: 25
+
+  Country Name Coverage:
+    Distinct Values: 134
+    NULL Values: 0
+    Top 10 (by row count):
+      Romania: 25 rows
+      Bulgaria: 25 rows
+      Sweden: 25 rows
+      Singapore: 25 rows
+      Thailand: 25 rows
+      Portugal: 25 rows
+      Albania: 25 rows
+      Paraguay: 25 rows
+      Suriname: 25 rows
+      Malaysia: 25 rows
+
+  Emissions Statistics (tonnes CO₂):
+    Min: 0.00
+    Max: 4,369,530.76
+    Average: 83,848.05
+    Median: 841.25
+    Std Dev: 412,122.39
+    NULL Count: 0
+
+
+3. CROSS-TABLE ANALYSIS
+--------------------------------------------------------------------------------
+Total Rows Across All Tables: 19,768,748
+
+Sectors: agriculture, buildings, fuel, ind, power, transport, waste
+Geographic Resolutions: admin1, city, combustion, country, exploitation, processes
+Temporal Resolutions: admin1, city, country, month, year
+
+
+4. UNIQUE VALUES (for Entity Resolution)
+--------------------------------------------------------------------------------
+
+Unique Countries (sample from first table with country_name):
+  From agriculture_admin1_month (showing first 50):
+    - Afghanistan
+    - Akrotiri
+    - Albania
+    - Algeria
+    - Andorra
+    - Argentina
+    - Armenia
+    - Australia
+    - Austria
+    - Azerbaijan
+    - Bangladesh
+    - Belarus
+    - Belgium
+    - Belize
+    - Benin
+    - Bhutan
+    - Bolivia
+    - Bosnia and Herz.
+    - Botswana
+    - Brazil
+    - Brunei
+    - Bulgaria
+    - Burkina Faso
+    - Burundi
+    - Cambodia
+    - Cameroon
+    - Canada
+    - Central African Rep.
+    - Chad
+    - Chile
+    - China
+    - Colombia
+    - Congo
+    - Costa Rica
+    - Croatia
+    - Cuba
+    - Cyprus
+    - Czechia
+    - Côte d'Ivoire
+    - Dem. Rep. Congo
+    - Denmark
+    - Dhekelia
+    - Dominican Rep.
+    - Ecuador
+    - Egypt
+    - El Salvador
+    - Eq. Guinea
+    - Eritrea
+    - Estonia
+    - Ethiopia
+
+Unique Admin1 Names (sample from first admin1 table):
+  From agriculture_admin1_month (showing first 30):
+    - Aargau (Switzerland)
+    - Aberdeen (United Kingdom)
+    - Aberdeenshire (United Kingdom)
+    - Abia (Nigeria)
+    - Abkhazia (Georgia)
+    - Abra (Philippines)
+    - Abu Dhabi (United Arab Emirates)
+    - Abşeron (Azerbaijan)
+    - Aceh (Indonesia)
+    - Acre (Brazil)
+    - Ad Daqahliyah (Egypt)
+    - Ad Dawhah (Qatar)
+    - Adamaoua (Cameroon)
+    - Adamawa (Nigeria)
+    - Adana (Turkey)
+    - Addis Ababa (Ethiopia)
+    - Adiyaman (Turkey)
+    - Adjumani (Uganda)
+    - Adrar (Algeria)
+    - Adygey (Russia)
+    - Afar (Ethiopia)
+    - Afyonkarahisar (Turkey)
+    - Aglonas (Latvia)
+    - Agnéby (Côte d'Ivoire)
+    - Agri (Turkey)
+    - Agrigento (Italy)
+    - Aguascalientes (Mexico)
+    - Agusan del Norte (Philippines)
+    - Agusan del Sur (Philippines)
+    - Ahal (Turkmenistan)
+
+Unique City Names (sample from first city table):
+  From agriculture_city_month (showing first 30):
+    - 51 farm of 12th division, Xinjiang, China
+    - A Coruña, La Coruña, Spain
+    - Aachen, Nordrhein-Westfalen, Germany
+    - Aalborg, Nordjylland, Denmark
+    - Aamchit [Byblos], Mount Lebanon, Lebanon
+    - Aarau, Aargau, Switzerland
+    - Aarhus, Midtjylland, Denmark
+    - Aba, Abia, Nigeria
+    - Abadan, Khuzestan, Iran
+    - Abat, Akwa Ibom, Nigeria
+    - Abbotsford, British Columbia, Canada
+    - Abbottabad, K.P., Pakistan
+    - Abdurahmoni Jomi, Khatlon, Tajikistan
+    - Abeokuta, Ogun, Nigeria
+    - Aberdeen, Aberdeen, United Kingdom
+    - Abhayapuri, Assam, India
+    - Abidjan, Lagunes, Côte d'Ivoire
+    - Abilene, Texas, United States
+    - Abnub, Asyut, Egypt
+    - Aboh, Imo, Nigeria
+    - Abu Qurqas, Al Minya, Egypt
+    - Abu Road, Rajasthan, India
+    - Abua, Rivers, Nigeria
+    - Abuja, Federal Capital Territory, Nigeria
+    - Acapulco, Guerrero, México
+    - Acheng, Heilongjiang, China
+    - Acilia, Roma, Italy
+    - Ad Da'ein, Eastern Darfur, Sudan
+    - Ad-Damazin, Blue Nile, Sudan
+    - Adama, Oromiya, Ethiopia
+
+
+5. INDEX ANALYSIS
+--------------------------------------------------------------------------------
+
+agriculture_admin1_month: No indexes found
+
+agriculture_admin1_year: No indexes found
+
+agriculture_city_month: No indexes found
+
+agriculture_city_year: No indexes found
+
+agriculture_country_month: No indexes found
+
+agriculture_country_year: No indexes found
+
+buildings_admin1_month: No indexes found
+
+buildings_admin1_year: No indexes found
+
+buildings_city_month: No indexes found
+
+buildings_city_year: No indexes found
+
+buildings_country_month: No indexes found
+
+buildings_country_year: No indexes found
+
+fuel_exploitation_admin1_month: No indexes found
+
+fuel_exploitation_admin1_year: No indexes found
+
+fuel_exploitation_city_month: No indexes found
+
+fuel_exploitation_city_year: No indexes found
+
+fuel_exploitation_country_month: No indexes found
+
+fuel_exploitation_country_year: No indexes found
+
+ind_combustion_admin1_month: No indexes found
+
+ind_combustion_admin1_year: No indexes found
+
+ind_combustion_city_month: No indexes found
+
+ind_combustion_city_year: No indexes found
+
+ind_combustion_country_month: No indexes found
+
+ind_combustion_country_year: No indexes found
+
+ind_processes_admin1_month: No indexes found
+
+ind_processes_admin1_year: No indexes found
+
+ind_processes_city_month: No indexes found
+
+ind_processes_city_year: No indexes found
+
+ind_processes_country_month: No indexes found
+
+ind_processes_country_year: No indexes found
+
+power_admin1_month: No indexes found
+
+power_admin1_year:
+  - idx_power_admin1_year_iso3_admin1_geoid_year (Unique: False)
+    SQL: CREATE INDEX idx_power_admin1_year_iso3_admin1_geoid_year ON power_admin1_year(iso3, admin1_geoid, "year");
+
+power_city_month: No indexes found
+
+power_city_year:
+  - idx_power_city_year_iso3_city_id_year (Unique: False)
+    SQL: CREATE INDEX idx_power_city_year_iso3_city_id_year ON power_city_year(iso3, city_id, "year");
+
+power_country_month: No indexes found
+
+power_country_year:
+  - idx_power_country_year_iso3_year (Unique: False)
+    SQL: CREATE INDEX idx_power_country_year_iso3_year ON power_country_year(iso3, "year");
+
+transport_admin1_month: No indexes found
+
+transport_admin1_year:
+  - idx_transport_admin1_year_iso3_admin1_geoid_year (Unique: False)
+    SQL: CREATE INDEX idx_transport_admin1_year_iso3_admin1_geoid_year ON transport_admin1_year(iso3, admin1_geoid, "year");
+
+transport_city_month: No indexes found
+
+transport_city_year: No indexes found
+
+transport_country_month: No indexes found
+
+transport_country_year: No indexes found
+
+waste_admin1_month: No indexes found
+
+waste_admin1_year: No indexes found
+
+waste_city_month: No indexes found
+
+waste_city_year: No indexes found
+
+waste_country_month: No indexes found
+
+waste_country_year: No indexes found
+
+
+6. DATA QUALITY CHECKS
+--------------------------------------------------------------------------------
+
+⚠️  Issues Found:
+  - agriculture_admin1_month: 15,051 statistical outliers (>3σ)
+  - agriculture_admin1_year: 1,266 statistical outliers (>3σ)
+  - agriculture_city_month: 8,667 statistical outliers (>3σ)
+  - agriculture_city_year: 721 statistical outliers (>3σ)
+  - agriculture_country_month: 697 statistical outliers (>3σ)
+  - agriculture_country_year: 59 statistical outliers (>3σ)
+  - buildings_admin1_month: 20,475 statistical outliers (>3σ)
+  - buildings_admin1_year: 1,743 statistical outliers (>3σ)
+  - buildings_city_month: 9,823 statistical outliers (>3σ)
+  - buildings_city_year: 812 statistical outliers (>3σ)
+  - buildings_country_month: 732 statistical outliers (>3σ)
+  - buildings_country_year: 60 statistical outliers (>3σ)
+  - fuel_exploitation_admin1_month: 12,718 statistical outliers (>3σ)
+  - fuel_exploitation_admin1_year: 1,058 statistical outliers (>3σ)
+  - fuel_exploitation_city_month: 10,196 statistical outliers (>3σ)
+  - fuel_exploitation_city_year: 847 statistical outliers (>3σ)
+  - fuel_exploitation_country_month: 873 statistical outliers (>3σ)
+  - fuel_exploitation_country_year: 74 statistical outliers (>3σ)
+  - ind_combustion_admin1_month: 8,898 statistical outliers (>3σ)
+  - ind_combustion_admin1_year: 740 statistical outliers (>3σ)
+  - ind_combustion_city_month: 16,409 statistical outliers (>3σ)
+  - ind_combustion_city_year: 1,387 statistical outliers (>3σ)
+  - ind_combustion_country_month: 393 statistical outliers (>3σ)
+  - ind_combustion_country_year: 30 statistical outliers (>3σ)
+  - ind_processes_admin1_month: 7,537 statistical outliers (>3σ)
+  - ind_processes_admin1_year: 622 statistical outliers (>3σ)
+  - ind_processes_city_month: 15,539 statistical outliers (>3σ)
+  - ind_processes_city_year: 1,327 statistical outliers (>3σ)
+  - ind_processes_country_month: 317 statistical outliers (>3σ)
+  - ind_processes_country_year: 26 statistical outliers (>3σ)
+  - power_admin1_month: 8,666 statistical outliers (>3σ)
+  - power_admin1_year: 726 statistical outliers (>3σ)
+  - power_city_month: 23,691 statistical outliers (>3σ)
+  - power_city_year: 1,995 statistical outliers (>3σ)
+  - power_country_month: 769 statistical outliers (>3σ)
+  - power_country_year: 74 statistical outliers (>3σ)
+  - transport_admin1_month: 12,755 statistical outliers (>3σ)
+  - transport_admin1_year: 1,097 statistical outliers (>3σ)
+  - transport_city_month: 42,365 statistical outliers (>3σ)
+  - transport_city_year: 35 statistical outliers (>3σ)
+  - transport_country_month: 506 statistical outliers (>3σ)
+  - transport_country_year: 43 statistical outliers (>3σ)
+  - waste_admin1_month: 11,114 statistical outliers (>3σ)
+  - waste_admin1_year: 931 statistical outliers (>3σ)
+  - waste_city_month: 2,390 statistical outliers (>3σ)
+  - waste_city_year: 195 statistical outliers (>3σ)
+  - waste_country_month: 945 statistical outliers (>3σ)
+  - waste_country_year: 83 statistical outliers (>3σ)
+
+
+7. SUMMARY STATISTICS
+--------------------------------------------------------------------------------
+{
+  "total_tables": 48,
+  "total_rows": 19768748,
+  "database_size_gb": 0.5166130065917969,
+  "sectors": [
+    "agriculture",
+    "buildings",
+    "fuel",
+    "ind",
+    "power",
+    "transport",
+    "waste"
+  ],
+  "geographic_resolutions": [
+    "admin1",
+    "city",
+    "combustion",
+    "country",
+    "exploitation",
+    "processes"
+  ],
+  "temporal_resolutions": [
+    "admin1",
+    "city",
+    "country",
+    "month",
+    "year"
+  ]
+}
+
+================================================================================
+ANALYSIS COMPLETE
+================================================================================
