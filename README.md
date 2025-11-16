@@ -1,6 +1,33 @@
 # ClimateGPT
 
+[![CI Pipeline](https://github.com/DharmpratapSingh/Team-1B-Fusion/actions/workflows/ci.yml/badge.svg)](https://github.com/DharmpratapSingh/Team-1B-Fusion/actions/workflows/ci.yml)
+[![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](pyproject.toml)
+[![MCP Protocol](https://img.shields.io/badge/MCP-1.20.0+-orange.svg)](https://modelcontextprotocol.io)
+
 AI-powered emissions data analysis system for EDGAR v2024 datasets. Query historical CO₂ emissions data through a conversational interface powered by an LLM and MCP (Model Context Protocol) server.
+
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Local Development](#local-development)
+  - [Docker Deployment](#docker-deployment)
+- [Example Queries](#example-queries)
+- [Architecture](#architecture)
+- [API Reference](#api-reference)
+- [Configuration](#configuration)
+  - [Environment Variables](#environment-variables)
+- [Testing](#testing)
+- [Data Sources](#data-sources)
+- [Usage Notes](#usage-notes)
+- [Troubleshooting](#troubleshooting)
+- [Documentation](#documentation)
+- [Development](#development)
+- [License](#license)
+- [Contributing](#contributing)
+- [Support](#support)
 
 ## Features
 
@@ -15,9 +42,12 @@ AI-powered emissions data analysis system for EDGAR v2024 datasets. Query histor
 
 ### Prerequisites
 
-- Python 3.11
-- [uv](https://docs.astral.sh/uv/) package manager
-- Docker (optional, for containerized deployment)
+- **Python 3.11** (specifically required - not 3.10 or 3.12)
+  - Why 3.11? This version provides the optimal balance of performance and compatibility with our dependencies (DuckDB, GeoPandas, NumPy 2.x)
+- **[uv](https://docs.astral.sh/uv/)** - Fast Python package manager and resolver
+  - Installation: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- **Docker** (optional, for containerized deployment)
+- **OpenAI API Key** (or compatible LLM endpoint) for conversational interface
 
 ### Local Development
 
@@ -45,6 +75,35 @@ This will start both services:
 - **server**: HTTP bridge (FastAPI) + true MCP stdio server on port 8010
 - **ui**: Streamlit interface on port 8501
 
+## Example Queries
+
+Once the system is running, you can ask questions like:
+
+**Simple Queries:**
+- "What were the CO2 emissions from transport in Germany in 2023?"
+- "Show me power industry emissions in California for 2022"
+- "What are the transport emissions for Paris in 2020?"
+
+**Temporal Analysis:**
+- "How have transport emissions in the United States changed from 2000 to 2023?"
+- "Compare monthly transport emissions in Beijing between 2022 and 2023"
+- "What were the peak emissions months for power industry in Texas in 2023?"
+
+**Comparative Queries:**
+- "Compare transport emissions between France and Germany in 2023"
+- "Which US state had the highest power industry emissions in 2022?"
+- "Compare emissions from transport and power industry in China in 2023"
+
+**Complex Multi-Sector:**
+- "Analyze transport and power industry emissions trends in India from 2015 to 2023"
+- "What sectors contribute most to emissions in California?"
+
+**Notes:**
+- Use exact country names (e.g., "United States of America" not "USA")
+- Emissions are in tonnes CO₂ (displayed as MtCO₂ for large values)
+- Data covers 2000-2024 with monthly resolution
+- Available sectors: transport, power-industry, waste, agriculture, buildings, fuel-exploitation, industrial-combustion, industrial-processes
+
 ## Architecture
 
 ### MCP Server Stack (`mcp_http_bridge.py` + `mcp_server_stdio.py`)
@@ -62,29 +121,157 @@ Streamlit chat interface with:
 - CSV export of query results
 - Status indicators and error handling
 
-## Configuration
+## API Reference
 
-Set environment variables as needed:
+The HTTP bridge exposes the following RESTful endpoints on port 8010:
+
+### Query Endpoint
+
+**POST** `/query`
+
+Execute a natural language query against the emissions database.
 
 ```bash
-# MCP Server
-export MCP_MANIFEST_PATH=data/curated-2/manifest_mcp_duckdb.json
-export MCP_RATE_CAP=60  # requests per 5 minutes per IP
-export PORT=8010
-
-# LLM Configuration
-export OPENAI_BASE_URL=https://api.openai.com/v1
-export OPENAI_API_KEY=your-api-key
-export MODEL=gpt-4
-
-# Query defaults
-export ASSIST_DEFAULT=smart
-export PROXY_DEFAULT=spatial
-export PROXY_MAX_K=10
-export PROXY_RADIUS_KM=100
+curl -X POST http://localhost:8010/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What were transport emissions in Germany in 2023?",
+    "assist_mode": "smart",
+    "proxy_strategy": "spatial"
+  }'
 ```
 
-See `docker-compose.yml` for container-specific configuration.
+**Request Body:**
+```json
+{
+  "question": "string (required)",
+  "assist_mode": "smart|lite|off (default: smart)",
+  "proxy_strategy": "spatial|random|off (default: spatial)",
+  "proxy_max_k": 10,
+  "proxy_radius_km": 100
+}
+```
+
+**Response:**
+```json
+{
+  "answer": "Natural language summary",
+  "data": [...],
+  "metadata": {
+    "intent": {...},
+    "datasets_used": [...],
+    "query_time_ms": 123
+  }
+}
+```
+
+### List Files Endpoint
+
+**GET** `/list_files`
+
+List all available datasets in the manifest.
+
+```bash
+curl http://localhost:8010/list_files
+```
+
+**Response:**
+```json
+{
+  "files": [
+    {
+      "name": "transport_admin0_yearly",
+      "description": "Country-level transport emissions (yearly)",
+      "path": "data/warehouse/climategpt.duckdb",
+      "table_name": "transport_admin0_yearly"
+    }
+  ]
+}
+```
+
+### Health Check
+
+**GET** `/health`
+
+Check server status.
+
+```bash
+curl http://localhost:8010/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "mcp_server": "running",
+  "version": "0.2.0"
+}
+```
+
+## Configuration
+
+### Environment Variables
+
+Configure the system using environment variables. Create a `.env` file or export them in your shell:
+
+#### MCP Server Configuration
+
+```bash
+# Required
+export MCP_MANIFEST_PATH=data/curated-2/manifest_mcp_duckdb.json
+
+# Optional
+export PORT=8010                          # HTTP server port (default: 8010)
+export MCP_RATE_CAP=60                    # Rate limit: requests per 5 minutes per IP
+export MCP_LOG_LEVEL=INFO                 # Logging level: DEBUG|INFO|WARNING|ERROR
+```
+
+#### LLM Configuration
+
+```bash
+# Required for conversational interface
+export OPENAI_API_KEY=your-api-key-here   # Your OpenAI API key
+
+# Optional
+export OPENAI_BASE_URL=https://api.openai.com/v1  # LLM endpoint
+export MODEL=gpt-4                        # Model name (gpt-4, gpt-3.5-turbo, etc.)
+```
+
+#### Query Behavior Defaults
+
+```bash
+# Assist Mode: how the LLM assists with query interpretation
+export ASSIST_DEFAULT=smart               # smart|lite|off (default: smart)
+  # smart: Full LLM-powered query understanding
+  # lite: Basic query parsing
+  # off: Direct SQL only
+
+# Proxy Strategy: how to handle missing admin-1/city data
+export PROXY_DEFAULT=spatial              # spatial|random|off (default: spatial)
+  # spatial: Find nearby locations with data
+  # random: Use random sampling
+  # off: No proxy fallback
+
+export PROXY_MAX_K=10                     # Max proxy results to return
+export PROXY_RADIUS_KM=100                # Search radius for spatial proxy (km)
+```
+
+#### Streamlit UI Configuration
+
+```bash
+export STREAMLIT_SERVER_PORT=8501         # UI port (default: 8501)
+export STREAMLIT_SERVER_ADDRESS=0.0.0.0   # Bind address
+```
+
+#### Development & Debugging
+
+```bash
+export DEBUG=true                         # Enable debug mode
+export LOG_QUERIES=true                   # Log all SQL queries
+export ENABLE_CORS=true                   # Enable CORS for API
+```
+
+See `docker-compose.yml` for container-specific configuration examples.
 
 ## Testing
 
@@ -129,6 +316,165 @@ This project uses EDGAR (Emissions Database for Global Atmospheric Research) v20
 - All emissions values are in tonnes CO₂; large numbers displayed as MtCO₂
 - No forecasts or per-capita metrics (by design)
 - Queries are limited by rate limiting to prevent abuse
+
+## Troubleshooting
+
+### Common Issues
+
+#### Server Won't Start
+
+**Problem:** `ModuleNotFoundError` or import errors
+
+**Solution:**
+```bash
+# Ensure dependencies are installed
+uv sync
+
+# Or with pip
+pip install -r requirements.txt
+
+# Verify Python version
+python --version  # Should be 3.11.x
+```
+
+**Problem:** Port 8010 already in use
+
+**Solution:**
+```bash
+# Find and kill the process using port 8010
+lsof -ti:8010 | xargs kill -9
+
+# Or change the port
+export PORT=8011
+make serve
+```
+
+#### UI Connection Issues
+
+**Problem:** UI can't connect to MCP server
+
+**Solution:**
+```bash
+# Verify server is running
+curl http://localhost:8010/health
+
+# Check server logs for errors
+# Make sure both server and UI are running in separate terminals
+
+# Terminal 1
+make serve
+
+# Terminal 2
+make ui
+```
+
+#### Database Errors
+
+**Problem:** `DuckDB: IO Error: No such file or directory`
+
+**Solution:**
+```bash
+# Verify database exists
+ls -lh data/warehouse/climategpt.duckdb
+
+# Check manifest path
+export MCP_MANIFEST_PATH=data/curated-2/manifest_mcp_duckdb.json
+
+# Verify manifest is valid
+python -c "import json; print(json.load(open('data/curated-2/manifest_mcp_duckdb.json')))"
+```
+
+#### LLM/OpenAI Errors
+
+**Problem:** `AuthenticationError` or `Invalid API key`
+
+**Solution:**
+```bash
+# Set your API key
+export OPENAI_API_KEY=sk-your-actual-key-here
+
+# Or create a .env file
+echo "OPENAI_API_KEY=sk-your-key" > .env
+```
+
+**Problem:** Rate limit errors from OpenAI
+
+**Solution:**
+- Wait a few minutes and retry
+- Switch to a different model with higher limits
+- Consider using a local LLM (see `testing/LM_STUDIO_SETUP.md`)
+
+#### Docker Issues
+
+**Problem:** Docker build fails
+
+**Solution:**
+```bash
+# Clean Docker cache
+docker system prune -a
+
+# Rebuild with no cache
+docker compose build --no-cache
+
+# Check Docker resources (need at least 4GB RAM)
+docker stats
+```
+
+**Problem:** Container exits immediately
+
+**Solution:**
+```bash
+# Check container logs
+docker compose logs server
+docker compose logs ui
+
+# Verify environment variables in docker-compose.yml
+```
+
+#### Query Returns No Results
+
+**Problem:** Valid question returns empty data
+
+**Possible causes:**
+1. **Country name mismatch**: Use "United States of America" not "USA"
+2. **Data not available**: Not all locations have city/admin-1 level data
+3. **Time range**: Data is limited to 2000-2024
+4. **Sector name**: Use exact sector names (e.g., "power-industry" not "power")
+
+**Solution:**
+```bash
+# Check available datasets
+curl http://localhost:8010/list_files
+
+# Try a simpler query first
+curl -X POST http://localhost:8010/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What were transport emissions in Germany in 2023?"}'
+```
+
+#### Performance Issues
+
+**Problem:** Slow query responses
+
+**Solution:**
+- Check system resources (CPU, RAM, disk I/O)
+- Reduce `PROXY_MAX_K` for faster spatial queries
+- Use yearly data instead of monthly for large time ranges
+- Consider optimizing DuckDB with `PRAGMA threads=4`
+
+### Getting Help
+
+If you encounter issues not covered here:
+
+1. Check the logs in the terminal where you ran `make serve`
+2. Enable debug logging: `export MCP_LOG_LEVEL=DEBUG`
+3. Review the full documentation in `docs/`
+4. Check existing issues on GitHub
+5. Create a new issue with:
+   - Error message
+   - Steps to reproduce
+   - Python version (`python --version`)
+   - OS and version
 
 ## Documentation
 
@@ -201,15 +547,121 @@ uv sync
 
 ## License
 
-See project repository for license information.
+This project is currently in development. License information will be added soon.
+
+For questions about licensing, please contact the project maintainers or open an issue on GitHub.
 
 ## Contributing
 
-Contributions welcome. Please ensure:
-- All tests pass (`make test`)
-- Code follows project style (ruff/black)
-- Documentation is updated
+We welcome contributions! To contribute:
+
+### Getting Started
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork**:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Team-1B-Fusion.git
+   cd Team-1B-Fusion
+   ```
+3. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+### Development Workflow
+
+1. **Install dependencies**:
+   ```bash
+   uv sync
+   ```
+
+2. **Make your changes**:
+   - Write clean, documented code
+   - Follow the existing code style
+   - Add tests for new functionality
+
+3. **Run tests and linting**:
+   ```bash
+   # Run tests
+   make test
+
+   # Run linting
+   uv run ruff check .
+   uv run black --check .
+
+   # Auto-format code
+   uv run black .
+   uv run ruff check --fix .
+   ```
+
+4. **Commit your changes**:
+   ```bash
+   git add .
+   git commit -m "feat: add your feature description"
+   ```
+
+   Use conventional commit messages:
+   - `feat:` for new features
+   - `fix:` for bug fixes
+   - `docs:` for documentation
+   - `test:` for tests
+   - `refactor:` for refactoring
+   - `chore:` for maintenance
+
+5. **Push and create a Pull Request**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+### Code Quality Standards
+
+- **Python 3.11** compatibility required
+- **Type hints** encouraged for new code
+- **Docstrings** for all public functions/classes
+- **Test coverage** for new features
+- **No breaking changes** without discussion
+
+### Areas for Contribution
+
+- 🐛 Bug fixes
+- 📚 Documentation improvements
+- ✨ New data sources or sectors
+- 🔧 Performance optimizations
+- 🧪 Additional test coverage
+- 🌍 Geographic data expansion
+- 🎨 UI/UX improvements
+
+### Code Review Process
+
+1. All PRs require at least one approval
+2. CI/CD pipeline must pass (linting, tests, security checks)
+3. Documentation must be updated for user-facing changes
+4. Maintainers will review within 1-2 weeks
 
 ## Support
 
-For issues or questions, please refer to the documentation in the `docs/` folder or open an issue on the project repository.
+### Getting Help
+
+- 📖 **Documentation**: Check the `docs/` folder for detailed guides
+- 💬 **Issues**: [Open an issue](https://github.com/DharmpratapSingh/Team-1B-Fusion/issues) on GitHub
+- 🐛 **Bug Reports**: Use the issue template and include reproduction steps
+- 💡 **Feature Requests**: Describe your use case and proposed solution
+
+### Reporting Security Issues
+
+If you discover a security vulnerability, please **DO NOT** open a public issue. Instead, email the maintainers directly or use GitHub's private security reporting feature.
+
+### Community Guidelines
+
+- Be respectful and inclusive
+- Help others learn and grow
+- Provide constructive feedback
+- Follow the code of conduct (coming soon)
+
+---
+
+**Built with:** Python 3.11 | FastAPI | Streamlit | DuckDB | MCP Protocol
+
+**Data Source:** [EDGAR v2024](https://edgar.jrc.ec.europa.eu/) - Emissions Database for Global Atmospheric Research
+
+**Version:** 0.2.0 | **Status:** Active Development 🚧
