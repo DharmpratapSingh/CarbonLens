@@ -966,6 +966,232 @@ def _coverage_index() -> Dict[str, List[str]]:
     return {k: sorted(v) for k, v in idx.items()}
 
 
+def _normalize_entity_name(name: str, level: Optional[str] = None) -> str:
+    """
+    Normalize entity names to match database values.
+    Handles common aliases, abbreviations, and variations.
+    """
+    if not name:
+        return name
+
+    normalized = name.strip()
+
+    # Comprehensive country name mappings
+    country_aliases = {
+        # United States variations
+        "USA": "United States of America",
+        "US": "United States of America",
+        "U.S.": "United States of America",
+        "U.S.A.": "United States of America",
+        "United States": "United States of America",
+        "America": "United States of America",
+
+        # United Kingdom variations
+        "UK": "United Kingdom",
+        "U.K.": "United Kingdom",
+        "Britain": "United Kingdom",
+        "Great Britain": "United Kingdom",
+        "England": "United Kingdom",  # Note: England is part of UK
+
+        # China variations
+        "China": "People's Republic of China",
+        "PRC": "People's Republic of China",
+        "Mainland China": "People's Republic of China",
+
+        # Russia variations
+        "Russia": "Russian Federation",
+
+        # Korea variations
+        "South Korea": "Republic of Korea",
+        "North Korea": "Democratic People's Republic of Korea",
+        "DPRK": "Democratic People's Republic of Korea",
+        "ROK": "Republic of Korea",
+
+        # Other common variations
+        "Holland": "Netherlands",
+        "Myanmar": "Burma",
+        "Czech Republic": "Czechia",
+        "Ivory Coast": "Côte d'Ivoire",
+        "UAE": "United Arab Emirates",
+        "Vietnam": "Viet Nam",
+    }
+
+    # Admin1 (state/province) mappings
+    admin1_aliases = {
+        "Calif": "California",
+        "Cali": "California",
+        "CA": "California",
+        "NY": "New York",
+        "TX": "Texas",
+        "FL": "Florida",
+        "Mass": "Massachusetts",
+        "MA": "Massachusetts",
+        "Penn": "Pennsylvania",
+        "PA": "Pennsylvania",
+    }
+
+    # City mappings
+    city_aliases = {
+        "NYC": "New York City",
+        "LA": "Los Angeles",
+        "SF": "San Francisco",
+        "DC": "Washington",
+        "Philly": "Philadelphia",
+    }
+
+    # Try exact match first (case-insensitive)
+    for alias, canonical in country_aliases.items():
+        if normalized.lower() == alias.lower():
+            return canonical
+
+    # Try admin1 if level specified
+    if level == "admin1":
+        for alias, canonical in admin1_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+
+    # Try city if level specified
+    if level == "city":
+        for alias, canonical in city_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+
+    # If no level specified, try all
+    if not level:
+        # Check admin1
+        for alias, canonical in admin1_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+        # Check city
+        for alias, canonical in city_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+
+    return normalized
+
+
+def _fuzzy_match_entity(name: str, candidates: List[str], threshold: float = 0.8) -> List[Tuple[str, float]]:
+    """
+    Find fuzzy matches for entity name using similarity scoring.
+    Returns list of (candidate, similarity_score) tuples, sorted by score (descending).
+    """
+    from difflib import SequenceMatcher
+
+    if not name or not candidates:
+        return []
+
+    name_lower = name.lower()
+    matches = []
+
+    for candidate in candidates:
+        candidate_lower = candidate.lower()
+
+        # Exact match
+        if name_lower == candidate_lower:
+            matches.append((candidate, 1.0))
+            continue
+
+        # Substring match
+        if name_lower in candidate_lower or candidate_lower in name_lower:
+            matches.append((candidate, 0.9))
+            continue
+
+        # Fuzzy similarity
+        similarity = SequenceMatcher(None, name_lower, candidate_lower).ratio()
+        if similarity >= threshold:
+            matches.append((candidate, similarity))
+
+    # Sort by similarity score (descending)
+    matches.sort(key=lambda x: x[1], reverse=True)
+    return matches
+
+
+def _detect_entity_level(entity: str, coverage: Optional[Dict[str, List[str]]] = None) -> Optional[str]:
+    """
+    Auto-detect whether entity is a country, admin1 (state/province), or city.
+    Returns: "country", "admin1", "city", or None if not found.
+    """
+    if not coverage:
+        coverage = _coverage_index()
+
+    # Normalize first
+    normalized = _normalize_entity_name(entity)
+
+    # Try exact match at each level
+    if normalized in coverage.get("city", []):
+        return "city"
+    if normalized in coverage.get("admin1", []):
+        return "admin1"
+    if normalized in coverage.get("country", []):
+        return "country"
+
+    # Try case-insensitive match
+    normalized_lower = normalized.lower()
+
+    for city in coverage.get("city", []):
+        if city.lower() == normalized_lower:
+            return "city"
+
+    for admin1 in coverage.get("admin1", []):
+        if admin1.lower() == normalized_lower:
+            return "admin1"
+
+    for country in coverage.get("country", []):
+        if country.lower() == normalized_lower:
+            return "country"
+
+    # Try fuzzy matching as last resort
+    for level_name, level_key in [("city", "city"), ("admin1", "admin1"), ("country", "country")]:
+        matches = _fuzzy_match_entity(normalized, coverage.get(level_key, []), threshold=0.85)
+        if matches:
+            return level_name
+
+    return None
+
+
+def _smart_entity_resolution(entity: str, level: Optional[str] = None) -> Tuple[str, str, List[str]]:
+    """
+    Resolve entity name with normalization, auto-detection, and fuzzy matching.
+
+    Returns: (normalized_name, detected_level, suggestions)
+    """
+    coverage = _coverage_index()
+
+    # Step 1: Normalize the entity name
+    normalized = _normalize_entity_name(entity, level)
+
+    # Step 2: Detect level if not provided
+    if not level:
+        detected_level = _detect_entity_level(normalized, coverage)
+    else:
+        detected_level = level
+
+    # Step 3: Verify entity exists at detected level
+    if detected_level:
+        level_data = coverage.get(detected_level, [])
+
+        # Exact match (case-insensitive)
+        exact_match = next((item for item in level_data if item.lower() == normalized.lower()), None)
+        if exact_match:
+            return exact_match, detected_level, []
+
+        # Fuzzy match
+        fuzzy_matches = _fuzzy_match_entity(normalized, level_data, threshold=0.75)
+        if fuzzy_matches:
+            best_match, score = fuzzy_matches[0]
+            suggestions = [m[0] for m in fuzzy_matches[:5]]
+            return best_match, detected_level, suggestions
+
+    # Step 4: If still not found, search across all levels
+    all_suggestions = []
+    for level_name in ["country", "admin1", "city"]:
+        fuzzy_matches = _fuzzy_match_entity(normalized, coverage.get(level_name, []), threshold=0.75)
+        for match, score in fuzzy_matches[:3]:
+            all_suggestions.append(f"{match} ({level_name})")
+
+    return normalized, detected_level or "country", all_suggestions
+
+
 def _top_matches(name: str, pool: List[str], k: int = 5) -> List[str]:
     """Find top matching strings from a pool"""
     nm = (name or "").lower()
@@ -1688,6 +1914,47 @@ async def handle_list_tools() -> list[Tool]:
                 },
                 "required": []
             }
+        ),
+        Tool(
+            name="smart_query_emissions",
+            description="Intelligent emissions query with auto-normalization, level detection, and fallback. Use this when entity name or level is ambiguous (e.g., 'USA', 'California', 'NYC')",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name in any format (e.g., 'USA', 'United States', 'California', 'NYC', 'LA')"
+                    },
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector to query (default: transport)",
+                        "default": "transport"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to query (default: 2023)",
+                        "default": 2023
+                    },
+                    "grain": {
+                        "type": "string",
+                        "enum": ["year", "month"],
+                        "description": "Temporal granularity (default: year)",
+                        "default": "year"
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": ["country", "admin1", "city", "auto"],
+                        "description": "Geographic level - use 'auto' for automatic detection (default: auto)",
+                        "default": "auto"
+                    },
+                    "enable_fallback": {
+                        "type": "boolean",
+                        "description": "Enable fallback to higher levels if no data found (city→admin1→country) (default: true)",
+                        "default": true
+                    }
+                },
+                "required": ["entity"]
+            }
         )
     ]
 
@@ -2276,6 +2543,10 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         sectors = arguments.get("sectors", "all")
         year = arguments.get("year", 2023)
 
+        # Smart normalization
+        if entity:
+            entity = _normalize_entity_name(entity, level)
+
         # Get all sectors if "all" specified
         all_sectors = ["transport", "power", "waste", "agriculture",
                       "buildings", "fuel-exploitation", "industrial-combustion",
@@ -2356,6 +2627,9 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         sector = arguments.get("sector", "transport")
         year = arguments.get("year", 2023)
         level = arguments.get("level", "country")
+
+        # Smart normalization for all entities
+        entities = [_normalize_entity_name(e, level) for e in entities]
 
         if len(entities) < 2:
             return [TextContent(type="text", text=json.dumps({
@@ -2459,6 +2733,10 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         start_year = arguments.get("start_year", 2000)
         end_year = arguments.get("end_year", 2023)
         level = arguments.get("level", "country")
+
+        # Smart normalization
+        if entity:
+            entity = _normalize_entity_name(entity, level)
 
         column_name = f"{level}_name" if level != "country" else "country_name"
         file_id = f"{sector}-{level}-year"
@@ -2621,6 +2899,172 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "error": "query_failed",
                 "detail": str(e)
             }))]
+
+    elif name == "smart_query_emissions":
+        entity = arguments.get("entity")
+        sector = arguments.get("sector", "transport")
+        year = arguments.get("year", 2023)
+        grain = arguments.get("grain", "year")
+        level = arguments.get("level", "auto")
+        enable_fallback = arguments.get("enable_fallback", True)
+
+        if not entity:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "missing_entity",
+                "detail": "Entity name is required"
+            }))]
+
+        # Step 1: Smart entity resolution
+        try:
+            resolved_entity, detected_level, suggestions = _smart_entity_resolution(
+                entity,
+                level if level != "auto" else None
+            )
+
+            logger.info(f"Smart query: '{entity}' → '{resolved_entity}' ({detected_level})")
+
+        except Exception as e:
+            logger.error(f"Entity resolution failed: {e}")
+            return [TextContent(type="text", text=json.dumps({
+                "error": "resolution_failed",
+                "detail": str(e),
+                "original_entity": entity
+            }))]
+
+        # Step 2: Try to query at detected level with fallback
+        levels_to_try = [detected_level]
+
+        if enable_fallback:
+            # Add fallback levels
+            if detected_level == "city":
+                levels_to_try.extend(["admin1", "country"])
+            elif detected_level == "admin1":
+                levels_to_try.append("country")
+
+        fallback_trace = []
+        final_data = None
+        final_level = None
+
+        for try_level in levels_to_try:
+            column_name = f"{try_level}_name" if try_level != "country" else "country_name"
+            file_id = f"{sector}-{try_level}-{grain}"
+            file_meta = _find_file_meta(file_id)
+
+            if not file_meta:
+                fallback_trace.append({
+                    "level": try_level,
+                    "status": "dataset_not_found",
+                    "file_id": file_id
+                })
+                continue
+
+            try:
+                where = {column_name: resolved_entity, "year": year}
+
+                if grain == "month":
+                    select_cols = [column_name, "year", "month", "emissions_tonnes"]
+                else:
+                    select_cols = [column_name, "year", "emissions_tonnes"]
+
+                data = _duckdb_pushdown(
+                    file_meta=file_meta,
+                    select=select_cols,
+                    where=where,
+                    group_by=[],
+                    order_by="year ASC" if grain == "year" else "year ASC, month ASC",
+                    limit=100
+                )
+
+                if data and len(data) > 0:
+                    # Success! Found data
+                    final_data = data
+                    final_level = try_level
+                    fallback_trace.append({
+                        "level": try_level,
+                        "status": "success",
+                        "rows_found": len(data)
+                    })
+                    break
+                else:
+                    fallback_trace.append({
+                        "level": try_level,
+                        "status": "no_data",
+                        "file_id": file_id
+                    })
+
+            except Exception as e:
+                fallback_trace.append({
+                    "level": try_level,
+                    "status": "error",
+                    "error": str(e),
+                    "file_id": file_id
+                })
+                logger.warning(f"Query failed at {try_level} level: {e}")
+                continue
+
+        # Step 3: Return results or error
+        if final_data:
+            # Format data with MtCO2
+            formatted_data = []
+            for row in final_data:
+                formatted_row = dict(row)
+                if "emissions_tonnes" in formatted_row:
+                    formatted_row["emissions_mtco2"] = float(formatted_row["emissions_tonnes"] / 1e6)
+                    formatted_row["emissions_tonnes"] = float(formatted_row["emissions_tonnes"])
+                formatted_data.append(formatted_row)
+
+            response = {
+                "query": {
+                    "original_entity": entity,
+                    "resolved_entity": resolved_entity,
+                    "requested_level": level,
+                    "detected_level": detected_level,
+                    "actual_level_used": final_level,
+                    "sector": sector,
+                    "year": year,
+                    "grain": grain
+                },
+                "resolution": {
+                    "normalized": resolved_entity,
+                    "detected_level": detected_level,
+                    "suggestions": suggestions if suggestions else [],
+                    "fallback_used": final_level != detected_level
+                },
+                "data": formatted_data,
+                "metadata": {
+                    "rows_returned": len(formatted_data),
+                    "fallback_trace": fallback_trace,
+                    "data_source": f"{sector}-{final_level}-{grain}"
+                }
+            }
+
+            return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
+
+        else:
+            # No data found at any level
+            response = {
+                "error": "no_data_found",
+                "query": {
+                    "original_entity": entity,
+                    "resolved_entity": resolved_entity,
+                    "detected_level": detected_level,
+                    "sector": sector,
+                    "year": year
+                },
+                "resolution": {
+                    "normalized": resolved_entity,
+                    "detected_level": detected_level,
+                    "suggestions": suggestions if suggestions else []
+                },
+                "fallback_trace": fallback_trace,
+                "suggestions": [
+                    f"Try a different entity (suggestions: {', '.join(suggestions[:3])})" if suggestions else "Entity not found in database",
+                    f"Try a different year (requested: {year})",
+                    f"Try a different sector (requested: {sector})"
+                ]
+            }
+
+            return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
 
     elif name == "validate_query":
         file_id = arguments.get("file_id")
