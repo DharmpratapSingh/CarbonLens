@@ -37,7 +37,7 @@ TEST_QUERIES = [
     },
     {
         "name": "Large City Monthly Scan (Transport)",
-        "sql": "SELECT * FROM transport_city_monthly WHERE city_name = 'New York' AND year = 2023"
+        "sql": "SELECT * FROM transport_city_month WHERE city_name = 'New York' AND year = 2023"
     },
     {
         "name": "Year Range Aggregation",
@@ -62,7 +62,7 @@ TEST_QUERIES = [
     },
     {
         "name": "Temporal Aggregation (Monthly to Yearly)",
-        "sql": "SELECT year, SUM(emissions_tonnes) FROM transport_country_monthly WHERE country_name = 'India' AND year = 2023 GROUP BY year"
+        "sql": "SELECT year, SUM(emissions_tonnes) FROM transport_country_month WHERE country_name = 'India' AND year = 2023 GROUP BY year"
     }
 ]
 

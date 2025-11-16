@@ -169,15 +169,15 @@ ON ind_processes_city_year(year);
 -- SECTION 6: POWER INDUSTRY SECTOR INDEXES (6 tables)
 -- ============================================================================
 
--- power_country_monthly (981,840 rows)
-CREATE INDEX IF NOT EXISTS idx_power_country_monthly_iso3_year_month
-ON power_country_monthly(iso3, year, month);
+-- power_country_month (981,840 rows)
+CREATE INDEX IF NOT EXISTS idx_power_country_month_iso3_year_month
+ON power_country_month(iso3, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_power_country_monthly_country_year_month
-ON power_country_monthly(country_name, year, month);
+CREATE INDEX IF NOT EXISTS idx_power_country_month_country_year_month
+ON power_country_month(country_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_power_country_monthly_year_month
-ON power_country_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_power_country_month_year_month
+ON power_country_month(year, month);
 
 -- power_country_year (81,720 rows)
 CREATE INDEX IF NOT EXISTS idx_power_country_year_iso3_year
@@ -189,12 +189,12 @@ ON power_country_year(country_name, year);
 CREATE INDEX IF NOT EXISTS idx_power_country_year_year
 ON power_country_year(year);
 
--- power_admin1_monthly (5,738,112 rows)
-CREATE INDEX IF NOT EXISTS idx_power_admin1_monthly_country_admin1_year_month
-ON power_admin1_monthly(country_name, admin1_name, year, month);
+-- power_admin1_month (5,738,112 rows)
+CREATE INDEX IF NOT EXISTS idx_power_admin1_month_country_admin1_year_month
+ON power_admin1_month(country_name, admin1_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_power_admin1_monthly_year_month
-ON power_admin1_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_power_admin1_month_year_month
+ON power_admin1_month(year, month);
 
 -- power_admin1_year (478,176 rows)
 CREATE INDEX IF NOT EXISTS idx_power_admin1_year_country_admin1_year
@@ -203,15 +203,15 @@ ON power_admin1_year(country_name, admin1_name, year);
 CREATE INDEX IF NOT EXISTS idx_power_admin1_year_year
 ON power_admin1_year(year);
 
--- power_city_monthly (15,507,180 rows) - LARGEST TABLE
-CREATE INDEX IF NOT EXISTS idx_power_city_monthly_country_admin1_city_year_month
-ON power_city_monthly(country_name, admin1_name, city_name, year, month);
+-- power_city_month (15,507,180 rows) - LARGEST TABLE
+CREATE INDEX IF NOT EXISTS idx_power_city_month_country_admin1_city_year_month
+ON power_city_month(country_name, admin1_name, city_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_power_city_monthly_year_month
-ON power_city_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_power_city_month_year_month
+ON power_city_month(year, month);
 
-CREATE INDEX IF NOT EXISTS idx_power_city_monthly_city_year_month
-ON power_city_monthly(city_name, year, month);
+CREATE INDEX IF NOT EXISTS idx_power_city_month_city_year_month
+ON power_city_month(city_name, year, month);
 
 -- power_city_year (1,292,265 rows)
 CREATE INDEX IF NOT EXISTS idx_power_city_year_country_admin1_city_year
@@ -225,15 +225,15 @@ ON power_city_year(year);
 -- SECTION 7: TRANSPORT SECTOR INDEXES (6 tables)
 -- ============================================================================
 
--- transport_country_monthly (981,840 rows)
-CREATE INDEX IF NOT EXISTS idx_transport_country_monthly_iso3_year_month
-ON transport_country_monthly(iso3, year, month);
+-- transport_country_month (981,840 rows)
+CREATE INDEX IF NOT EXISTS idx_transport_country_month_iso3_year_month
+ON transport_country_month(iso3, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_transport_country_monthly_country_year_month
-ON transport_country_monthly(country_name, year, month);
+CREATE INDEX IF NOT EXISTS idx_transport_country_month_country_year_month
+ON transport_country_month(country_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_transport_country_monthly_year_month
-ON transport_country_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_transport_country_month_year_month
+ON transport_country_month(year, month);
 
 -- transport_country_year (81,720 rows)
 CREATE INDEX IF NOT EXISTS idx_transport_country_year_iso3_year
@@ -245,12 +245,12 @@ ON transport_country_year(country_name, year);
 CREATE INDEX IF NOT EXISTS idx_transport_country_year_year
 ON transport_country_year(year);
 
--- transport_admin1_monthly (5,738,112 rows)
-CREATE INDEX IF NOT EXISTS idx_transport_admin1_monthly_country_admin1_year_month
-ON transport_admin1_monthly(country_name, admin1_name, year, month);
+-- transport_admin1_month (5,738,112 rows)
+CREATE INDEX IF NOT EXISTS idx_transport_admin1_month_country_admin1_year_month
+ON transport_admin1_month(country_name, admin1_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_transport_admin1_monthly_year_month
-ON transport_admin1_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_transport_admin1_month_year_month
+ON transport_admin1_month(year, month);
 
 -- transport_admin1_year (478,176 rows)
 CREATE INDEX IF NOT EXISTS idx_transport_admin1_year_country_admin1_year
@@ -259,15 +259,15 @@ ON transport_admin1_year(country_name, admin1_name, year);
 CREATE INDEX IF NOT EXISTS idx_transport_admin1_year_year
 ON transport_admin1_year(year);
 
--- transport_city_monthly (19,062,876 rows) - LARGEST TABLE IN DATABASE
-CREATE INDEX IF NOT EXISTS idx_transport_city_monthly_country_admin1_city_year_month
-ON transport_city_monthly(country_name, admin1_name, city_name, year, month);
+-- transport_city_month (19,062,876 rows) - LARGEST TABLE IN DATABASE
+CREATE INDEX IF NOT EXISTS idx_transport_city_month_country_admin1_city_year_month
+ON transport_city_month(country_name, admin1_name, city_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_transport_city_monthly_year_month
-ON transport_city_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_transport_city_month_year_month
+ON transport_city_month(year, month);
 
-CREATE INDEX IF NOT EXISTS idx_transport_city_monthly_city_year_month
-ON transport_city_monthly(city_name, year, month);
+CREATE INDEX IF NOT EXISTS idx_transport_city_month_city_year_month
+ON transport_city_month(city_name, year, month);
 
 -- transport_city_year (1,588,740 rows)
 CREATE INDEX IF NOT EXISTS idx_transport_city_year_country_admin1_city_year
@@ -281,15 +281,15 @@ ON transport_city_year(year);
 -- SECTION 8: WASTE SECTOR INDEXES (6 tables)
 -- ============================================================================
 
--- waste_country_monthly (981,840 rows)
-CREATE INDEX IF NOT EXISTS idx_waste_country_monthly_iso3_year_month
-ON waste_country_monthly(iso3, year, month);
+-- waste_country_month (981,840 rows)
+CREATE INDEX IF NOT EXISTS idx_waste_country_month_iso3_year_month
+ON waste_country_month(iso3, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_waste_country_monthly_country_year_month
-ON waste_country_monthly(country_name, year, month);
+CREATE INDEX IF NOT EXISTS idx_waste_country_month_country_year_month
+ON waste_country_month(country_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_waste_country_monthly_year_month
-ON waste_country_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_waste_country_month_year_month
+ON waste_country_month(year, month);
 
 -- waste_country_year (81,720 rows)
 CREATE INDEX IF NOT EXISTS idx_waste_country_year_iso3_year
@@ -301,12 +301,12 @@ ON waste_country_year(country_name, year);
 CREATE INDEX IF NOT EXISTS idx_waste_country_year_year
 ON waste_country_year(year);
 
--- waste_admin1_monthly (5,738,112 rows)
-CREATE INDEX IF NOT EXISTS idx_waste_admin1_monthly_country_admin1_year_month
-ON waste_admin1_monthly(country_name, admin1_name, year, month);
+-- waste_admin1_month (5,738,112 rows)
+CREATE INDEX IF NOT EXISTS idx_waste_admin1_month_country_admin1_year_month
+ON waste_admin1_month(country_name, admin1_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_waste_admin1_monthly_year_month
-ON waste_admin1_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_waste_admin1_month_year_month
+ON waste_admin1_month(year, month);
 
 -- waste_admin1_year (478,176 rows)
 CREATE INDEX IF NOT EXISTS idx_waste_admin1_year_country_admin1_year
@@ -315,15 +315,15 @@ ON waste_admin1_year(country_name, admin1_name, year);
 CREATE INDEX IF NOT EXISTS idx_waste_admin1_year_year
 ON waste_admin1_year(year);
 
--- waste_city_monthly (4,635,204 rows)
-CREATE INDEX IF NOT EXISTS idx_waste_city_monthly_country_admin1_city_year_month
-ON waste_city_monthly(country_name, admin1_name, city_name, year, month);
+-- waste_city_month (4,635,204 rows)
+CREATE INDEX IF NOT EXISTS idx_waste_city_month_country_admin1_city_year_month
+ON waste_city_month(country_name, admin1_name, city_name, year, month);
 
-CREATE INDEX IF NOT EXISTS idx_waste_city_monthly_year_month
-ON waste_city_monthly(year, month);
+CREATE INDEX IF NOT EXISTS idx_waste_city_month_year_month
+ON waste_city_month(year, month);
 
-CREATE INDEX IF NOT EXISTS idx_waste_city_monthly_city_year_month
-ON waste_city_monthly(city_name, year, month);
+CREATE INDEX IF NOT EXISTS idx_waste_city_month_city_year_month
+ON waste_city_month(city_name, year, month);
 
 -- waste_city_year (386,267 rows)
 CREATE INDEX IF NOT EXISTS idx_waste_city_year_country_admin1_city_year
@@ -363,16 +363,8 @@ COMMIT;
 -- Run ANALYZE to update statistics for query optimizer
 ANALYZE;
 
--- Display database size after indexing
-SELECT
-    'Database Size (after indexing)' as metric,
-    pg_size_pretty(pg_database_size(current_database())) as value;
-
--- Display total index size
-SELECT
-    'Total Index Size' as metric,
-    pg_size_pretty(SUM(pg_relation_size(indexrelid))) as value
-FROM pg_index;
+-- Note: Database size and index statistics are displayed by the Python script
+-- DuckDB doesn't support PostgreSQL-specific functions like pg_database_size()
 
 -- ============================================================================
 -- EXPECTED RESULTS

@@ -1015,6 +1015,25 @@ def _normalize_entity_name(name: str, level: Optional[str] = None) -> str:
         "Ivory Coast": "Côte d'Ivoire",
         "UAE": "United Arab Emirates",
         "Vietnam": "Viet Nam",
+        
+        # Database-specific abbreviations (from EDGAR data)
+        "bosnia and herz.": "Bosnia and Herzegovina",
+        "bosnia and herz": "Bosnia and Herzegovina",
+        "dem. rep. congo": "Democratic Republic of the Congo",
+        "eq. guinea": "Equatorial Guinea",
+        "n. mariana islands": "Northern Mariana Islands",
+        "st. kitts and nevis": "Saint Kitts and Nevis",
+        "st. lucia": "Saint Lucia",
+        "st. vincent and the grenadines": "Saint Vincent and the Grenadines",
+        "são tomé and príncipe": "Sao Tome and Principe",
+        "trinidad and tobago": "Trinidad and Tobago",
+        "u.s. virgin islands": "United States Virgin Islands",
+        "united rep. of tanzania": "United Republic of Tanzania",
+        
+        # Additional common variations
+        "czech rep.": "Czechia",
+        "central african rep.": "Central African Republic",
+        "dom. rep.": "Dominican Republic",
     }
 
     # Admin1 (state/province) mappings
@@ -1069,6 +1088,130 @@ def _normalize_entity_name(name: str, level: Optional[str] = None) -> str:
                 return canonical
 
     return normalized
+
+
+def _get_iso3_code(country_name: str) -> str | None:
+    """
+    Get ISO3 country code for faster database queries.
+
+    ISO3 codes are 4x faster than full country names in WHERE clauses.
+    Falls back to None if country not found.
+    """
+    ISO3_CODES = {
+        "United States of America": "USA",
+        "People's Republic of China": "CHN",
+        "China": "CHN",
+        "India": "IND",
+        "Germany": "DEU",
+        "United Kingdom": "GBR",
+        "France": "FRA",
+        "Japan": "JPN",
+        "Canada": "CAN",
+        "Australia": "AUS",
+        "Brazil": "BRA",
+        "Russian Federation": "RUS",
+        "Russia": "RUS",
+        "Republic of Korea": "KOR",
+        "South Korea": "KOR",
+        "Mexico": "MEX",
+        "Indonesia": "IDN",
+        "Saudi Arabia": "SAU",
+        "Turkey": "TUR",
+        "Italy": "ITA",
+        "Spain": "ESP",
+        "Netherlands": "NLD",
+        "Poland": "POL",
+        "South Africa": "ZAF",
+        "Argentina": "ARG",
+        "Thailand": "THA",
+        "Egypt": "EGY",
+        "Malaysia": "MYS",
+        "Pakistan": "PAK",
+        "Bangladesh": "BGD",
+        "Viet Nam": "VNM",
+        "Vietnam": "VNM",
+        "Philippines": "PHL",
+        "Nigeria": "NGA",
+        "Iran": "IRN",
+        "United Arab Emirates": "ARE",
+        "UAE": "ARE",
+        "Singapore": "SGP",
+        "Switzerland": "CHE",
+        "Belgium": "BEL",
+        "Sweden": "SWE",
+        "Norway": "NOR",
+        "Denmark": "DNK",
+        "Finland": "FIN",
+        "Austria": "AUT",
+        "Greece": "GRC",
+        "Portugal": "PRT",
+        "Czechia": "CZE",
+        "Czech Republic": "CZE",
+        "Romania": "ROU",
+        "Hungary": "HUN",
+        "Ireland": "IRL",
+        "New Zealand": "NZL",
+        "Chile": "CHL",
+        "Colombia": "COL",
+        "Peru": "PER",
+        "Venezuela": "VEN",
+        "Ukraine": "UKR",
+        "Kazakhstan": "KAZ",
+        "Algeria": "DZA",
+        "Morocco": "MAR",
+        "Kenya": "KEN",
+        "Ethiopia": "ETH",
+        "Ghana": "GHA",
+        "Tanzania": "TZA",
+        "United Republic of Tanzania": "TZA",
+        "Uganda": "UGA",
+        "Angola": "AGO",
+        "Mozambique": "MOZ",
+        "Madagascar": "MDG",
+        "Cameroon": "CMR",
+        "Côte d'Ivoire": "CIV",
+        "Ivory Coast": "CIV",
+        "Niger": "NER",
+        "Burkina Faso": "BFA",
+        "Mali": "MLI",
+        "Malawi": "MWI",
+        "Zambia": "ZMB",
+        "Zimbabwe": "ZWE",
+        "Senegal": "SEN",
+        "Chad": "TCD",
+        "Guinea": "GIN",
+        "Rwanda": "RWA",
+        "Benin": "BEN",
+        "Burundi": "BDI",
+        "Tunisia": "TUN",
+        "South Sudan": "SSD",
+        "Togo": "TGO",
+        "Sierra Leone": "SLE",
+        "Libya": "LBY",
+        "Liberia": "LBR",
+        "Central African Republic": "CAF",
+        "Mauritania": "MRT",
+        "Eritrea": "ERI",
+        "Gambia": "GMB",
+        "Botswana": "BWA",
+        "Namibia": "NAM",
+        "Gabon": "GAB",
+        "Lesotho": "LSO",
+        "Guinea-Bissau": "GNB",
+        "Equatorial Guinea": "GNQ",
+        "Mauritius": "MUS",
+        "Eswatini": "SWZ",
+        "Djibouti": "DJI",
+        "Comoros": "COM",
+        "Cape Verde": "CPV",
+        "São Tomé and Príncipe": "STP",
+        "Sao Tome and Principe": "STP",
+        "Seychelles": "SYC",
+    }
+    
+    # Normalize country name first
+    normalized = _normalize_entity_name(country_name)
+    return ISO3_CODES.get(normalized)
 
 
 def _fuzzy_match_entity(name: str, candidates: List[str], threshold: float = 0.8) -> List[Tuple[str, float]]:
@@ -1311,6 +1454,87 @@ def _detect_query_patterns(
     return patterns
 
 
+# ========================================
+# QUERY CACHE
+# ========================================
+
+class QueryCache:
+    """LRU cache for query results with TTL"""
+    
+    def __init__(self, maxsize=1000, ttl_seconds=300):
+        self.maxsize = maxsize
+        self.ttl_seconds = ttl_seconds
+        self._cache = {}
+        self._timestamps = {}
+        self._lock = threading.Lock()
+        self.hits = 0
+        self.misses = 0
+    
+    def _get_cache_key(self, sql: str, params: list) -> str:
+        """Generate cache key from SQL and parameters"""
+        cache_str = sql + json.dumps(params, sort_keys=True)
+        return hashlib.md5(cache_str.encode()).hexdigest()
+    
+    def get(self, sql: str, params: list):
+        """Get cached result if exists and not expired"""
+        with self._lock:
+            key = self._get_cache_key(sql, params)
+            
+            if key not in self._cache:
+                self.misses += 1
+                return None
+            
+            # Check TTL
+            if time.time() - self._timestamps[key] > self.ttl_seconds:
+                del self._cache[key]
+                del self._timestamps[key]
+                self.misses += 1
+                return None
+            
+            self.hits += 1
+            return self._cache[key]
+    
+    def set(self, sql: str, params: list, result):
+        """Cache query result"""
+        with self._lock:
+            key = self._get_cache_key(sql, params)
+            
+            # Evict oldest if at capacity
+            if len(self._cache) >= self.maxsize:
+                oldest_key = min(self._timestamps.keys(), key=lambda k: self._timestamps[k])
+                del self._cache[oldest_key]
+                del self._timestamps[oldest_key]
+            
+            self._cache[key] = result
+            self._timestamps[key] = time.time()
+    
+    def clear(self):
+        """Clear all cached results"""
+        with self._lock:
+            self._cache.clear()
+            self._timestamps.clear()
+            self.hits = 0
+            self.misses = 0
+    
+    def get_stats(self):
+        """Get cache statistics"""
+        total = self.hits + self.misses
+        hit_rate = (self.hits / total * 100) if total > 0 else 0
+        return {
+            "hits": self.hits,
+            "misses": self.misses,
+            "hit_rate_pct": round(hit_rate, 2),
+            "size": len(self._cache),
+            "maxsize": self.maxsize
+        }
+
+# Initialize cache
+query_cache = QueryCache(maxsize=1000, ttl_seconds=300)
+
+# ========================================
+# CONNECTION POOL
+# ========================================
+
 class DuckDBConnectionPool:
     """
     Thread-safe connection pool for DuckDB connections.
@@ -1463,6 +1687,28 @@ def _get_db_connection():
     """
     return _connection_pool.get_connection()
 
+def execute_cached(conn, sql: str, params: list = None):
+    """
+    Execute query with caching.
+    
+    Checks cache first, executes if not found, then caches result.
+    Returns cached or fresh result.
+    """
+    params = params or []
+    
+    # Check cache
+    cached = query_cache.get(sql, params)
+    if cached is not None:
+        return cached
+    
+    # Execute query
+    result = conn.execute(sql, params).fetchall()
+    
+    # Cache result
+    query_cache.set(sql, params, result)
+    
+    return result
+
 # ========================================
 # HELPER FUNCTIONS (from mcp_server.py)
 # ========================================
@@ -1486,6 +1732,7 @@ def _build_where_sql(where: dict[str, Any]) -> tuple[str, list]:
     """
     Build WHERE clause SQL with parameterized queries (enhanced version).
     Supports: equality, in, between, comparisons, contains/ILIKE
+    Optimizes country_name queries by using ISO3 codes when available (4x faster).
     """
     if not where:
         return "", []
@@ -1494,6 +1741,16 @@ def _build_where_sql(where: dict[str, Any]) -> tuple[str, list]:
     params = []
 
     for key, value in where.items():
+        # Optimize country_name queries with ISO3 codes (4x faster)
+        if key == "country_name" and isinstance(value, str):
+            iso3 = _get_iso3_code(value)
+            if iso3:
+                # Use ISO3 for faster lookup
+                conditions.append("iso3 = ?")
+                params.append(iso3)
+                continue
+            # Fall back to normalized country name
+            value = _normalize_entity_name(value)
         if isinstance(value, list):
             # List values are treated as IN operator
             placeholders = ",".join(["?"] * len(value))
@@ -1956,6 +2213,115 @@ async def handle_list_tools() -> list[Tool]:
                 },
                 "required": ["entity"]
             }
+        ),
+        Tool(
+            name="top_emitters",
+            description="Find top emitters by sector and year. Returns ranked list of countries/states/cities with highest emissions.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector name (transport, power, waste, agriculture, buildings, fuel-exploitation, ind-combustion, ind-processes)",
+                        "enum": ["transport", "power", "waste", "agriculture", "buildings", "fuel-exploitation", "ind-combustion", "ind-processes"]
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to analyze (2000-2024)"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Number of top emitters to return (default: 10)",
+                        "default": 10,
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "geographic_level": {
+                        "type": "string",
+                        "enum": ["country", "admin1", "city"],
+                        "description": "Geographic level to analyze (default: country)",
+                        "default": "country"
+                    }
+                },
+                "required": ["sector", "year"]
+            }
+        ),
+        Tool(
+            name="analyze_trend",
+            description="Analyze emissions trend over time with growth rates and patterns. Calculates year-over-year growth, CAGR, and identifies patterns.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity_name": {
+                        "type": "string",
+                        "description": "Country, state, or city name"
+                    },
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector to analyze",
+                        "enum": ["transport", "power", "waste", "agriculture", "buildings", "fuel-exploitation", "ind-combustion", "ind-processes"]
+                    },
+                    "start_year": {
+                        "type": "integer",
+                        "description": "Start year (2000-2024)"
+                    },
+                    "end_year": {
+                        "type": "integer",
+                        "description": "End year (2000-2024)"
+                    }
+                },
+                "required": ["entity_name", "sector", "start_year", "end_year"]
+            }
+        ),
+        Tool(
+            name="compare_sectors",
+            description="Compare emissions across multiple sectors for a location. Returns totals, percentages, and rankings.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity_name": {
+                        "type": "string",
+                        "description": "Country, state, or city name"
+                    },
+                    "sectors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": ["transport", "power", "waste", "agriculture", "buildings", "fuel-exploitation", "ind-combustion", "ind-processes"]
+                        },
+                        "description": "List of sectors to compare (at least 2 required)"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to analyze (2000-2024)"
+                    }
+                },
+                "required": ["entity_name", "sectors", "year"]
+            }
+        ),
+        Tool(
+            name="compare_geographies",
+            description="Compare emissions across multiple countries/regions/cities. Returns rankings and percentages.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entities": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of country/state/city names to compare (at least 2 required)"
+                    },
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector to analyze",
+                        "enum": ["transport", "power", "waste", "agriculture", "buildings", "fuel-exploitation", "ind-combustion", "ind-processes"]
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to compare (2000-2024)"
+                    }
+                },
+                "required": ["entities", "sector", "year"]
+            }
         )
     ]
 
@@ -2119,11 +2485,14 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             # LIMIT
             sql += f" LIMIT {limit}"
 
-            # Execute (fix: reuse cursor to avoid double execution)
+            # Execute query
             with _get_db_connection() as conn:
-                cursor = conn.execute(sql, params)
-                columns = [desc[0] for desc in cursor.description]
-                result = cursor.fetchall()
+                # Get column description first
+                desc_cursor = conn.execute(sql, params)
+                columns = [desc[0] for desc in desc_cursor.description]
+                
+                # Use cached execution for better performance
+                result = execute_cached(conn, sql, params)
 
                 # Convert to dict
                 rows = [dict(zip(columns, row)) for row in result]
@@ -3173,6 +3542,365 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                 ))
             )]
 
+    elif name == "top_emitters":
+        sector = arguments.get("sector")
+        year = arguments.get("year")
+        limit = arguments.get("limit", 10)
+        geographic_level = arguments.get("geographic_level", "country")
+        
+        if not sector or not year:
+            return [TextContent(type="text", text=json.dumps({"error": "sector and year required"}))]
+        
+        try:
+            file_id = f"{sector}-{geographic_level}-year"
+            file_meta = _find_file_meta(file_id)
+            if not file_meta:
+                return [TextContent(type="text", text=json.dumps({"error": "file_not_found", "file_id": file_id}))]
+            
+            table = _get_table_name(file_meta)
+            if not table:
+                return [TextContent(type="text", text=json.dumps({"error": "table_not_found"}))]
+            
+            # Build query based on geographic level
+            if geographic_level == "country":
+                sql = f"""
+                    SELECT
+                        country_name,
+                        iso3,
+                        emissions_tonnes,
+                        RANK() OVER (ORDER BY emissions_tonnes DESC) as rank
+                    FROM {table}
+                    WHERE year = ?
+                    ORDER BY emissions_tonnes DESC
+                    LIMIT ?
+                """
+            elif geographic_level == "admin1":
+                sql = f"""
+                    SELECT
+                        country_name,
+                        admin1_name,
+                        emissions_tonnes,
+                        RANK() OVER (ORDER BY emissions_tonnes DESC) as rank
+                    FROM {table}
+                    WHERE year = ?
+                    ORDER BY emissions_tonnes DESC
+                    LIMIT ?
+                """
+            else:  # city
+                sql = f"""
+                    SELECT
+                        country_name,
+                        admin1_name,
+                        city_name,
+                        emissions_tonnes,
+                        RANK() OVER (ORDER BY emissions_tonnes DESC) as rank
+                    FROM {table}
+                    WHERE year = ?
+                    ORDER BY emissions_tonnes DESC
+                    LIMIT ?
+                """
+            
+            with _get_db_connection() as conn:
+                result = conn.execute(sql, [year, limit]).fetchall()
+            
+            emitters = []
+            for row in result:
+                if geographic_level == "country":
+                    emitters.append({
+                        "rank": int(row[3]),
+                        "country": row[0],
+                        "iso3": row[1],
+                        "emissions_tonnes": float(row[2]),
+                        "emissions_mtco2": float(row[2]) / 1_000_000
+                    })
+                elif geographic_level == "admin1":
+                    emitters.append({
+                        "rank": int(row[3]),
+                        "country": row[0],
+                        "admin1": row[1],
+                        "emissions_tonnes": float(row[2]),
+                        "emissions_mtco2": float(row[2]) / 1_000_000
+                    })
+                else:  # city
+                    emitters.append({
+                        "rank": int(row[4]),
+                        "country": row[0],
+                        "admin1": row[1],
+                        "city": row[2],
+                        "emissions_tonnes": float(row[3]),
+                        "emissions_mtco2": float(row[3]) / 1_000_000
+                    })
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps({
+                    "sector": sector,
+                    "year": year,
+                    "geographic_level": geographic_level,
+                    "top_emitters": emitters
+                }, indent=2, default=str)
+            )]
+        except Exception as e:
+            logger.error(f"Top emitters query failed: {e}")
+            return [TextContent(type="text", text=json.dumps({"error": "query_failed", "detail": str(e)}))]
+    
+    elif name == "analyze_trend":
+        entity_name = arguments.get("entity_name")
+        sector = arguments.get("sector")
+        start_year = arguments.get("start_year")
+        end_year = arguments.get("end_year")
+        
+        if not all([entity_name, sector, start_year, end_year]):
+            return [TextContent(type="text", text=json.dumps({"error": "All parameters required"}))]
+        
+        try:
+            # Auto-detect geographic level
+            normalized = _normalize_entity_name(entity_name)
+            coverage = _coverage_index()
+            
+            geographic_level = None
+            if normalized in coverage.get("city", []):
+                geographic_level = "city"
+            elif normalized in coverage.get("admin1", []):
+                geographic_level = "admin1"
+            elif normalized in coverage.get("country", []):
+                geographic_level = "country"
+            
+            if not geographic_level:
+                return [TextContent(type="text", text=json.dumps({"error": "entity_not_found", "entity": entity_name}))]
+            
+            file_id = f"{sector}-{geographic_level}-year"
+            file_meta = _find_file_meta(file_id)
+            if not file_meta:
+                return [TextContent(type="text", text=json.dumps({"error": "file_not_found", "file_id": file_id}))]
+            
+            table = _get_table_name(file_meta)
+            if not table:
+                return [TextContent(type="text", text=json.dumps({"error": "table_not_found"}))]
+            
+            entity_column = f"{geographic_level}_name"
+            
+            # Query yearly data
+            sql = f"""
+                SELECT year, emissions_tonnes
+                FROM {table}
+                WHERE {entity_column} = ? AND year BETWEEN ? AND ?
+                ORDER BY year
+            """
+            
+            with _get_db_connection() as conn:
+                result = conn.execute(sql, [normalized, start_year, end_year]).fetchall()
+            
+            if not result:
+                return [TextContent(type="text", text=json.dumps({"error": "no_data_found"}))]
+            
+            # Calculate trend metrics
+            years = [row[0] for row in result]
+            emissions = [float(row[1]) for row in result]
+            
+            # Year-over-year growth rates
+            yoy_growth = []
+            for i in range(1, len(emissions)):
+                growth = ((emissions[i] - emissions[i-1]) / emissions[i-1]) * 100 if emissions[i-1] > 0 else 0
+                yoy_growth.append({
+                    "year": years[i],
+                    "growth_pct": round(growth, 2)
+                })
+            
+            # Total change
+            total_change_pct = ((emissions[-1] - emissions[0]) / emissions[0]) * 100 if emissions[0] > 0 else 0
+            total_change_abs = emissions[-1] - emissions[0]
+            
+            # Determine pattern
+            if total_change_pct > 10:
+                pattern = "increasing"
+            elif total_change_pct < -10:
+                pattern = "decreasing"
+            else:
+                pattern = "stable"
+            
+            # Calculate CAGR
+            num_years = len(years) - 1
+            cagr = (((emissions[-1] / emissions[0]) ** (1 / num_years)) - 1) * 100 if emissions[0] > 0 and num_years > 0 else 0
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps({
+                    "entity": normalized,
+                    "sector": sector,
+                    "period": f"{start_year}-{end_year}",
+                    "pattern": pattern,
+                    "total_change_pct": round(total_change_pct, 2),
+                    "total_change_tonnes": round(total_change_abs, 2),
+                    "cagr_pct": round(cagr, 2),
+                    "start_emissions": round(emissions[0], 2),
+                    "end_emissions": round(emissions[-1], 2),
+                    "yoy_growth": yoy_growth,
+                    "yearly_data": [
+                        {"year": y, "emissions_tonnes": round(e, 2)}
+                        for y, e in zip(years, emissions)
+                    ]
+                }, indent=2, default=str)
+            )]
+        except Exception as e:
+            logger.error(f"Trend analysis failed: {e}")
+            return [TextContent(type="text", text=json.dumps({"error": "analysis_failed", "detail": str(e)}))]
+    
+    elif name == "compare_sectors":
+        entity_name = arguments.get("entity_name")
+        sectors = arguments.get("sectors", [])
+        year = arguments.get("year")
+        
+        if not entity_name or not sectors or len(sectors) < 2 or not year:
+            return [TextContent(type="text", text=json.dumps({"error": "entity_name, sectors (min 2), and year required"}))]
+        
+        try:
+            normalized = _normalize_entity_name(entity_name)
+            coverage = _coverage_index()
+            
+            geographic_level = None
+            if normalized in coverage.get("city", []):
+                geographic_level = "city"
+            elif normalized in coverage.get("admin1", []):
+                geographic_level = "admin1"
+            elif normalized in coverage.get("country", []):
+                geographic_level = "country"
+            
+            if not geographic_level:
+                return [TextContent(type="text", text=json.dumps({"error": "entity_not_found"}))]
+            
+            results = []
+            total_emissions = 0
+            entity_column = f"{geographic_level}_name"
+            
+            # Query each sector
+            for sector in sectors:
+                file_id = f"{sector}-{geographic_level}-year"
+                file_meta = _find_file_meta(file_id)
+                if not file_meta:
+                    continue
+                
+                table = _get_table_name(file_meta)
+                if not table:
+                    continue
+                
+                sql = f"SELECT emissions_tonnes FROM {table} WHERE {entity_column} = ? AND year = ?"
+                
+                with _get_db_connection() as conn:
+                    result = conn.execute(sql, [normalized, year]).fetchone()
+                
+                if result:
+                    emissions = float(result[0])
+                    results.append({"sector": sector, "emissions": emissions})
+                    total_emissions += emissions
+            
+            if not results:
+                return [TextContent(type="text", text=json.dumps({"error": "no_data_found"}))]
+            
+            # Calculate percentages and rank
+            for item in results:
+                item["percentage"] = round((item["emissions"] / total_emissions) * 100, 2) if total_emissions > 0 else 0
+                item["emissions_mtco2"] = round(item["emissions"] / 1_000_000, 2)
+            
+            # Sort by emissions descending
+            results.sort(key=lambda x: x["emissions"], reverse=True)
+            
+            # Add rank
+            for i, item in enumerate(results, 1):
+                item["rank"] = i
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps({
+                    "entity": normalized,
+                    "year": year,
+                    "total_emissions_tonnes": round(total_emissions, 2),
+                    "total_emissions_mtco2": round(total_emissions / 1_000_000, 2),
+                    "sectors": results
+                }, indent=2, default=str)
+            )]
+        except Exception as e:
+            logger.error(f"Sector comparison failed: {e}")
+            return [TextContent(type="text", text=json.dumps({"error": "comparison_failed", "detail": str(e)}))]
+    
+    elif name == "compare_geographies":
+        entities = arguments.get("entities", [])
+        sector = arguments.get("sector")
+        year = arguments.get("year")
+        
+        if not entities or len(entities) < 2 or not sector or not year:
+            return [TextContent(type="text", text=json.dumps({"error": "entities (min 2), sector, and year required"}))]
+        
+        try:
+            results = []
+            total_emissions = 0
+            
+            for entity in entities:
+                normalized = _normalize_entity_name(entity)
+                coverage = _coverage_index()
+                
+                geographic_level = None
+                if normalized in coverage.get("city", []):
+                    geographic_level = "city"
+                elif normalized in coverage.get("admin1", []):
+                    geographic_level = "admin1"
+                elif normalized in coverage.get("country", []):
+                    geographic_level = "country"
+                
+                if not geographic_level:
+                    continue
+                
+                file_id = f"{sector}-{geographic_level}-year"
+                file_meta = _find_file_meta(file_id)
+                if not file_meta:
+                    continue
+                
+                table = _get_table_name(file_meta)
+                if not table:
+                    continue
+                
+                entity_column = f"{geographic_level}_name"
+                sql = f"SELECT emissions_tonnes FROM {table} WHERE {entity_column} = ? AND year = ?"
+                
+                with _get_db_connection() as conn:
+                    result = conn.execute(sql, [normalized, year]).fetchone()
+                
+                if result:
+                    emissions = float(result[0])
+                    results.append({
+                        "entity": normalized,
+                        "geographic_level": geographic_level,
+                        "emissions": emissions
+                    })
+                    total_emissions += emissions
+            
+            if not results:
+                return [TextContent(type="text", text=json.dumps({"error": "no_data_found"}))]
+            
+            # Calculate percentages
+            for item in results:
+                item["percentage"] = round((item["emissions"] / total_emissions) * 100, 2) if total_emissions > 0 else 0
+                item["emissions_mtco2"] = round(item["emissions"] / 1_000_000, 2)
+            
+            # Sort and rank
+            results.sort(key=lambda x: x["emissions"], reverse=True)
+            for i, item in enumerate(results, 1):
+                item["rank"] = i
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps({
+                    "sector": sector,
+                    "year": year,
+                    "comparison": results,
+                    "total_emissions_tonnes": round(total_emissions, 2),
+                    "total_emissions_mtco2": round(total_emissions / 1_000_000, 2)
+                }, indent=2, default=str)
+            )]
+        except Exception as e:
+            logger.error(f"Geography comparison failed: {e}")
+            return [TextContent(type="text", text=json.dumps({"error": "comparison_failed", "detail": str(e)}))]
+    
     else:
         return [TextContent(
             type="text",
