@@ -612,9 +612,10 @@ def _duckdb_pushdown(
 
     try:
         with _get_db_connection() as conn:
-            result = conn.execute(sql, params).fetchall()
-            # Get column names
-            column_names = [desc[0] for desc in conn.execute(sql, params).description]
+            cursor = conn.execute(sql, params)
+            # Get column names from cursor (avoid re-executing query)
+            column_names = [desc[0] for desc in cursor.description]
+            result = cursor.fetchall()
             # Convert to list of dicts
             return [dict(zip(column_names, row)) for row in result]
     except Exception as e:
@@ -822,46 +823,111 @@ def _get_suggestions_for_column(file_meta: Dict[str, Any], column: str,
 
 
 def _get_cities_data_coverage() -> Dict[str, Any]:
-    """Get cities dataset coverage information"""
-    return {
-        "available_countries": [
-            "Azerbaijan", "India", "Kazakhstan", "Madagascar",
-            "People's Republic of China", "Samoa", "Somalia", "South Africa",
-            "France", "Germany", "United States of America", "United Kingdom",
-            "Italy", "Spain", "Japan", "Brazil", "Canada"
-        ],
-        "total_countries": 17,
-        "total_cities": 116,
-        "coverage_period": "2000-2023",
-        "status": "comprehensive",
-        "major_cities_included": [
-            "Paris", "London", "New York", "Tokyo", "Berlin", "Rome", "Madrid",
-            "São Paulo", "Toronto", "Mumbai", "Beijing"
-        ]
-    }
+    """Get cities dataset coverage information dynamically from database"""
+    try:
+        # Find a city-level dataset to query
+        city_datasets = [f for f in MANIFEST.get("files", []) if "-city-" in f.get("file_id", "")]
+
+        if not city_datasets:
+            return {
+                "available_countries": [],
+                "total_countries": 0,
+                "total_cities": 0,
+                "coverage_period": "N/A",
+                "status": "no_city_data",
+                "major_cities_included": []
+            }
+
+        # Use first city dataset to get coverage info
+        city_file = city_datasets[0]
+        uri = city_file.get("path")
+
+        if not uri or not uri.startswith("duckdb://"):
+            return {"error": "Invalid city dataset URI"}
+
+        db_path, _, table = uri[len("duckdb://"):].partition("#")
+        if not table:
+            return {"error": "No table specified in URI"}
+
+        with _get_db_connection() as conn:
+            # Get unique countries with city data
+            countries_sql = f"SELECT DISTINCT country_name FROM {table} WHERE city_name IS NOT NULL ORDER BY country_name"
+            countries_result = conn.execute(countries_sql).fetchall()
+            available_countries = [row[0] for row in countries_result if row[0]]
+
+            # Get total cities count
+            cities_sql = f"SELECT COUNT(DISTINCT city_name) FROM {table} WHERE city_name IS NOT NULL"
+            cities_count = conn.execute(cities_sql).fetchone()[0]
+
+            # Get major cities (cities with most data points or highest values)
+            major_cities_sql = f"""
+                SELECT DISTINCT city_name
+                FROM {table}
+                WHERE city_name IS NOT NULL
+                LIMIT 15
+            """
+            major_cities_result = conn.execute(major_cities_sql).fetchall()
+            major_cities = [row[0] for row in major_cities_result if row[0]]
+
+            # Get temporal coverage
+            temporal_coverage = city_file.get("temporal_coverage", "2000-2023")
+
+        return {
+            "available_countries": available_countries,
+            "total_countries": len(available_countries),
+            "total_cities": cities_count,
+            "coverage_period": temporal_coverage,
+            "status": "comprehensive",
+            "major_cities_included": major_cities
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting cities coverage: {e}")
+        # Fallback to empty response
+        return {
+            "available_countries": [],
+            "total_countries": 0,
+            "total_cities": 0,
+            "coverage_period": "Unknown",
+            "status": "error",
+            "error": str(e)
+        }
 
 
 def _get_cities_suggestions(country_name: str) -> Dict[str, Any]:
     """Get smart suggestions for unavailable cities data"""
-    available_countries = [
-        "Azerbaijan", "India", "Kazakhstan", "Madagascar",
-        "People's Republic of China", "Samoa", "Somalia", "South Africa",
-        "France", "Germany", "United States of America", "United Kingdom",
-        "Italy", "Spain", "Japan", "Brazil", "Canada"
-    ]
+    # Get available countries dynamically
+    coverage = _get_cities_data_coverage()
+    available_countries = coverage.get("available_countries", [])
+
+    if not available_countries:
+        return {
+            "message": f"City data is not available for {country_name}",
+            "available_alternatives": [
+                f"What are {country_name}'s total transport emissions by year?",
+                "Which countries have the highest emissions?",
+                "Show me admin1 (state/province) level data instead"
+            ],
+            "available_countries": [],
+            "suggestions": [
+                "No city-level data is currently available",
+                "Ask about country-level emissions instead",
+                "Try admin1 (state/province) level queries"
+            ]
+        }
 
     return {
         "message": f"City data is not available for {country_name}",
         "available_alternatives": [
-            "Which Indian city has the highest emissions?",
-            "Which Chinese city has the highest emissions?",
+            f"Which {available_countries[0]} city has the highest emissions?",
+            f"Which {available_countries[1] if len(available_countries) > 1 else available_countries[0]} city has the highest emissions?",
             f"What are {country_name}'s total transport emissions by year?"
         ],
         "available_countries": available_countries,
         "suggestions": [
             f"Try asking about one of these countries: {', '.join(available_countries[:3])}",
             "Ask about country-level emissions instead of city-level",
-            "Check if the country is available in the country dataset"
+            "Try admin1 (state/province) level if available"
         ]
     }
 
@@ -899,6 +965,232 @@ def _coverage_index() -> Dict[str, List[str]]:
             continue
 
     return {k: sorted(v) for k, v in idx.items()}
+
+
+def _normalize_entity_name(name: str, level: Optional[str] = None) -> str:
+    """
+    Normalize entity names to match database values.
+    Handles common aliases, abbreviations, and variations.
+    """
+    if not name:
+        return name
+
+    normalized = name.strip()
+
+    # Comprehensive country name mappings
+    country_aliases = {
+        # United States variations
+        "USA": "United States of America",
+        "US": "United States of America",
+        "U.S.": "United States of America",
+        "U.S.A.": "United States of America",
+        "United States": "United States of America",
+        "America": "United States of America",
+
+        # United Kingdom variations
+        "UK": "United Kingdom",
+        "U.K.": "United Kingdom",
+        "Britain": "United Kingdom",
+        "Great Britain": "United Kingdom",
+        "England": "United Kingdom",  # Note: England is part of UK
+
+        # China variations
+        "China": "People's Republic of China",
+        "PRC": "People's Republic of China",
+        "Mainland China": "People's Republic of China",
+
+        # Russia variations
+        "Russia": "Russian Federation",
+
+        # Korea variations
+        "South Korea": "Republic of Korea",
+        "North Korea": "Democratic People's Republic of Korea",
+        "DPRK": "Democratic People's Republic of Korea",
+        "ROK": "Republic of Korea",
+
+        # Other common variations
+        "Holland": "Netherlands",
+        "Myanmar": "Burma",
+        "Czech Republic": "Czechia",
+        "Ivory Coast": "Côte d'Ivoire",
+        "UAE": "United Arab Emirates",
+        "Vietnam": "Viet Nam",
+    }
+
+    # Admin1 (state/province) mappings
+    admin1_aliases = {
+        "Calif": "California",
+        "Cali": "California",
+        "CA": "California",
+        "NY": "New York",
+        "TX": "Texas",
+        "FL": "Florida",
+        "Mass": "Massachusetts",
+        "MA": "Massachusetts",
+        "Penn": "Pennsylvania",
+        "PA": "Pennsylvania",
+    }
+
+    # City mappings
+    city_aliases = {
+        "NYC": "New York City",
+        "LA": "Los Angeles",
+        "SF": "San Francisco",
+        "DC": "Washington",
+        "Philly": "Philadelphia",
+    }
+
+    # Try exact match first (case-insensitive)
+    for alias, canonical in country_aliases.items():
+        if normalized.lower() == alias.lower():
+            return canonical
+
+    # Try admin1 if level specified
+    if level == "admin1":
+        for alias, canonical in admin1_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+
+    # Try city if level specified
+    if level == "city":
+        for alias, canonical in city_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+
+    # If no level specified, try all
+    if not level:
+        # Check admin1
+        for alias, canonical in admin1_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+        # Check city
+        for alias, canonical in city_aliases.items():
+            if normalized.lower() == alias.lower():
+                return canonical
+
+    return normalized
+
+
+def _fuzzy_match_entity(name: str, candidates: List[str], threshold: float = 0.8) -> List[Tuple[str, float]]:
+    """
+    Find fuzzy matches for entity name using similarity scoring.
+    Returns list of (candidate, similarity_score) tuples, sorted by score (descending).
+    """
+    from difflib import SequenceMatcher
+
+    if not name or not candidates:
+        return []
+
+    name_lower = name.lower()
+    matches = []
+
+    for candidate in candidates:
+        candidate_lower = candidate.lower()
+
+        # Exact match
+        if name_lower == candidate_lower:
+            matches.append((candidate, 1.0))
+            continue
+
+        # Substring match
+        if name_lower in candidate_lower or candidate_lower in name_lower:
+            matches.append((candidate, 0.9))
+            continue
+
+        # Fuzzy similarity
+        similarity = SequenceMatcher(None, name_lower, candidate_lower).ratio()
+        if similarity >= threshold:
+            matches.append((candidate, similarity))
+
+    # Sort by similarity score (descending)
+    matches.sort(key=lambda x: x[1], reverse=True)
+    return matches
+
+
+def _detect_entity_level(entity: str, coverage: Optional[Dict[str, List[str]]] = None) -> Optional[str]:
+    """
+    Auto-detect whether entity is a country, admin1 (state/province), or city.
+    Returns: "country", "admin1", "city", or None if not found.
+    """
+    if not coverage:
+        coverage = _coverage_index()
+
+    # Normalize first
+    normalized = _normalize_entity_name(entity)
+
+    # Try exact match at each level
+    if normalized in coverage.get("city", []):
+        return "city"
+    if normalized in coverage.get("admin1", []):
+        return "admin1"
+    if normalized in coverage.get("country", []):
+        return "country"
+
+    # Try case-insensitive match
+    normalized_lower = normalized.lower()
+
+    for city in coverage.get("city", []):
+        if city.lower() == normalized_lower:
+            return "city"
+
+    for admin1 in coverage.get("admin1", []):
+        if admin1.lower() == normalized_lower:
+            return "admin1"
+
+    for country in coverage.get("country", []):
+        if country.lower() == normalized_lower:
+            return "country"
+
+    # Try fuzzy matching as last resort
+    for level_name, level_key in [("city", "city"), ("admin1", "admin1"), ("country", "country")]:
+        matches = _fuzzy_match_entity(normalized, coverage.get(level_key, []), threshold=0.85)
+        if matches:
+            return level_name
+
+    return None
+
+
+def _smart_entity_resolution(entity: str, level: Optional[str] = None) -> Tuple[str, str, List[str]]:
+    """
+    Resolve entity name with normalization, auto-detection, and fuzzy matching.
+
+    Returns: (normalized_name, detected_level, suggestions)
+    """
+    coverage = _coverage_index()
+
+    # Step 1: Normalize the entity name
+    normalized = _normalize_entity_name(entity, level)
+
+    # Step 2: Detect level if not provided
+    if not level:
+        detected_level = _detect_entity_level(normalized, coverage)
+    else:
+        detected_level = level
+
+    # Step 3: Verify entity exists at detected level
+    if detected_level:
+        level_data = coverage.get(detected_level, [])
+
+        # Exact match (case-insensitive)
+        exact_match = next((item for item in level_data if item.lower() == normalized.lower()), None)
+        if exact_match:
+            return exact_match, detected_level, []
+
+        # Fuzzy match
+        fuzzy_matches = _fuzzy_match_entity(normalized, level_data, threshold=0.75)
+        if fuzzy_matches:
+            best_match, score = fuzzy_matches[0]
+            suggestions = [m[0] for m in fuzzy_matches[:5]]
+            return best_match, detected_level, suggestions
+
+    # Step 4: If still not found, search across all levels
+    all_suggestions = []
+    for level_name in ["country", "admin1", "city"]:
+        fuzzy_matches = _fuzzy_match_entity(normalized, coverage.get(level_name, []), threshold=0.75)
+        for match, score in fuzzy_matches[:3]:
+            all_suggestions.append(f"{match} ({level_name})")
+
+    return normalized, detected_level or "country", all_suggestions
 
 
 def _top_matches(name: str, pool: List[str], k: int = 5) -> List[str]:
@@ -1491,6 +1783,179 @@ async def handle_list_tools() -> list[Tool]:
                 },
                 "required": ["file_id"]
             }
+        ),
+        Tool(
+            name="aggregate_across_sectors",
+            description="Aggregate emissions across multiple sectors for an entity (country/region/city)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name (e.g., 'Germany', 'California', 'Paris')"
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": ["country", "admin1", "city"],
+                        "description": "Geographic level (default: auto-detect)",
+                        "default": "country"
+                    },
+                    "sectors": {
+                        "description": "List of sectors or 'all' for all sectors",
+                        "oneOf": [
+                            {"type": "array", "items": {"type": "string"}},
+                            {"type": "string", "enum": ["all"]}
+                        ],
+                        "default": "all"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to query (default: 2023)",
+                        "default": 2023
+                    }
+                },
+                "required": ["entity"]
+            }
+        ),
+        Tool(
+            name="compare_emissions",
+            description="Compare emissions between multiple entities (countries/regions/cities)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entities": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of entities to compare (min 2)"
+                    },
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector to compare (default: transport)",
+                        "default": "transport"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year for comparison (default: 2023)",
+                        "default": 2023
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": ["country", "admin1", "city"],
+                        "description": "Geographic level (default: country)",
+                        "default": "country"
+                    }
+                },
+                "required": ["entities"]
+            }
+        ),
+        Tool(
+            name="analyze_emissions_trend",
+            description="Analyze emissions trend over a time period with growth rate calculation",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name (e.g., 'Germany')"
+                    },
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector to analyze (default: transport)",
+                        "default": "transport"
+                    },
+                    "start_year": {
+                        "type": "integer",
+                        "description": "Start year (default: 2000)",
+                        "default": 2000
+                    },
+                    "end_year": {
+                        "type": "integer",
+                        "description": "End year (default: 2023)",
+                        "default": 2023
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": ["country", "admin1", "city"],
+                        "description": "Geographic level (default: country)",
+                        "default": "country"
+                    }
+                },
+                "required": ["entity"]
+            }
+        ),
+        Tool(
+            name="get_top_emitters",
+            description="Get top N emitters for a sector and year, ranked by emissions",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector to query (default: transport)",
+                        "default": "transport"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to query (default: 2023)",
+                        "default": 2023
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": ["country", "admin1", "city"],
+                        "description": "Geographic level (default: country)",
+                        "default": "country"
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "description": "Number of top emitters to return (default: 10, max: 50)",
+                        "default": 10,
+                        "minimum": 1,
+                        "maximum": 50
+                    }
+                },
+                "required": []
+            }
+        ),
+        Tool(
+            name="smart_query_emissions",
+            description="Intelligent emissions query with auto-normalization, level detection, and fallback. Use this when entity name or level is ambiguous (e.g., 'USA', 'California', 'NYC')",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name in any format (e.g., 'USA', 'United States', 'California', 'NYC', 'LA')"
+                    },
+                    "sector": {
+                        "type": "string",
+                        "description": "Sector to query (default: transport)",
+                        "default": "transport"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to query (default: 2023)",
+                        "default": 2023
+                    },
+                    "grain": {
+                        "type": "string",
+                        "enum": ["year", "month"],
+                        "description": "Temporal granularity (default: year)",
+                        "default": "year"
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": ["country", "admin1", "city", "auto"],
+                        "description": "Geographic level - use 'auto' for automatic detection (default: auto)",
+                        "default": "auto"
+                    },
+                    "enable_fallback": {
+                        "type": "boolean",
+                        "description": "Enable fallback to higher levels if no data found (city→admin1→country) (default: true)",
+                        "default": true
+                    }
+                },
+                "required": ["entity"]
+            }
         )
     ]
 
@@ -1590,47 +2055,79 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         aggregations = arguments.get("aggregations")
         
         try:
-            # Build SELECT
+            # Build SELECT with validation
             if select:
-                select_sql = ", ".join(select) if isinstance(select, list) else str(select)
+                select_list = select if isinstance(select, list) else [select]
+                # Validate each column name
+                for col in select_list:
+                    valid, error = _validate_column_name_enhanced(col)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": f"Invalid select column: {error}"}))]
+                select_sql = ", ".join(select_list)
             else:
                 select_sql = "*"
-            
-            # Handle aggregations
+
+            # Handle aggregations with validation
             if aggregations:
                 agg_parts = []
                 for col, func in aggregations.items():
+                    # Validate column name
+                    valid, error = _validate_column_name_enhanced(col)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": f"Invalid aggregation column: {error}"}))]
+                    # Validate aggregation function
+                    valid, error = _validate_aggregation_function(func)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": error}))]
                     agg_parts.append(f"{func.upper()}({col}) AS {func}_{col}")
                 if group_by:
                     select_sql = ", ".join(group_by) + ", " + ", ".join(agg_parts)
                 else:
                     select_sql = ", ".join(agg_parts)
-            
+
             sql = f"SELECT {select_sql} FROM {table}"
-            
+
             # WHERE clause
             where_sql, params = _build_where_sql(where)
             sql += where_sql
-            
-            # GROUP BY
+
+            # GROUP BY with validation
             if group_by:
-                sql += f" GROUP BY {', '.join(group_by)}"
-            
-            # ORDER BY
+                group_list = group_by if isinstance(group_by, list) else [group_by]
+                # Validate each group by column
+                for col in group_list:
+                    valid, error = _validate_column_name_enhanced(col)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": f"Invalid group_by column: {error}"}))]
+                sql += f" GROUP BY {', '.join(group_list)}"
+
+            # ORDER BY with validation
             if order_by:
+                # Parse order by to extract column name (handles "column ASC" or "column DESC")
+                order_parts = order_by.split()
+                order_col = order_parts[0]
+                valid, error = _validate_column_name_enhanced(order_col)
+                if not valid:
+                    return [TextContent(type="text", text=json.dumps({"error": f"Invalid order_by column: {error}"}))]
+                # Validate direction if specified
+                if len(order_parts) > 1:
+                    direction = order_parts[1].upper()
+                    if direction not in ("ASC", "DESC"):
+                        return [TextContent(type="text", text=json.dumps({"error": "order_by direction must be ASC or DESC"}))]
                 sql += f" ORDER BY {order_by}"
-            
+
             # LIMIT
             sql += f" LIMIT {limit}"
 
-            # Execute
+            # Execute (fix: reuse cursor to avoid double execution)
             with _get_db_connection() as conn:
-                result = conn.execute(sql, params).fetchall()
-                columns = [desc[0] for desc in conn.description]
+                cursor = conn.execute(sql, params)
+                columns = [desc[0] for desc in cursor.description]
+                result = cursor.fetchall()
 
                 # Convert to dict
                 rows = [dict(zip(columns, row)) for row in result]
-            
+
             return [TextContent(
                 type="text",
                 text=json.dumps({
@@ -1684,8 +2181,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=json.dumps({"error": "invalid_column", "detail": error}))]
 
         try:
-            conn = _get_db_connection(DB_PATH)
-            
             # Calculate YoY changes
             sql = f"""
             WITH base AS (
@@ -1698,7 +2193,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                 FROM {table}
                 WHERE year = ?
             )
-            SELECT 
+            SELECT
                 b.{key_column} as entity,
                 b.base_value,
                 c.compare_value,
@@ -1710,12 +2205,14 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             ORDER BY change {'ASC' if direction == 'drop' else 'DESC'}
             LIMIT ?
             """
-            
-            result = conn.execute(sql, [base_year, compare_year, top_n]).fetchall()
-            columns = [desc[0] for desc in conn.description]
-            
-            rows = [dict(zip(columns, row)) for row in result]
-            
+
+            with _get_db_connection() as conn:
+                cursor = conn.execute(sql, [base_year, compare_year, top_n])
+                columns = [desc[0] for desc in cursor.description]
+                result = cursor.fetchall()
+
+                rows = [dict(zip(columns, row)) for row in result]
+
             return [TextContent(
                 type="text",
                 text=json.dumps({
@@ -1727,8 +2224,9 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                     }
                 }, indent=2, default=str)
             )]
-            
+
         except Exception as e:
+            logger.error(f"YoY calculation failed: {e}")
             return [TextContent(
                 type="text",
                 text=json.dumps({"error": "yoy_calculation_failed", "detail": str(e)})
@@ -1770,8 +2268,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=json.dumps({"error": "invalid_column", "detail": error}))]
 
         try:
-            conn = _get_db_connection(DB_PATH)
-
             # Get monthly data
             sql = f"""
             SELECT month, {value_column}
@@ -1780,7 +2276,8 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             ORDER BY month
             """
 
-            result = conn.execute(sql, [entity_value, year]).fetchall()
+            with _get_db_connection() as conn:
+                result = conn.execute(sql, [entity_value, year]).fetchall()
 
             if not result:
                 return [TextContent(
@@ -1893,8 +2390,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=json.dumps({"error": "invalid_column", "detail": error}))]
 
         try:
-            conn = _get_db_connection(DB_PATH)
-
             # Calculate average by month across years
             sql = f"""
             SELECT
@@ -1911,7 +2406,8 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             ORDER BY month
             """
 
-            result = conn.execute(sql, [entity_value, start_year, end_year]).fetchall()
+            with _get_db_connection() as conn:
+                result = conn.execute(sql, [entity_value, start_year, end_year]).fetchall()
 
             if not result:
                 return [TextContent(
@@ -1984,6 +2480,697 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(
                 type="text",
                 text=json.dumps({"error": "seasonal_analysis_failed", "detail": str(e)})
+            )]
+
+    elif name == "get_data_coverage":
+        try:
+            # Build comprehensive coverage index
+            coverage_idx = _coverage_index()
+            cities_coverage = _get_cities_data_coverage()
+
+            result = {
+                "coverage_by_type": {
+                    "countries": {
+                        "count": len(coverage_idx.get("country", [])),
+                        "sample": coverage_idx.get("country", [])[:10]
+                    },
+                    "admin1_regions": {
+                        "count": len(coverage_idx.get("admin1", [])),
+                        "sample": coverage_idx.get("admin1", [])[:10]
+                    },
+                    "cities": {
+                        "count": len(coverage_idx.get("city", [])),
+                        "sample": coverage_idx.get("city", [])[:10]
+                    }
+                },
+                "city_data_coverage": cities_coverage,
+                "datasets": len(MANIFEST.get("files", [])),
+                "status": "comprehensive"
+            }
+
+            return [TextContent(
+                type="text",
+                text=json.dumps(result, indent=2)
+            )]
+        except Exception as e:
+            logger.error(f"Error getting data coverage: {e}")
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response(
+                    "coverage_error",
+                    f"Failed to retrieve data coverage: {str(e)}"
+                ))
+            )]
+
+    elif name == "get_column_suggestions":
+        file_id = arguments.get("file_id")
+        column = arguments.get("column")
+        query = arguments.get("query")
+        limit = arguments.get("limit", 10)
+
+        if not file_id or not column:
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response(
+                    "missing_parameters",
+                    "file_id and column are required"
+                ))
+            )]
+
+        # Validate file_id
+        valid, error = _validate_file_id(file_id)
+        if not valid:
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response("invalid_file_id", error))
+            )]
+
+        file_meta = _find_file_meta(file_id)
+        if not file_meta:
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response(
+                    "file_not_found",
+                    f"Dataset '{file_id}' not found"
+                ))
+            )]
+
+        try:
+            suggestions = _get_suggestions_for_column(file_meta, column, query, limit)
+            return [TextContent(
+                type="text",
+                text=json.dumps(suggestions, indent=2)
+            )]
+        except Exception as e:
+            logger.error(f"Error getting column suggestions: {e}")
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response(
+                    "suggestions_error",
+                    f"Failed to get suggestions: {str(e)}"
+                ))
+            )]
+
+    elif name == "aggregate_across_sectors":
+        entity = arguments.get("entity")
+        level = arguments.get("level", "country")
+        sectors = arguments.get("sectors", "all")
+        year = arguments.get("year", 2023)
+
+        # Smart normalization
+        if entity:
+            entity = _normalize_entity_name(entity, level)
+
+        # Get all sectors if "all" specified
+        all_sectors = ["transport", "power", "waste", "agriculture",
+                      "buildings", "fuel-exploitation", "industrial-combustion",
+                      "industrial-processes"]
+
+        if sectors == "all":
+            sectors_to_query = all_sectors
+        elif isinstance(sectors, list):
+            sectors_to_query = sectors
+        else:
+            sectors_to_query = [sectors]
+
+        # Query each sector
+        results = []
+        total_emissions = 0
+        column_name = f"{level}_name" if level != "country" else "country_name"
+
+        for sector in sectors_to_query:
+            file_id = f"{sector}-{level}-year"
+            file_meta = _find_file_meta(file_id)
+
+            if not file_meta:
+                results.append({
+                    "sector": sector,
+                    "emissions_tonnes": None,
+                    "error": "dataset_not_found"
+                })
+                continue
+
+            try:
+                where = {column_name: entity, "year": year}
+                data = _duckdb_pushdown(
+                    file_meta=file_meta,
+                    select=[column_name, "year", "emissions_tonnes"],
+                    where=where,
+                    group_by=[],
+                    order_by=None,
+                    limit=10
+                )
+
+                if data and len(data) > 0:
+                    sector_emissions = data[0].get("emissions_tonnes", 0)
+                    total_emissions += sector_emissions
+                    results.append({
+                        "sector": sector,
+                        "emissions_tonnes": float(sector_emissions),
+                        "emissions_mtco2": float(sector_emissions / 1e6)
+                    })
+                else:
+                    results.append({
+                        "sector": sector,
+                        "emissions_tonnes": None,
+                        "error": "no_data"
+                    })
+            except Exception as e:
+                logger.warning(f"Could not get data for {sector}: {e}")
+                results.append({
+                    "sector": sector,
+                    "emissions_tonnes": None,
+                    "error": str(e)
+                })
+
+        response = {
+            "entity": entity,
+            "level": level,
+            "year": year,
+            "total_emissions_tonnes": float(total_emissions),
+            "total_emissions_mtco2": float(total_emissions / 1e6),
+            "breakdown": results,
+            "sectors_with_data": len([r for r in results if r.get("emissions_tonnes") is not None]),
+            "sectors_queried": len(sectors_to_query)
+        }
+
+        return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
+
+    elif name == "compare_emissions":
+        entities = arguments.get("entities", [])
+        sector = arguments.get("sector", "transport")
+        year = arguments.get("year", 2023)
+        level = arguments.get("level", "country")
+
+        # Smart normalization for all entities
+        entities = [_normalize_entity_name(e, level) for e in entities]
+
+        if len(entities) < 2:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "At least 2 entities required for comparison",
+                "provided": len(entities)
+            }))]
+
+        column_name = f"{level}_name" if level != "country" else "country_name"
+        file_id = f"{sector}-{level}-year"
+        file_meta = _find_file_meta(file_id)
+
+        if not file_meta:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "dataset_not_found",
+                "file_id": file_id
+            }))]
+
+        # Query each entity
+        results = []
+        for entity in entities:
+            where = {column_name: entity, "year": year}
+
+            try:
+                data = _duckdb_pushdown(
+                    file_meta=file_meta,
+                    select=[column_name, "year", "emissions_tonnes"],
+                    where=where,
+                    group_by=[],
+                    order_by=None,
+                    limit=10
+                )
+
+                if data and len(data) > 0:
+                    emissions = data[0].get("emissions_tonnes", 0)
+                    results.append({
+                        "entity": entity,
+                        "emissions_tonnes": float(emissions),
+                        "emissions_mtco2": float(emissions / 1e6)
+                    })
+                else:
+                    results.append({
+                        "entity": entity,
+                        "emissions_tonnes": None,
+                        "error": "no_data"
+                    })
+            except Exception as e:
+                results.append({
+                    "entity": entity,
+                    "emissions_tonnes": None,
+                    "error": str(e)
+                })
+
+        # Calculate comparisons
+        valid_results = [r for r in results if r.get("emissions_tonnes") is not None]
+
+        if len(valid_results) >= 2:
+            # Sort by emissions
+            sorted_results = sorted(valid_results, key=lambda x: x["emissions_tonnes"], reverse=True)
+
+            # Calculate differences
+            highest = sorted_results[0]
+            comparisons = []
+
+            for r in sorted_results[1:]:
+                diff = highest["emissions_tonnes"] - r["emissions_tonnes"]
+                pct_diff = (diff / r["emissions_tonnes"] * 100) if r["emissions_tonnes"] > 0 else 0
+
+                comparisons.append({
+                    "entity": r["entity"],
+                    "vs_highest": highest["entity"],
+                    "difference_tonnes": float(diff),
+                    "difference_mtco2": float(diff / 1e6),
+                    "percentage_higher": float(pct_diff)
+                })
+        else:
+            sorted_results = None
+            comparisons = None
+
+        response = {
+            "comparison": {
+                "entities": entities,
+                "sector": sector,
+                "year": year,
+                "level": level
+            },
+            "results": results,
+            "ranking": sorted_results,
+            "comparisons": comparisons,
+            "summary": {
+                "highest_emitter": sorted_results[0]["entity"] if sorted_results else None,
+                "lowest_emitter": sorted_results[-1]["entity"] if sorted_results else None,
+                "total_emissions_mtco2": sum(r["emissions_mtco2"] for r in valid_results) if valid_results else 0
+            }
+        }
+
+        return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
+
+    elif name == "analyze_emissions_trend":
+        entity = arguments.get("entity")
+        sector = arguments.get("sector", "transport")
+        start_year = arguments.get("start_year", 2000)
+        end_year = arguments.get("end_year", 2023)
+        level = arguments.get("level", "country")
+
+        # Smart normalization
+        if entity:
+            entity = _normalize_entity_name(entity, level)
+
+        column_name = f"{level}_name" if level != "country" else "country_name"
+        file_id = f"{sector}-{level}-year"
+        file_meta = _find_file_meta(file_id)
+
+        if not file_meta:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "dataset_not_found",
+                "file_id": file_id
+            }))]
+
+        try:
+            where = {
+                column_name: entity,
+                "year": {"gte": start_year, "lte": end_year}
+            }
+
+            data = _duckdb_pushdown(
+                file_meta=file_meta,
+                select=[column_name, "year", "emissions_tonnes"],
+                where=where,
+                group_by=[],
+                order_by="year ASC",
+                limit=100
+            )
+
+            if not data or len(data) == 0:
+                return [TextContent(type="text", text=json.dumps({
+                    "error": "no_data",
+                    "entity": entity,
+                    "years": f"{start_year}-{end_year}"
+                }))]
+
+            # Calculate trend statistics
+            years = [row["year"] for row in data]
+            values = [row["emissions_tonnes"] for row in data]
+
+            # Calculate year-over-year changes
+            yoy_changes = []
+            for i in range(1, len(values)):
+                change = values[i] - values[i-1]
+                pct_change = (change / values[i-1] * 100) if values[i-1] > 0 else 0
+                yoy_changes.append({
+                    "from_year": years[i-1],
+                    "to_year": years[i],
+                    "change_tonnes": float(change),
+                    "change_percent": float(pct_change)
+                })
+
+            # Calculate overall trend
+            total_change = values[-1] - values[0]
+            total_pct_change = (total_change / values[0] * 100) if values[0] > 0 else 0
+            num_years = years[-1] - years[0]
+            avg_annual_change = total_change / num_years if num_years > 0 else 0
+            avg_annual_pct = total_pct_change / num_years if num_years > 0 else 0
+
+            # Find peak and low
+            max_idx = values.index(max(values))
+            min_idx = values.index(min(values))
+
+            response = {
+                "entity": entity,
+                "sector": sector,
+                "period": f"{start_year}-{end_year}",
+                "level": level,
+                "data_points": len(data),
+                "yearly_data": [{"year": d["year"], "emissions_tonnes": float(d["emissions_tonnes"]),
+                                "emissions_mtco2": float(d["emissions_tonnes"] / 1e6)} for d in data],
+                "trend_analysis": {
+                    "start_value": float(values[0]),
+                    "end_value": float(values[-1]),
+                    "total_change_tonnes": float(total_change),
+                    "total_change_percent": float(total_pct_change),
+                    "avg_annual_change_tonnes": float(avg_annual_change),
+                    "avg_annual_change_percent": float(avg_annual_pct),
+                    "peak": {
+                        "year": years[max_idx],
+                        "value": float(values[max_idx])
+                    },
+                    "low": {
+                        "year": years[min_idx],
+                        "value": float(values[min_idx])
+                    },
+                    "trend_direction": "increasing" if total_change > 0 else "decreasing" if total_change < 0 else "stable"
+                },
+                "year_over_year_changes": yoy_changes
+            }
+
+            return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
+
+        except Exception as e:
+            logger.error(f"Trend analysis failed: {e}")
+            return [TextContent(type="text", text=json.dumps({
+                "error": "analysis_failed",
+                "detail": str(e)
+            }))]
+
+    elif name == "get_top_emitters":
+        sector = arguments.get("sector", "transport")
+        year = arguments.get("year", 2023)
+        level = arguments.get("level", "country")
+        top_n = min(arguments.get("top_n", 10), 50)
+
+        column_name = f"{level}_name" if level != "country" else "country_name"
+        file_id = f"{sector}-{level}-year"
+        file_meta = _find_file_meta(file_id)
+
+        if not file_meta:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "dataset_not_found",
+                "file_id": file_id
+            }))]
+
+        try:
+            where = {"year": year}
+            data = _duckdb_pushdown(
+                file_meta=file_meta,
+                select=[column_name, "year", "emissions_tonnes"],
+                where=where,
+                group_by=[],
+                order_by="emissions_tonnes DESC",
+                limit=top_n
+            )
+
+            if not data:
+                return [TextContent(type="text", text=json.dumps({
+                    "error": "no_data",
+                    "year": year
+                }))]
+
+            # Calculate percentages and rankings
+            total_emissions = sum(row["emissions_tonnes"] for row in data)
+
+            ranked_data = []
+            for idx, row in enumerate(data, 1):
+                emissions = row["emissions_tonnes"]
+                ranked_data.append({
+                    "rank": idx,
+                    "entity": row[column_name],
+                    "emissions_tonnes": float(emissions),
+                    "emissions_mtco2": float(emissions / 1e6),
+                    "percentage_of_top": float((emissions / total_emissions * 100) if total_emissions > 0 else 0)
+                })
+
+            response = {
+                "sector": sector,
+                "year": year,
+                "level": level,
+                "top_n": len(ranked_data),
+                "top_emitters": ranked_data,
+                "total_from_top": float(total_emissions),
+                "total_from_top_mtco2": float(total_emissions / 1e6)
+            }
+
+            return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
+
+        except Exception as e:
+            logger.error(f"Top emitters query failed: {e}")
+            return [TextContent(type="text", text=json.dumps({
+                "error": "query_failed",
+                "detail": str(e)
+            }))]
+
+    elif name == "smart_query_emissions":
+        entity = arguments.get("entity")
+        sector = arguments.get("sector", "transport")
+        year = arguments.get("year", 2023)
+        grain = arguments.get("grain", "year")
+        level = arguments.get("level", "auto")
+        enable_fallback = arguments.get("enable_fallback", True)
+
+        if not entity:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "missing_entity",
+                "detail": "Entity name is required"
+            }))]
+
+        # Step 1: Smart entity resolution
+        try:
+            resolved_entity, detected_level, suggestions = _smart_entity_resolution(
+                entity,
+                level if level != "auto" else None
+            )
+
+            logger.info(f"Smart query: '{entity}' → '{resolved_entity}' ({detected_level})")
+
+        except Exception as e:
+            logger.error(f"Entity resolution failed: {e}")
+            return [TextContent(type="text", text=json.dumps({
+                "error": "resolution_failed",
+                "detail": str(e),
+                "original_entity": entity
+            }))]
+
+        # Step 2: Try to query at detected level with fallback
+        levels_to_try = [detected_level]
+
+        if enable_fallback:
+            # Add fallback levels
+            if detected_level == "city":
+                levels_to_try.extend(["admin1", "country"])
+            elif detected_level == "admin1":
+                levels_to_try.append("country")
+
+        fallback_trace = []
+        final_data = None
+        final_level = None
+
+        for try_level in levels_to_try:
+            column_name = f"{try_level}_name" if try_level != "country" else "country_name"
+            file_id = f"{sector}-{try_level}-{grain}"
+            file_meta = _find_file_meta(file_id)
+
+            if not file_meta:
+                fallback_trace.append({
+                    "level": try_level,
+                    "status": "dataset_not_found",
+                    "file_id": file_id
+                })
+                continue
+
+            try:
+                where = {column_name: resolved_entity, "year": year}
+
+                if grain == "month":
+                    select_cols = [column_name, "year", "month", "emissions_tonnes"]
+                else:
+                    select_cols = [column_name, "year", "emissions_tonnes"]
+
+                data = _duckdb_pushdown(
+                    file_meta=file_meta,
+                    select=select_cols,
+                    where=where,
+                    group_by=[],
+                    order_by="year ASC" if grain == "year" else "year ASC, month ASC",
+                    limit=100
+                )
+
+                if data and len(data) > 0:
+                    # Success! Found data
+                    final_data = data
+                    final_level = try_level
+                    fallback_trace.append({
+                        "level": try_level,
+                        "status": "success",
+                        "rows_found": len(data)
+                    })
+                    break
+                else:
+                    fallback_trace.append({
+                        "level": try_level,
+                        "status": "no_data",
+                        "file_id": file_id
+                    })
+
+            except Exception as e:
+                fallback_trace.append({
+                    "level": try_level,
+                    "status": "error",
+                    "error": str(e),
+                    "file_id": file_id
+                })
+                logger.warning(f"Query failed at {try_level} level: {e}")
+                continue
+
+        # Step 3: Return results or error
+        if final_data:
+            # Format data with MtCO2
+            formatted_data = []
+            for row in final_data:
+                formatted_row = dict(row)
+                if "emissions_tonnes" in formatted_row:
+                    formatted_row["emissions_mtco2"] = float(formatted_row["emissions_tonnes"] / 1e6)
+                    formatted_row["emissions_tonnes"] = float(formatted_row["emissions_tonnes"])
+                formatted_data.append(formatted_row)
+
+            response = {
+                "query": {
+                    "original_entity": entity,
+                    "resolved_entity": resolved_entity,
+                    "requested_level": level,
+                    "detected_level": detected_level,
+                    "actual_level_used": final_level,
+                    "sector": sector,
+                    "year": year,
+                    "grain": grain
+                },
+                "resolution": {
+                    "normalized": resolved_entity,
+                    "detected_level": detected_level,
+                    "suggestions": suggestions if suggestions else [],
+                    "fallback_used": final_level != detected_level
+                },
+                "data": formatted_data,
+                "metadata": {
+                    "rows_returned": len(formatted_data),
+                    "fallback_trace": fallback_trace,
+                    "data_source": f"{sector}-{final_level}-{grain}"
+                }
+            }
+
+            return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
+
+        else:
+            # No data found at any level
+            response = {
+                "error": "no_data_found",
+                "query": {
+                    "original_entity": entity,
+                    "resolved_entity": resolved_entity,
+                    "detected_level": detected_level,
+                    "sector": sector,
+                    "year": year
+                },
+                "resolution": {
+                    "normalized": resolved_entity,
+                    "detected_level": detected_level,
+                    "suggestions": suggestions if suggestions else []
+                },
+                "fallback_trace": fallback_trace,
+                "suggestions": [
+                    f"Try a different entity (suggestions: {', '.join(suggestions[:3])})" if suggestions else "Entity not found in database",
+                    f"Try a different year (requested: {year})",
+                    f"Try a different sector (requested: {sector})"
+                ]
+            }
+
+            return [TextContent(type="text", text=json.dumps(response, indent=2, default=str))]
+
+    elif name == "validate_query":
+        file_id = arguments.get("file_id")
+        select = arguments.get("select", [])
+        where = arguments.get("where", {})
+        group_by = arguments.get("group_by", [])
+        order_by = arguments.get("order_by")
+        limit = arguments.get("limit", 20)
+
+        if not file_id:
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response("missing_file_id", "file_id is required"))
+            )]
+
+        # Validate file_id
+        valid, error = _validate_file_id(file_id)
+        if not valid:
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response("invalid_file_id", error))
+            )]
+
+        file_meta = _find_file_meta(file_id)
+        if not file_meta:
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response("file_not_found", f"Dataset '{file_id}' not found"))
+            )]
+
+        validation_result = {
+            "valid": True,
+            "warnings": [],
+            "suggestions": [],
+            "query_patterns": {}
+        }
+
+        try:
+            # Validate query complexity
+            valid, complexity_error, limits = _validate_query_complexity(select, where, group_by, order_by)
+            if not valid:
+                validation_result["valid"] = False
+                validation_result["warnings"].append(complexity_error)
+                validation_result["limits"] = limits
+
+            # Validate query intent
+            intent_valid, intent_warning, suggestions_dict, suggestions_list = _validate_query_intent(
+                file_id, where, select, file_meta
+            )
+            if intent_warning:
+                validation_result["warnings"].append(intent_warning)
+            if suggestions_list:
+                validation_result["suggestions"].extend(suggestions_list)
+            if suggestions_dict:
+                validation_result["intent_suggestions"] = suggestions_dict
+
+            # Detect query patterns
+            patterns = _detect_query_patterns(where, group_by, order_by, limit)
+            validation_result["query_patterns"] = patterns
+
+            return [TextContent(
+                type="text",
+                text=json.dumps(validation_result, indent=2)
+            )]
+        except Exception as e:
+            logger.error(f"Error validating query: {e}")
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response(
+                    "validation_error",
+                    f"Query validation failed: {str(e)}"
+                ))
             )]
 
     else:
@@ -2181,167 +3368,8 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
             )
         ]
 
-    elif name == "get_data_coverage":
-        try:
-            # Build comprehensive coverage index
-            coverage_idx = _coverage_index()
-            cities_coverage = _get_cities_data_coverage()
-
-            result = {
-                "coverage_by_type": {
-                    "countries": {
-                        "count": len(coverage_idx.get("country", [])),
-                        "sample": coverage_idx.get("country", [])[:10]
-                    },
-                    "admin1_regions": {
-                        "count": len(coverage_idx.get("admin1", [])),
-                        "sample": coverage_idx.get("admin1", [])[:10]
-                    },
-                    "cities": {
-                        "count": len(coverage_idx.get("city", [])),
-                        "sample": coverage_idx.get("city", [])[:10]
-                    }
-                },
-                "city_data_coverage": cities_coverage,
-                "datasets": len(MANIFEST.get("files", [])),
-                "status": "comprehensive"
-            }
-
-            return [TextContent(
-                type="text",
-                text=json.dumps(result, indent=2)
-            )]
-        except Exception as e:
-            logger.error(f"Error getting data coverage: {e}")
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response(
-                    "coverage_error",
-                    f"Failed to retrieve data coverage: {str(e)}"
-                ))
-            )]
-
-    elif name == "get_column_suggestions":
-        file_id = arguments.get("file_id")
-        column = arguments.get("column")
-        query = arguments.get("query")
-        limit = arguments.get("limit", 10)
-
-        if not file_id or not column:
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response(
-                    "missing_parameters",
-                    "file_id and column are required"
-                ))
-            )]
-
-        # Validate file_id
-        valid, error = _validate_file_id(file_id)
-        if not valid:
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response("invalid_file_id", error))
-            )]
-
-        file_meta = _find_file_meta(file_id)
-        if not file_meta:
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response(
-                    "file_not_found",
-                    f"Dataset '{file_id}' not found"
-                ))
-            )]
-
-        try:
-            suggestions = _get_suggestions_for_column(file_meta, column, query, limit)
-            return [TextContent(
-                type="text",
-                text=json.dumps(suggestions, indent=2)
-            )]
-        except Exception as e:
-            logger.error(f"Error getting column suggestions: {e}")
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response(
-                    "suggestions_error",
-                    f"Failed to get suggestions: {str(e)}"
-                ))
-            )]
-
-    elif name == "validate_query":
-        file_id = arguments.get("file_id")
-        select = arguments.get("select", [])
-        where = arguments.get("where", {})
-        group_by = arguments.get("group_by", [])
-        order_by = arguments.get("order_by")
-        limit = arguments.get("limit", 20)
-
-        if not file_id:
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response("missing_file_id", "file_id is required"))
-            )]
-
-        # Validate file_id
-        valid, error = _validate_file_id(file_id)
-        if not valid:
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response("invalid_file_id", error))
-            )]
-
-        file_meta = _find_file_meta(file_id)
-        if not file_meta:
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response("file_not_found", f"Dataset '{file_id}' not found"))
-            )]
-
-        validation_result = {
-            "valid": True,
-            "warnings": [],
-            "suggestions": [],
-            "query_patterns": {}
-        }
-
-        try:
-            # Validate query complexity
-            valid, complexity_error, limits = _validate_query_complexity(select, where, group_by, order_by)
-            if not valid:
-                validation_result["valid"] = False
-                validation_result["warnings"].append(complexity_error)
-                validation_result["limits"] = limits
-
-            # Validate query intent
-            intent_valid, intent_warning, suggestions_dict, suggestions_list = _validate_query_intent(
-                file_id, where, select, file_meta
-            )
-            if intent_warning:
-                validation_result["warnings"].append(intent_warning)
-            if suggestions_list:
-                validation_result["suggestions"].extend(suggestions_list)
-            if suggestions_dict:
-                validation_result["intent_suggestions"] = suggestions_dict
-
-            # Detect query patterns
-            patterns = _detect_query_patterns(where, group_by, order_by, limit)
-            validation_result["query_patterns"] = patterns
-
-            return [TextContent(
-                type="text",
-                text=json.dumps(validation_result, indent=2)
-            )]
-        except Exception as e:
-            logger.error(f"Error validating query: {e}")
-            return [TextContent(
-                type="text",
-                text=json.dumps(_error_response(
-                    "validation_error",
-                    f"Query validation failed: {str(e)}"
-                ))
-            )]
+    # Note: get_data_coverage, get_column_suggestions, and validate_query
+    # have been moved to handle_call_tool() as they are tools, not prompts
 
     return []
 

@@ -17,6 +17,9 @@ import sys
 from typing import Any, Dict, Optional
 from pathlib import Path
 import uuid
+import time
+from collections import defaultdict
+import threading
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,18 +40,109 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware
+# CORS middleware - Configure allowed origins via environment variable
+# SECURITY: Fail closed - require explicit configuration
+# For development: ALLOWED_ORIGINS="http://localhost:3000,http://localhost:8501"
+# For production: Set to your actual frontend domains
+ALLOWED_ORIGINS_ENV = os.getenv("ALLOWED_ORIGINS")
+if not ALLOWED_ORIGINS_ENV:
+    # Only allow localhost in development mode
+    if os.getenv("ENVIRONMENT", "production") == "development":
+        ALLOWED_ORIGINS = ["http://localhost:8501", "http://localhost:3000"]
+        logger.warning("Using default localhost CORS origins in development mode")
+    else:
+        logger.error("ALLOWED_ORIGINS environment variable not set in production!")
+        raise ValueError(
+            "ALLOWED_ORIGINS environment variable is required in production. "
+            "Set it to a comma-separated list of allowed origins. "
+            "Example: ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com"
+        )
+else:
+    ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
+    logger.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # MCP Server Process
 mcp_process: Optional[asyncio.subprocess.Process] = None
 request_counter = 0
+
+
+# ============================================================================
+# Rate Limiting
+# ============================================================================
+
+class RateLimiter:
+    """Simple in-memory rate limiter with sliding window"""
+
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests: Dict[str, list] = defaultdict(list)
+        self.lock = threading.Lock()
+
+    def is_allowed(self, client_id: str) -> bool:
+        """Check if request is allowed for this client"""
+        with self.lock:
+            now = time.time()
+            # Remove old requests outside the window
+            self.requests[client_id] = [
+                req_time for req_time in self.requests[client_id]
+                if now - req_time < self.window_seconds
+            ]
+
+            # Check if under limit
+            if len(self.requests[client_id]) < self.max_requests:
+                self.requests[client_id].append(now)
+                return True
+
+            return False
+
+    def get_retry_after(self, client_id: str) -> int:
+        """Get seconds until next request is allowed"""
+        with self.lock:
+            if not self.requests[client_id]:
+                return 0
+            oldest_request = min(self.requests[client_id])
+            return max(0, int(self.window_seconds - (time.time() - oldest_request)))
+
+# Initialize rate limiter
+# Default: 100 requests per 60 seconds (configurable via env)
+MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "100"))
+WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+rate_limiter = RateLimiter(max_requests=MAX_REQUESTS, window_seconds=WINDOW_SECONDS)
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Apply rate limiting to all requests"""
+    # Skip rate limiting for health check
+    if request.url.path == "/health":
+        return await call_next(request)
+
+    # Get client identifier (IP address)
+    client_ip = request.client.host if request.client else "unknown"
+
+    # Check rate limit
+    if not rate_limiter.is_allowed(client_ip):
+        retry_after = rate_limiter.get_retry_after(client_ip)
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "rate_limit_exceeded",
+                "message": f"Too many requests. Please try again in {retry_after} seconds.",
+                "retry_after": retry_after
+            },
+            headers={"Retry-After": str(retry_after)}
+        )
+
+    return await call_next(request)
 
 
 # ============================================================================

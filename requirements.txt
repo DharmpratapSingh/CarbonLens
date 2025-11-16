@@ -4,7 +4,7 @@
 # Web Framework and API
 fastapi==0.117.1
 uvicorn[standard]==0.37.0
-pydantic>=2.12.0
+pydantic==2.11.9
 pydantic-settings>=2.11.0
 
 # Streamlit for Web UI
@@ -55,5 +55,5 @@ tenacity==9.1.2
 watchfiles==1.1.0
 
 # MCP Protocol Support
-mcp>=1.0.0
+mcp>=1.20.0
 python-multipart>=0.0.9
