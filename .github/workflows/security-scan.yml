@@ -1,0 +1,201 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  dependency-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    - name: Install dependencies
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        uv sync
+
+    - name: Install pip-audit
+      run: pip install pip-audit
+
+    - name: Run pip-audit
+      run: pip-audit --requirement requirements.txt --format json --output pip-audit-report.json
+      continue-on-error: true
+
+    - name: Upload pip-audit report
+      uses: actions/upload-artifact@v4
+      with:
+        name: pip-audit-report
+        path: pip-audit-report.json
+
+    - name: Check for critical vulnerabilities
+      run: |
+        if grep -q '"severity": "critical"' pip-audit-report.json; then
+          echo "❌ Critical vulnerabilities found!"
+          exit 1
+        else
+          echo "✅ No critical vulnerabilities found"
+        fi
+
+  code-security-scan:
+    name: Code Security Scan (Bandit)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install bandit
+      run: pip install bandit[toml]
+
+    - name: Run Bandit
+      run: |
+        bandit -r . \
+          -f json \
+          -o bandit-report.json \
+          --exclude .venv,tests,docs \
+          --severity-level medium \
+          || true
+
+    - name: Upload Bandit report
+      uses: actions/upload-artifact@v4
+      with:
+        name: bandit-report
+        path: bandit-report.json
+
+    - name: Run Bandit (fail on high severity)
+      run: |
+        bandit -r . \
+          --exclude .venv,tests,docs \
+          --severity-level high \
+          --confidence-level high \
+          --format screen
+
+  secret-scan:
+    name: Secret Scanning (TruffleHog)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for secret scanning
+
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  license-compliance:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install pip-licenses
+      run: pip install pip-licenses
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Check licenses
+      run: |
+        pip-licenses --format=json --output-file=licenses.json
+        echo "✅ License compliance check complete"
+
+    - name: Upload license report
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-report
+        path: licenses.json
+
+    - name: Check for GPL licenses (optional, adjust as needed)
+      run: |
+        if grep -qi "gpl" licenses.json; then
+          echo "⚠️  GPL license detected - manual review required"
+          # Not failing build, just warning
+        else
+          echo "✅ No GPL licenses found"
+        fi
+
+  docker-security-scan:
+    name: Docker Image Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker build -t climategpt:test .
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'climategpt:test'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-audit, code-security-scan, secret-scan, license-compliance]
+    if: always()
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Generate security summary
+      run: |
+        echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Job Results:" >> $GITHUB_STEP_SUMMARY
+        echo "- Dependency Audit: ${{ needs.dependency-audit.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Code Security Scan: ${{ needs.code-security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Secret Scan: ${{ needs.secret-scan.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- License Compliance: ${{ needs.license-compliance.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        if [ -f pip-audit-report/pip-audit-report.json ]; then
+          echo "### Dependency Vulnerabilities:" >> $GITHUB_STEP_SUMMARY
+          cat pip-audit-report/pip-audit-report.json | jq -r '.vulnerabilities | length' | xargs -I {} echo "Found {} vulnerabilities" >> $GITHUB_STEP_SUMMARY
+        fi
