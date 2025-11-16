@@ -45,9 +45,16 @@ DEFAULT_TIMEOUT = 30
 OPENAI_BASE_URL = os.environ.get(
     "OPENAI_BASE_URL", "https://erasmus.ai/models/climategpt_8b_test/v1"
 )
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "ai:4climate")
+
+# API_KEY must be set and in format "username:password" - NO DEFAULTS for security
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is required")
+if ":" not in OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY must be in format 'username:password'")
+
 MODEL = os.environ.get("MODEL", "/cache/climategpt_8b_test")
-USER, PASS = OPENAI_API_KEY.split(":", 1) if ":" in OPENAI_API_KEY else ("", "")
+USER, PASS = OPENAI_API_KEY.split(":", 1)
 
 MCP_URL = os.environ.get("MCP_URL", "http://127.0.0.1:8010")
 

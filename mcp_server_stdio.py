@@ -612,9 +612,10 @@ def _duckdb_pushdown(
 
     try:
         with _get_db_connection() as conn:
-            result = conn.execute(sql, params).fetchall()
-            # Get column names
-            column_names = [desc[0] for desc in conn.execute(sql, params).description]
+            cursor = conn.execute(sql, params)
+            # Get column names from cursor (avoid re-executing query)
+            column_names = [desc[0] for desc in cursor.description]
+            result = cursor.fetchall()
             # Convert to list of dicts
             return [dict(zip(column_names, row)) for row in result]
     except Exception as e:
@@ -2054,47 +2055,79 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         aggregations = arguments.get("aggregations")
         
         try:
-            # Build SELECT
+            # Build SELECT with validation
             if select:
-                select_sql = ", ".join(select) if isinstance(select, list) else str(select)
+                select_list = select if isinstance(select, list) else [select]
+                # Validate each column name
+                for col in select_list:
+                    valid, error = _validate_column_name_enhanced(col)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": f"Invalid select column: {error}"}))]
+                select_sql = ", ".join(select_list)
             else:
                 select_sql = "*"
-            
-            # Handle aggregations
+
+            # Handle aggregations with validation
             if aggregations:
                 agg_parts = []
                 for col, func in aggregations.items():
+                    # Validate column name
+                    valid, error = _validate_column_name_enhanced(col)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": f"Invalid aggregation column: {error}"}))]
+                    # Validate aggregation function
+                    valid, error = _validate_aggregation_function(func)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": error}))]
                     agg_parts.append(f"{func.upper()}({col}) AS {func}_{col}")
                 if group_by:
                     select_sql = ", ".join(group_by) + ", " + ", ".join(agg_parts)
                 else:
                     select_sql = ", ".join(agg_parts)
-            
+
             sql = f"SELECT {select_sql} FROM {table}"
-            
+
             # WHERE clause
             where_sql, params = _build_where_sql(where)
             sql += where_sql
-            
-            # GROUP BY
+
+            # GROUP BY with validation
             if group_by:
-                sql += f" GROUP BY {', '.join(group_by)}"
-            
-            # ORDER BY
+                group_list = group_by if isinstance(group_by, list) else [group_by]
+                # Validate each group by column
+                for col in group_list:
+                    valid, error = _validate_column_name_enhanced(col)
+                    if not valid:
+                        return [TextContent(type="text", text=json.dumps({"error": f"Invalid group_by column: {error}"}))]
+                sql += f" GROUP BY {', '.join(group_list)}"
+
+            # ORDER BY with validation
             if order_by:
+                # Parse order by to extract column name (handles "column ASC" or "column DESC")
+                order_parts = order_by.split()
+                order_col = order_parts[0]
+                valid, error = _validate_column_name_enhanced(order_col)
+                if not valid:
+                    return [TextContent(type="text", text=json.dumps({"error": f"Invalid order_by column: {error}"}))]
+                # Validate direction if specified
+                if len(order_parts) > 1:
+                    direction = order_parts[1].upper()
+                    if direction not in ("ASC", "DESC"):
+                        return [TextContent(type="text", text=json.dumps({"error": "order_by direction must be ASC or DESC"}))]
                 sql += f" ORDER BY {order_by}"
-            
+
             # LIMIT
             sql += f" LIMIT {limit}"
 
-            # Execute
+            # Execute (fix: reuse cursor to avoid double execution)
             with _get_db_connection() as conn:
-                result = conn.execute(sql, params).fetchall()
-                columns = [desc[0] for desc in conn.description]
+                cursor = conn.execute(sql, params)
+                columns = [desc[0] for desc in cursor.description]
+                result = cursor.fetchall()
 
                 # Convert to dict
                 rows = [dict(zip(columns, row)) for row in result]
-            
+
             return [TextContent(
                 type="text",
                 text=json.dumps({
@@ -2174,8 +2207,9 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             """
 
             with _get_db_connection() as conn:
-                result = conn.execute(sql, [base_year, compare_year, top_n]).fetchall()
-                columns = [desc[0] for desc in conn.description]
+                cursor = conn.execute(sql, [base_year, compare_year, top_n])
+                columns = [desc[0] for desc in cursor.description]
+                result = cursor.fetchall()
 
                 rows = [dict(zip(columns, row)) for row in result]
 

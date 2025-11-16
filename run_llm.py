@@ -8,8 +8,15 @@ from requests.auth import HTTPBasicAuth
 load_dotenv()
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://erasmus.ai/models/climategpt_8b_test/v1")
 MODEL = os.getenv("MODEL", "/cache/climategpt_8b_test")
-API_KEY = os.getenv("OPENAI_API_KEY", "")  # expects "username:password" (e.g., ai:4climate)
-USER, PASS = API_KEY.split(":", 1) if ":" in API_KEY else ("", "")
+
+# API_KEY must be set and in format "username:password"
+API_KEY = os.getenv("OPENAI_API_KEY", "")
+if not API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is required")
+if ":" not in API_KEY:
+    raise ValueError("OPENAI_API_KEY must be in format 'username:password'")
+
+USER, PASS = API_KEY.split(":", 1)
 
 MCP_PORT = os.getenv("PORT", "8010")
 MCP_BASE = f"http://127.0.0.1:{MCP_PORT}"

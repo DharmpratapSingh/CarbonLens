@@ -16,7 +16,14 @@ import altair as alt
 import logging
 import re
 
-from test_response_metrics import ResponseEvaluator
+# Optional: Response metrics evaluation (for testing/development)
+try:
+    from test_response_metrics import ResponseEvaluator
+    RESPONSE_METRICS_AVAILABLE = True
+except ImportError:
+    RESPONSE_METRICS_AVAILABLE = False
+    ResponseEvaluator = None  # type: ignore
+
 from climategpt_persona_engine import PERSONAS, PERSONA_ORDER, process_persona_question
 
 load_dotenv()
@@ -777,7 +784,7 @@ if prompt:
 
                 st.markdown(answer)
 
-                if data_context:
+                if data_context and RESPONSE_METRICS_AVAILABLE:
                     try:
                         evaluator = ResponseEvaluator()
                         evaluation = evaluator.evaluate_response(
