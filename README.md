@@ -292,9 +292,43 @@ export ALLOWED_ORIGINS=http://localhost:8501,http://localhost:3000
 # Default allows localhost origins only for security
 # Add your production domains as needed:
 # export ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
+
+# Environment mode (affects error messages and security defaults)
+export ENVIRONMENT=production              # production|development (default: production)
+
+# Rate Limiting
+export RATE_LIMIT_MAX_REQUESTS=100        # Max requests per window (default: 100)
+export RATE_LIMIT_WINDOW_SECONDS=60       # Rate limit window in seconds (default: 60)
 ```
 
 **Security Best Practice:** Never use `*` for allowed origins in production. The system now enforces explicit origin whitelisting to prevent unauthorized cross-origin requests.
+
+#### Database Configuration
+
+```bash
+# Database file path
+export DB_PATH=data/warehouse/climategpt.duckdb  # Path to DuckDB database
+
+# Connection pool settings
+export DB_POOL_SIZE=10                    # Connection pool size (default: 10)
+export DB_MAX_CONNECTIONS=20              # Maximum concurrent connections (default: 20)
+
+# Note: Higher pool sizes improve concurrent query performance but use more memory
+# Recommended: 10-20 for most deployments, 20-50 for high-traffic production
+```
+
+#### Performance Configuration
+
+```bash
+# LLM Concurrency Control
+export LLM_CONCURRENCY_LIMIT=10           # Max concurrent LLM API calls (default: 10)
+  # Lower values (2-5): Conservative, prevents rate limiting
+  # Higher values (10-20): Better throughput if API allows
+
+# Query Result Caching
+export CACHE_SIZE=1000                    # Cache entry limit (default: 1000)
+export CACHE_TTL_SECONDS=300              # Cache TTL in seconds (default: 300/5min)
+```
 
 #### Development & Debugging
 
