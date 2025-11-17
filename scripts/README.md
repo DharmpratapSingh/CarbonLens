@@ -35,7 +35,15 @@ The preprocessing pipeline has been refactored into modular, reusable components
 #### Core Modules
 
 **`sector_config.py`** - Central configuration
-- Defines all sector metadata (transport, power, waste, agriculture)
+- Defines ALL 8 EDGAR sector metadata:
+  * Transport (aviation, maritime, road)
+  * Power Industry (coal, gas, oil)
+  * Agriculture (livestock, rice, soil, manure)
+  * Waste (solid waste, wastewater)
+  * Buildings (residential, commercial)
+  * Fuel Exploitation (oil/gas, coal mining)
+  * Industrial Combustion (iron/steel, chemicals)
+  * Industrial Processes (cement, chemicals, metals)
 - Configures paths, parameters, and thresholds
 - Provides helper functions for path resolution
 
@@ -51,39 +59,36 @@ The preprocessing pipeline has been refactored into modular, reusable components
 - Aggregates gridded emissions to administrative boundaries
 - Tracks provenance and coverage metrics
 
-#### Sector Processors
+#### Sector Processors (All 8 EDGAR Sectors)
 
-**`process_transport_sector.py`** - Transport sector pipeline
+**Individual Sector Processors:**
+- `process_transport_sector.py` - Transport (aviation, maritime, road)
+- `process_power_sector.py` - Power Industry (coal, gas, oil)
+- `process_agriculture_sector.py` - Agriculture (livestock, rice, soil)
+- `process_waste_sector.py` - Waste (solid waste, wastewater)
+- `process_buildings_sector.py` - Buildings (residential, commercial)
+- `process_fuel_exploitation_sector.py` - Fuel Exploitation (oil/gas, mining)
+- `process_industrial_combustion_sector.py` - Industrial Combustion
+- `process_industrial_processes_sector.py` - Industrial Processes
+
+**Usage:**
 ```bash
+# Process a single sector
 python scripts/preprocessing/process_transport_sector.py \
   --raw-data data/raw/transport \
   --output data/curated-2
 ```
 
-Processes:
-- Aviation, maritime, and road transport emissions
-- 0.1° resolution NetCDF files (2000-2023)
-- Outputs: admin0, admin1, city levels (monthly + yearly)
-
-**`process_power_sector.py`** - Power industry pipeline
+**`process_all_sectors.py`** - Batch processor for all sectors
 ```bash
-python scripts/preprocessing/process_power_sector.py \
-  --raw-data data/raw/power-industry \
-  --output data/curated-2
-```
-
-Processes power generation and industrial energy emissions using the same pipeline.
-
-**`process_all_sectors.py`** - Batch processor
-```bash
-# Process all configured sectors
+# Process all 8 sectors
 python scripts/preprocessing/process_all_sectors.py \
   --raw-data-dir data/raw \
   --output-dir data/curated-2
 
 # Process specific sectors
 python scripts/preprocessing/process_all_sectors.py \
-  --sectors transport power-industry
+  --sectors transport agriculture waste
 ```
 
 ### Pipeline Workflow
@@ -94,9 +99,30 @@ python scripts/preprocessing/process_all_sectors.py \
 4. **Spatial aggregation** - Hybrid join to admin boundaries
 5. **Export results** - Parquet + CSV for monthly and yearly data
 
-### Adding New Sectors
+## Master Processing Script
 
-To add a new sector (e.g., agriculture):
+For convenience, use the master script at repository root:
+
+```bash
+# Process all sectors (recommended)
+python process_edgar_complete.py
+
+# Process high-priority sectors only (transport, power-industry)
+python process_edgar_complete.py --by-priority --max-priority 1
+
+# Process specific sectors
+python process_edgar_complete.py --sectors transport agriculture
+
+# Dry run (check configuration)
+python process_edgar_complete.py --dry-run
+
+# List all available sectors
+python process_edgar_complete.py --list
+```
+
+### All 8 Sectors Ready to Process
+
+All EDGAR v2024 sectors are now fully configured and ready:
 
 1. **Update `sector_config.py`**:
 ```python

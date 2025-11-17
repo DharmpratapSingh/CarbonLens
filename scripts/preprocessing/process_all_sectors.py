@@ -13,6 +13,12 @@ from typing import List
 from sector_config import SECTORS, get_raw_data_path
 from process_transport_sector import TransportProcessor
 from process_power_sector import PowerProcessor
+from process_agriculture_sector import AgricultureProcessor
+from process_waste_sector import WasteProcessor
+from process_buildings_sector import BuildingsProcessor
+from process_fuel_exploitation_sector import FuelExploitationProcessor
+from process_industrial_combustion_sector import IndustrialCombustionProcessor
+from process_industrial_processes_sector import IndustrialProcessesProcessor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,11 +27,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# Processor mapping
+# Processor mapping - All 8 EDGAR sectors
 PROCESSORS = {
     "transport": TransportProcessor,
     "power-industry": PowerProcessor,
-    # Add more sectors as they're implemented
+    "agriculture": AgricultureProcessor,
+    "waste": WasteProcessor,
+    "buildings": BuildingsProcessor,
+    "fuel-exploitation": FuelExploitationProcessor,
+    "industrial-combustion": IndustrialCombustionProcessor,
+    "industrial-processes": IndustrialProcessesProcessor,
 }
 
 
