@@ -1,6 +1,6 @@
 # ClimateGPT Streamlit UI
 # Python 3.11 is required for optimal compatibility
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 

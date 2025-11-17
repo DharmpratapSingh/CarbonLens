@@ -1,6 +1,6 @@
 # ClimateGPT MCP Server
 # Python 3.11 is required for optimal compatibility with DuckDB, GeoPandas, and NumPy 2.x
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
