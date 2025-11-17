@@ -261,7 +261,7 @@ async def send_mcp_request(method: str, params: Dict[str, Any]) -> Dict[str, Any
 # HTTP Endpoints (REST API compatibility with existing ClimateGPT UI)
 # ============================================================================
 
-@app.get("/health")
+@app.get("/health", response_model=None)
 async def health_check():
     """Health check endpoint"""
     if mcp_process and mcp_process.returncode is None:
