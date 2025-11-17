@@ -698,6 +698,8 @@ def normalize_country_name(country_name: str) -> str:
 
 def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs) -> Dict[str, Any]:
     """HTTP helper with retries/backoff to the MCP server."""
+    import traceback
+
     last_error: Optional[Exception] = None
     for attempt in range(max_retries):
         try:
@@ -723,9 +725,17 @@ def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs
                 "error": f"HTTP error {e.response.status_code}: {e.response.text}",
                 "status_code": e.response.status_code,
             }
+        except TypeError as e:
+            # Catch unhashable type errors that might occur in requests
+            last_error = e
+            logger.error(f"TypeError in request for {url}: {e}")
+            logger.error(traceback.format_exc())
+            logger.error(f"Request kwargs: {kwargs}")
+            return {"error": f"Request error: {str(e)}"}
         except Exception as e:
             last_error = e
             logger.warning(f"Request error for {url} (attempt {attempt + 1}/{max_retries}): {e}")
+            logger.warning(traceback.format_exc())
 
         time.sleep(1 * (2 ** attempt))
 
@@ -826,6 +836,8 @@ def chat_with_climategpt(system: str, user_message: str, temperature: float = 0.
 
 def exec_tool_call(tool_json: str) -> dict:
     """Execute tool call against MCP server with caching and resilience."""
+    import traceback
+
     cleaned_json = tool_json.strip()
 
     if cleaned_json.startswith("```json"):
@@ -896,37 +908,55 @@ def exec_tool_call(tool_json: str) -> dict:
         return _http_post(f"{MCP_URL}/batch/query", batch_args)
 
     try:
+        # Make a deep copy of args to avoid mutation issues with nested dicts/lists
+        import copy
+        args_copy = copy.deepcopy(args)
+
         cache_key = None
         try:
-            cache_key = json.dumps({"tool": tool, "args": args}, sort_keys=True)
-        except Exception:
+            # Use the copy for cache key to avoid any mutation-related issues
+            cache_key = json.dumps({"tool": tool, "args": args_copy}, sort_keys=True)
+            logger.debug(f"Created cache key for tool={tool}")
+        except Exception as cache_err:
+            logger.warning(f"Could not create cache key: {cache_err}")
+            logger.warning(traceback.format_exc())
             cache_key = None
 
         if cache_key:
-            cached = _TOOL_CACHE.get(cache_key)
-            if cached is not None:
-                return cached
+            try:
+                cached = _TOOL_CACHE.get(cache_key)
+                if cached is not None:
+                    logger.debug(f"Cache hit for tool={tool}")
+                    return cached
+            except Exception as cache_get_err:
+                logger.error(f"Error getting from cache: {cache_get_err}")
+                logger.error(traceback.format_exc())
 
         if tool == "list_files":
             result = mcp_circuit_breaker.call(_list_files)
         elif tool == "get_schema":
-            if "file_id" not in args:
+            if "file_id" not in args_copy:
                 return {"error": "Missing required parameter: file_id"}
-            result = mcp_circuit_breaker.call(_get_schema, args["file_id"])
+            result = mcp_circuit_breaker.call(_get_schema, args_copy["file_id"])
         elif tool == "query":
-            result = mcp_circuit_breaker.call(_execute_query, args)
+            result = mcp_circuit_breaker.call(_execute_query, args_copy)
         elif tool == "metrics.yoy":
-            result = mcp_circuit_breaker.call(_execute_yoy_metrics, args)
+            result = mcp_circuit_breaker.call(_execute_yoy_metrics, args_copy)
         elif tool == "batch_query":
-            result = mcp_circuit_breaker.call(_execute_batch_query, args)
+            result = mcp_circuit_breaker.call(_execute_batch_query, args_copy)
         else:
             return {"error": f"Unsupported tool: {tool}"}
 
         if cache_key and isinstance(result, dict) and "error" not in result:
-            _TOOL_CACHE.set(cache_key, result)
+            try:
+                _TOOL_CACHE.set(cache_key, result)
+            except Exception as cache_set_err:
+                logger.error(f"Error setting cache: {cache_set_err}")
+                logger.error(traceback.format_exc())
         return result
     except Exception as error:
         logger.error(f"Unexpected error in exec_tool_call: {error}")
+        logger.error(traceback.format_exc())
         return {"error": str(error)}
 
 
