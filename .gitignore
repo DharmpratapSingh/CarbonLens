@@ -104,7 +104,11 @@ bkl_*/
 # ----------------------------
 data/outputs/*.png
 data/outputs/*.csv
-docs/images/output*.png
+docs/images/*.png
+docs/images/*.jpg
+docs/images/*.jpeg
+testing/test_results/*.png
+testing/test_results/*.csv
 
 # ----------------------------
 # Local test artifacts
