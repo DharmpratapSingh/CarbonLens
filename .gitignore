@@ -112,6 +112,16 @@ output*.png
 notebooks/.ipynb_checkpoints/
 __snapshots__/
 *.bak
+*.backup
+*.bak[0-9]
+*.bak[0-9][0-9]
+*~
+.~*
+
+# Testing results (should not be committed)
+testing/test_results/*.txt
+testing/test_results/*.json
+testing/test_results/*.csv
 
 # ----------------------------
 # Output / Reports / Cache

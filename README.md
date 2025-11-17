@@ -581,34 +581,82 @@ The following reports document recent enhancements and security improvements:
 ├── enhanced_climategpt_with_personas.py   # Streamlit UI
 ├── run_llm.py                             # LLM integration harness
 ├── src/
+│   ├── pipelines/                         # Data processing pipelines
+│   │   ├── viirs.py                       # VIIRS data pipeline
+│   │   └── __init__.py
 │   └── utils/                             # Core utilities
 │       ├── router.py                      # Intent to dataset routing
 │       ├── intent.py                      # Intent extraction
 │       ├── answer.py                      # Response formatting
 │       ├── fallbacks.py                   # Query fallback logic
+│       ├── baseline_context.py            # Baseline context handling
+│       ├── logging.py                     # Logging utilities
 │       └── http.py                        # HTTP utilities
+├── scripts/                               # Utility scripts
+│   ├── preprocessing/                     # Data preprocessing for EDGAR sectors
+│   │   ├── sector_config.py               # Centralized sector configuration
+│   │   ├── geometry_loader.py             # Geographic boundary loader
+│   │   ├── spatial_aggregation.py         # Spatial join engine
+│   │   ├── process_transport_sector.py    # Transport sector pipeline
+│   │   ├── process_power_sector.py        # Power sector pipeline
+│   │   ├── process_all_sectors.py         # Batch process all sectors
+│   │   └── (legacy scripts)
+│   ├── database/                          # Database management
+│   │   ├── analyze_database.py            # Database analysis
+│   │   ├── apply_database_indexes.py      # Index management
+│   │   ├── create_database_indexes.sql    # SQL index definitions
+│   │   └── create_materialized_views.*    # View management
+│   └── analysis/                          # Analysis and validation
+│       ├── audit_dependencies.py          # Dependency audit
+│       └── validate_phase5.py             # Phase 5 validation
+├── notebooks/                             # Jupyter notebooks for exploration
+│   ├── EDGAR_Transport.ipynb              # Original transport processing (now modular)
+│   └── (analysis documentation)
+├── shared/                                # Shared utilities
+│   ├── entity_normalization.py            # Entity name normalization
+│   └── __init__.py
+├── middleware/                            # Middleware components
+│   └── request_tracking.py                # Request tracking
+├── utils/                                 # Legacy utilities
+│   ├── config.py                          # Configuration management
+│   ├── error_handling.py                  # Error handling utilities
+│   └── serialization.py                   # Serialization utilities
+├── models/                                # Data models (placeholder)
 ├── data/
+│   ├── curated/                           # Legacy curated data
+│   │   └── manifest_mcp.json              # Legacy manifest
 │   ├── curated-2/                         # Processed datasets
 │   │   └── manifest_mcp_duckdb.json       # Dataset manifest
 │   ├── warehouse/                         # DuckDB databases
-│   └── geo/                               # Geographic data
+│   └── geo/                               # Geographic boundary files
 ├── testing/                               # LLM testing infrastructure
 │   ├── test_harness.py                    # Automated test runner
 │   ├── analyze_results.py                 # Results analysis
 │   ├── test_question_bank.json            # 50 test questions
-│   └── test_results/                      # Test outputs
+│   └── test_results/                      # Test outputs (gitignored)
 ├── tests/                                 # Unit/integration tests
 ├── docs/                                  # Documentation
 │   ├── QUICK_START.md                     # Setup guide
 │   ├── SYSTEM_REFERENCE.md                # Architecture reference
 │   ├── TESTING_GUIDE.md                   # Testing procedures
-│   └── TESTING_RESULTS.md                 # LLM comparison results
+│   ├── TESTING_RESULTS.md                 # LLM comparison results
+│   ├── MCP_ARCHITECTURE.md                # MCP architecture details
+│   ├── API.md                             # API documentation
+│   └── (additional documentation)
+├── .github/                               # GitHub Actions workflows
+│   ├── workflows/
+│   │   ├── ci.yml                         # CI pipeline
+│   │   ├── security.yml                   # Security scanning
+│   │   └── deploy.yml                     # Deployment workflow
+│   └── dependabot.yml                     # Dependency updates
 ├── Dockerfile.server                      # Server container
 ├── Dockerfile.ui                          # UI container
 ├── docker-compose.yml                     # Multi-container setup
 ├── Makefile                               # Development commands
-├── pyproject.toml                         # Dependencies
-└── uv.lock                                # Locked dependencies
+├── pyproject.toml                         # UV package manager config
+├── uv.lock                                # Locked dependencies
+├── requirements.txt                       # Pip fallback dependencies
+└── .gitignore                             # Git ignore rules
 ```
 
 ### Dependencies

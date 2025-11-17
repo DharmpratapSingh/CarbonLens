@@ -1,7 +1,31 @@
+# ClimateGPT MCP Server
+# Python 3.11 is required for optimal compatibility with DuckDB, GeoPandas, and NumPy 2.x
 FROM python:3.11-slim
+
 WORKDIR /app
-COPY requirements.txt ./
+
+# Install system dependencies for geospatial processing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgeos-dev \
+    libproj-dev \
+    libspatialindex-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependency files
+COPY requirements.txt pyproject.toml uv.lock* ./
+
+# Install Python dependencies using pip (fallback)
+# For UV-based builds, uncomment the UV section below
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Alternative: Use UV for faster dependency resolution (uncomment to use)
+# RUN pip install uv && uv pip install --system -r requirements.txt
+
+# Copy application code
 COPY . .
+
+# Expose MCP server port
 EXPOSE 8010
+
+# Run the MCP HTTP bridge (which spawns the stdio server)
 CMD ["python", "mcp_http_bridge.py"]
