@@ -22,7 +22,8 @@ import re
 import threading
 import time
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Literal
+from collections.abc import Callable
 
 import requests
 from dotenv import load_dotenv
@@ -293,7 +294,7 @@ class PersonaOutputController:
             },
         }
 
-    def curate_response(self, raw_response: str, persona_key: str, data_context: Dict[str, Any]) -> str:
+    def curate_response(self, raw_response: str, persona_key: str, data_context: dict[str, Any]) -> str:
         persona = PERSONAS.get(persona_key, PERSONAS[CLIMATE_ANALYST])
         template = self.response_templates.get(persona_key, self.response_templates[CLIMATE_ANALYST])
 
@@ -307,7 +308,7 @@ class PersonaOutputController:
         curated += f"\n\n*{template['units']}*"
         return curated
 
-    def _persona_insights(self, persona_key: str, rows: List[Dict[str, Any]]) -> str:
+    def _persona_insights(self, persona_key: str, rows: list[dict[str, Any]]) -> str:
         if persona_key == CLIMATE_ANALYST:
             return self._analyst(rows)
         if persona_key == RESEARCH_SCIENTIST:
@@ -318,7 +319,7 @@ class PersonaOutputController:
             return self._student(rows)
         return ""
 
-    def _analyst(self, rows: List[Dict[str, Any]]) -> str:
+    def _analyst(self, rows: list[dict[str, Any]]) -> str:
         snippets = []
         if len(rows) >= 3:
             snippets.append("• Identify top emitters in this slice for immediate policy engagement.")
@@ -328,7 +329,7 @@ class PersonaOutputController:
             snippets.append("• Consider sector-specific mitigation for regions above ~150 MtCO₂.")
         return "\n".join(snippets) if snippets else "• No standout anomalies beyond baseline patterns."
 
-    def _scientist(self, rows: List[Dict[str, Any]]) -> str:
+    def _scientist(self, rows: list[dict[str, Any]]) -> str:
         snippets = []
         if self._has_multiple_years(rows):
             snippets.append("• Trend visibility: multiple years captured, enabling temporal comparisons.")
@@ -337,7 +338,7 @@ class PersonaOutputController:
         snippets.append("• Source: EDGAR v2024 structured datasets; refer to meta for exact table IDs.")
         return "\n".join(snippets)
 
-    def _finance(self, rows: List[Dict[str, Any]]) -> str:
+    def _finance(self, rows: list[dict[str, Any]]) -> str:
         snippets = []
         share = self._top_three_share(rows)
         if share:
@@ -347,7 +348,7 @@ class PersonaOutputController:
         snippets.append("• Treat figures as emission signals only (no direct monetary inference).")
         return "\n".join(snippets)
 
-    def _student(self, rows: List[Dict[str, Any]]) -> str:
+    def _student(self, rows: list[dict[str, Any]]) -> str:
         snippets = [
             "• Emissions measure how much CO₂ was released by the sector and place shown.",
         ]
@@ -358,12 +359,12 @@ class PersonaOutputController:
         return "\n".join(snippets)
 
     @staticmethod
-    def _has_multiple_years(rows: List[Dict[str, Any]]) -> bool:
+    def _has_multiple_years(rows: list[dict[str, Any]]) -> bool:
         years = {r.get("year") for r in rows if isinstance(r, dict) and isinstance(r.get("year"), int)}
         return len(years) >= 2
 
     @staticmethod
-    def _top_value(rows: List[Dict[str, Any]]) -> float:
+    def _top_value(rows: list[dict[str, Any]]) -> float:
         best = 0.0
         for r in rows[:10]:
             if not isinstance(r, dict):
@@ -378,8 +379,8 @@ class PersonaOutputController:
         return best
 
     @staticmethod
-    def _top_three_share(rows: List[Dict[str, Any]]) -> Optional[float]:
-        values: List[float] = []
+    def _top_three_share(rows: list[dict[str, Any]]) -> float | None:
+        values: list[float] = []
         for r in rows[:10]:
             if not isinstance(r, dict):
                 continue
@@ -399,7 +400,7 @@ class PersonaOutputController:
         return (top3 / total) * 100
 
     @staticmethod
-    def _top_entity(rows: List[Dict[str, Any]]) -> Tuple[Optional[str], Optional[float]]:
+    def _top_entity(rows: list[dict[str, Any]]) -> tuple[str | None, float | None]:
         best_name, best_val = None, None
         best = PersonaOutputController._top_value(rows)
         if best <= 0:
@@ -495,7 +496,7 @@ COMMON_CITIES = {
 }
 
 
-def detect_geo_entity(question: str) -> Dict[str, Any]:
+def detect_geo_entity(question: str) -> dict[str, Any]:
     """Detect admin1 or city mentions to enforce level constraints."""
     q = (question or "").lower()
 
@@ -517,7 +518,7 @@ def detect_geo_entity(question: str) -> Dict[str, Any]:
     return {}
 
 
-def apply_level_constraints_to_tool(tool_json: str, constraints: Dict[str, Any]) -> str:
+def apply_level_constraints_to_tool(tool_json: str, constraints: dict[str, Any]) -> str:
     """Force level-specific file_id and required filters onto the tool JSON."""
     try:
         obj = json.loads(tool_json)
@@ -591,12 +592,12 @@ def _coerce_literal(value: str) -> Any:
         return stripped
 
 
-def _parse_where_string(where_str: str) -> Optional[Dict[str, Any]]:
+def _parse_where_string(where_str: str) -> dict[str, Any] | None:
     try:
         clauses = [clause.strip() for clause in re.split(r"\bAND\b", where_str, flags=re.IGNORECASE) if clause.strip()]
         if not clauses:
             return None
-        where: Dict[str, Any] = {}
+        where: dict[str, Any] = {}
         for clause in clauses:
             in_match = re.match(r"^([a-zA-Z0-9_]+)\s+IN\s*\((.+)\)$", clause, flags=re.IGNORECASE)
             between_match = re.match(r"^([a-zA-Z0-9_]+)\s+BETWEEN\s+(.+)\s+AND\s+(.+)$", clause, flags=re.IGNORECASE)
@@ -625,7 +626,7 @@ def _parse_where_string(where_str: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def sanitize_tool_call_object(tool_obj: Dict[str, Any]) -> Dict[str, Any]:
+def sanitize_tool_call_object(tool_obj: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(tool_obj, dict):
         return tool_obj
 
@@ -696,9 +697,9 @@ def normalize_country_name(country_name: str) -> str:
     return mapping.get(country_name, country_name)
 
 
-def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs) -> Dict[str, Any]:
+def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs: Any) -> dict[str, Any]:
     """HTTP helper with retries/backoff to the MCP server."""
-    last_error: Optional[Exception] = None
+    last_error: Exception | None = None
     for attempt in range(max_retries):
         try:
             if method.upper() == "GET":
@@ -737,19 +738,19 @@ def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs
 class SimpleLRUCache:
     """Thread-safe LRU cache for tool responses."""
 
-    def __init__(self, maxsize: int = 128):
-        self.maxsize = maxsize
-        self._store: "OrderedDict[str, Any]" = OrderedDict()
-        self._lock = threading.Lock()
+    def __init__(self, maxsize: int = 128) -> None:
+        self.maxsize: int = maxsize
+        self._store: OrderedDict[str, Any] = OrderedDict()
+        self._lock: threading.Lock = threading.Lock()
 
-    def get(self, key: str):
+    def get(self, key: str) -> Any | None:
         with self._lock:
             if key in self._store:
                 self._store.move_to_end(key)
                 return self._store[key]
             return None
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any) -> None:
         with self._lock:
             if key in self._store:
                 self._store.move_to_end(key)
@@ -759,14 +760,14 @@ class SimpleLRUCache:
 
 
 class CircuitBreaker:
-    def __init__(self, max_failures: int = 5, timeout: int = 60):
-        self.max_failures = max_failures
-        self.timeout = timeout
-        self.failures = 0
-        self.last_failure_time = 0.0
-        self.state = "CLOSED"
+    def __init__(self, max_failures: int = 5, timeout: int = 60) -> None:
+        self.max_failures: int = max_failures
+        self.timeout: int = timeout
+        self.failures: int = 0
+        self.last_failure_time: float = 0.0
+        self.state: Literal["CLOSED", "OPEN", "HALF_OPEN"] = "CLOSED"
 
-    def call(self, func, *args, **kwargs):
+    def call(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         now = time.time()
 
         if self.state == "OPEN" and now - self.last_failure_time > self.timeout:
@@ -824,7 +825,7 @@ def chat_with_climategpt(system: str, user_message: str, temperature: float = 0.
         return f"Error communicating with ClimateGPT: {str(e)}"
 
 
-def exec_tool_call(tool_json: str) -> dict:
+def exec_tool_call(tool_json: str) -> dict[str, Any]:
     """Execute tool call against MCP server with caching and resilience."""
     cleaned_json = tool_json.strip()
 
@@ -930,7 +931,7 @@ def exec_tool_call(tool_json: str) -> dict:
         return {"error": str(error)}
 
 
-def create_fallback_response(question: str, context: Dict[str, Any]) -> str:
+def create_fallback_response(question: str, context: dict[str, Any]) -> str:
     fallback_responses = {
         "timeout": "The data request timed out. Please try again in a moment.",
         "network_error": "I couldn't reach the data service. Please check that the MCP server is running.",
@@ -951,7 +952,7 @@ def create_fallback_response(question: str, context: Dict[str, Any]) -> str:
         context.get("error_type"), "I encountered an unexpected error. Please try again."
     )
 
-    suggestions: List[str] = []
+    suggestions: list[str] = []
     lower_q = (question or "").lower()
     if "emissions" in lower_q:
         suggestions.append("Try specifying a sector like transport, power, or waste along with the year.")
@@ -969,7 +970,7 @@ def create_fallback_response(question: str, context: Dict[str, Any]) -> str:
 # Persona question processor (primary export)
 # -----------------------------------------------------------------------------
 
-def process_persona_question(question: str, persona_key: str) -> Tuple[str, Dict[str, Any], str]:
+def process_persona_question(question: str, persona_key: str) -> tuple[str, dict[str, Any], str]:
     """Main workflow for persona-aware ClimateGPT answer generation."""
     try:
         system_prompt = get_persona_system_prompt(persona_key)
@@ -1131,7 +1132,7 @@ Data:
 """
 
         raw_answer = ""
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
         for attempt in range(3):
             try:
                 raw_answer = chat_with_climategpt(system_prompt, summary_prompt, temperature=0.2)

@@ -1,5 +1,5 @@
 import os, sys, json, requests, textwrap
-from typing import Any, Dict, List, Union
+from typing import Any, Literal
 from dotenv import load_dotenv
 from pathlib import Path
 from requests.auth import HTTPBasicAuth
@@ -186,7 +186,7 @@ def chat(system: str, user: str, temperature: float = 0.2) -> str:
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
-def exec_single_tool(tool_obj: Dict[str, Any]) -> Dict[str, Any]:
+def exec_single_tool(tool_obj: dict[str, Any]) -> dict[str, Any]:
     """Execute a single tool call object."""
     t = tool_obj.get("tool")
     a = tool_obj.get("args", {})
@@ -241,7 +241,7 @@ def exec_single_tool(tool_obj: Dict[str, Any]) -> Dict[str, Any]:
 
     return {"error": f"unknown tool '{t}'"}
 
-def exec_tool_call(tool_json: str) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+def exec_tool_call(tool_json: str) -> dict[str, Any] | list[dict[str, Any]]:
     """
     Accepts a JSON string like:
     {"tool":"query","args":{...}}  - single tool call
@@ -347,7 +347,7 @@ def _ensure_mt(df_rows: Any) -> Any:
         pass
     return df_rows
 
-def summarize(result: Union[Dict[str, Any], List[Dict[str, Any]]], question: str) -> str:
+def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str) -> str:
     """Summarize query result(s) into natural language answer."""
 
     # Handle multiple results (from multiple tool calls)
@@ -429,7 +429,7 @@ CRITICAL RULES:
 
     return chat(summary_system_prompt, prompt, temperature=0.2)
 
-def main():
+def main() -> None:
     if len(sys.argv) < 2:
         print('Usage: uv run python run_llm.py "<your question>"')
         print('Example: uv run python run_llm.py "Which US state had the biggest drop in 2020 vs 2019?"')

@@ -14,7 +14,8 @@ import json
 import logging
 import os
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Literal
+from collections.abc import Callable
 from pathlib import Path
 import uuid
 import time
@@ -70,8 +71,8 @@ app.add_middleware(
 )
 
 # MCP Server Process
-mcp_process: Optional[asyncio.subprocess.Process] = None
-request_counter = 0
+mcp_process: asyncio.subprocess.Process | None = None
+request_counter: int = 0
 
 
 # ============================================================================
@@ -81,11 +82,11 @@ request_counter = 0
 class RateLimiter:
     """Simple in-memory rate limiter with sliding window"""
 
-    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
-        self.max_requests = max_requests
-        self.window_seconds = window_seconds
-        self.requests: Dict[str, list] = defaultdict(list)
-        self.lock = threading.Lock()
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60) -> None:
+        self.max_requests: int = max_requests
+        self.window_seconds: int = window_seconds
+        self.requests: dict[str, list[float]] = defaultdict(list)
+        self.lock: threading.Lock = threading.Lock()
 
     def is_allowed(self, client_id: str) -> bool:
         """Check if request is allowed for this client"""
@@ -120,7 +121,7 @@ rate_limiter = RateLimiter(max_requests=MAX_REQUESTS, window_seconds=WINDOW_SECO
 
 
 @app.middleware("http")
-async def rate_limit_middleware(request: Request, call_next):
+async def rate_limit_middleware(request: Request, call_next: Callable[[Request], Any]) -> Any:
     """Apply rate limiting to all requests"""
     # Skip rate limiting for health check
     if request.url.path == "/health":
@@ -185,15 +186,21 @@ def _safe_json_loads(payload: str) -> Any:
             except json.JSONDecodeError:
                 continue
 
-        logger.error("Unparseable JSON payload snippet: %s", text[:200])
-        raise
+        # Log the actual payload for debugging
+        try:
+            snippet = text[:200] if len(text) > 200 else text
+        except Exception as e:
+            snippet = f"<error getting snippet: {e}>"
+        logger.error(f"Unparseable JSON payload snippet: {snippet}")
+        logger.error(f"Payload type: {type(text)}, length: {len(text) if hasattr(text, '__len__') else 'N/A'}")
+        raise json.JSONDecodeError("Unable to parse JSON from MCP response", text[:100] if isinstance(text, str) else str(text)[:100], 0)
 
 
 # ============================================================================
 # MCP Protocol Communication
 # ============================================================================
 
-async def send_mcp_request(method: str, params: Dict[str, Any]) -> Dict[str, Any]:
+async def send_mcp_request(method: str, params: dict[str, Any]) -> dict[str, Any]:
     """Send a JSON-RPC 2.0 request to MCP server via stdio"""
     global request_counter, mcp_process
 
@@ -261,8 +268,8 @@ async def send_mcp_request(method: str, params: Dict[str, Any]) -> Dict[str, Any
 # HTTP Endpoints (REST API compatibility with existing ClimateGPT UI)
 # ============================================================================
 
-@app.get("/health")
-async def health_check():
+@app.get("/health", response_model=None)
+async def health_check() -> dict[str, Any] | JSONResponse:
     """Health check endpoint"""
     if mcp_process and mcp_process.returncode is None:
         return {"status": "healthy", "mcp_server": "running"}
@@ -273,7 +280,7 @@ async def health_check():
 
 
 @app.get("/list_files")
-async def list_files():
+async def list_files() -> dict[str, Any]:
     """List available datasets via MCP list_emissions_datasets tool"""
     try:
         result = await send_mcp_request("tools/call", {
@@ -302,7 +309,7 @@ async def list_files():
 
 
 @app.get("/get_schema/{file_id}")
-async def get_schema(file_id: str):
+async def get_schema(file_id: str) -> dict[str, Any]:
     """Get schema for a specific dataset via MCP get_dataset_schema tool"""
     try:
         result = await send_mcp_request("tools/call", {
@@ -333,20 +340,25 @@ async def get_schema(file_id: str):
 
 class QueryRequest(BaseModel):
     file_id: str
-    select: Optional[list] = None
-    where: Optional[dict] = None
-    group_by: Optional[list] = None
-    order_by: Optional[str] = None
-    limit: Optional[int] = None
+    select: list[str] | None = None
+    where: dict[str, Any] | None = None
+    group_by: list[str] | None = None
+    order_by: str | None = None
+    limit: int | None = None
 
 
 @app.post("/query")
-async def query_data(request: QueryRequest):
+async def query_data(request: QueryRequest) -> dict[str, Any]:
     """Query dataset via MCP query_emissions tool"""
     try:
+        # Get request arguments and remove problematic "assist" parameter
+        # (workaround for MCP library bug with boolean values)
+        arguments = request.dict(exclude_none=True)
+        arguments.pop("assist", None)  # Remove assist if present
+
         result = await send_mcp_request("tools/call", {
             "name": "query_emissions",
-            "arguments": request.dict(exclude_none=True)
+            "arguments": arguments
         })
 
         # Parse the result content
@@ -354,10 +366,13 @@ async def query_data(request: QueryRequest):
             content = result["content"]
             if isinstance(content, list) and len(content) > 0:
                 text_content = content[0].get("text", "{}")
+                logger.debug(f"MCP response text_content type: {type(text_content)}")
+                logger.debug(f"MCP response text_content: {text_content[:500] if isinstance(text_content, str) else str(text_content)[:500]}")
                 try:
                     return _safe_json_loads(text_content)
-                except json.JSONDecodeError as exc:
+                except Exception as exc:
                     logger.error(f"Failed to parse query payload: {exc}")
+                    logger.error(f"Problematic content: {text_content[:500] if isinstance(text_content, str) else str(text_content)[:500]}")
                     raise HTTPException(status_code=500, detail=f"Invalid MCP response: {exc}") from exc
 
         return result
@@ -375,12 +390,12 @@ class YoYMetricsRequest(BaseModel):
     value_col: str
     base_year: int
     compare_year: int
-    top_n: Optional[int] = 10
-    direction: Optional[str] = "rise"
+    top_n: int | None = 10
+    direction: str | None = "rise"
 
 
 @app.post("/metrics/yoy")
-async def yoy_metrics(request: YoYMetricsRequest):
+async def yoy_metrics(request: YoYMetricsRequest) -> dict[str, Any]:
     """Year-over-year metrics via MCP calculate_yoy_change tool"""
     try:
         result = await send_mcp_request("tools/call", {
@@ -409,11 +424,11 @@ async def yoy_metrics(request: YoYMetricsRequest):
 
 
 class BatchQueryRequest(BaseModel):
-    queries: list
+    queries: list[dict[str, Any]]
 
 
 @app.post("/batch/query")
-async def batch_query(request: BatchQueryRequest):
+async def batch_query(request: BatchQueryRequest) -> dict[str, Any]:
     """Batch query - executes multiple queries via MCP and aggregates results"""
     try:
         results = []
@@ -464,7 +479,7 @@ async def batch_query(request: BatchQueryRequest):
 # ============================================================================
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """Start the MCP server process on bridge startup"""
     global mcp_process
 
@@ -518,7 +533,7 @@ async def startup_event():
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     """Stop the MCP server process on bridge shutdown"""
     global mcp_process
 

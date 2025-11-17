@@ -13,7 +13,9 @@ import time
 import hashlib
 import uuid
 from pathlib import Path
-from typing import Any, Optional, Dict, List, Tuple, Set
+from typing import Any, Literal
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager
 from datetime import datetime, timedelta
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -35,7 +37,7 @@ from contextlib import contextmanager
 # ---------------------------------------------------------------------
 # Logging Infrastructure (from mcp_server.py)
 # ---------------------------------------------------------------------
-def _setup_logging():
+def _setup_logging() -> logging.Logger:
     """Setup structured logging with JSON format for production."""
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     log_format = os.getenv("LOG_FORMAT", "json")  # "json" or "text"
@@ -50,7 +52,7 @@ def _setup_logging():
     # Create formatter
     if log_format == "json":
         class JSONFormatter(logging.Formatter):
-            def format(self, record):
+            def format(self, record: logging.LogRecord) -> str:
                 log_entry = {
                     "timestamp": datetime.utcnow().isoformat() + "Z",
                     "level": record.levelname,
@@ -157,7 +159,7 @@ def _resolve_file_id(fid: str) -> str:
 # ---------------------------------------------------------------------
 # Enhanced Validation Functions (from mcp_server.py)
 # ---------------------------------------------------------------------
-def _validate_file_id_enhanced(file_id: str) -> Tuple[bool, Optional[str]]:
+def _validate_file_id_enhanced(file_id: str) -> tuple[bool, str | None]:
     """Validate file_id format and prevent path traversal."""
     if not file_id or not isinstance(file_id, str):
         return False, "file_id must be a non-empty string"
@@ -176,7 +178,7 @@ def _validate_file_id_enhanced(file_id: str) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def _validate_column_name_enhanced(col: str) -> Tuple[bool, Optional[str]]:
+def _validate_column_name_enhanced(col: str) -> tuple[bool, str | None]:
     """Validate column name to prevent SQL injection."""
     if not col or not isinstance(col, str):
         return False, "Column name must be a non-empty string"
@@ -197,7 +199,7 @@ def _validate_column_name_enhanced(col: str) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def _validate_filter_value(value: Any, filter_type: str) -> Tuple[bool, Optional[str]]:
+def _validate_filter_value(value: Any, filter_type: str) -> tuple[bool, str | None]:
     """Validate filter values for safety and size limits."""
     if filter_type == "list" and isinstance(value, list):
         if len(value) > _MAX_QUERY_COMPLEXITY["max_list_items"]:
@@ -219,7 +221,7 @@ def _validate_filter_value(value: Any, filter_type: str) -> Tuple[bool, Optional
 # ---------------------------------------------------------------------
 # Error handling helpers (from mcp_server.py)
 # ---------------------------------------------------------------------
-def _parse_duckdb_column_error(error_str: str) -> Optional[Tuple[List[str], List[str]]]:
+def _parse_duckdb_column_error(error_str: str) -> tuple[list[str], list[str]] | None:
     """
     Parse DuckDB error to detect invalid column errors.
     Returns (bad_columns, candidate_columns) if it's a column error, None otherwise.
@@ -253,9 +255,13 @@ def _parse_duckdb_column_error(error_str: str) -> Optional[Tuple[List[str], List
     return bad_columns, candidate_columns
 
 
-def _error_response(code: str, detail: str, hint: Optional[str] = None,
-                   context: Optional[Dict[str, Any]] = None,
-                   suggestions: Optional[List[str]] = None) -> Dict[str, Any]:
+def _error_response(
+    code: str,
+    detail: str,
+    hint: str | None = None,
+    context: dict[str, Any] | None = None,
+    suggestions: list[str] | None = None
+) -> dict[str, Any]:
     """
     Create a standardized error response with enhanced context.
 
@@ -269,7 +275,7 @@ def _error_response(code: str, detail: str, hint: Optional[str] = None,
     Returns:
         Standardized error dict
     """
-    response: Dict[str, Any] = {
+    response: dict[str, Any] = {
         "error": code,
         "detail": detail,
         "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -287,7 +293,7 @@ def _error_response(code: str, detail: str, hint: Optional[str] = None,
 # ---------------------------------------------------------------------
 # Query Validation and Intent Detection (from mcp_server.py)
 # ---------------------------------------------------------------------
-def _parse_temporal_coverage(coverage_str: str) -> Optional[Tuple[int, int]]:
+def _parse_temporal_coverage(coverage_str: str) -> tuple[int, int] | None:
     """Parse temporal coverage string like '2000-2023' into (start, end)."""
     if not coverage_str or '-' not in coverage_str:
         return None
@@ -301,13 +307,29 @@ def _parse_temporal_coverage(coverage_str: str) -> Optional[Tuple[int, int]]:
 
 
 def _validate_query_complexity(
-    select: List[str],
-    where: Dict[str, Any],
-    group_by: List[str],
-    order_by: Optional[str] = None
-) -> Tuple[bool, Optional[str], Optional[Dict[str, Any]]]:
+    select: list[str],
+    where: dict[str, Any],
+    group_by: list[str],
+    order_by: str | None = None
+) -> tuple[bool, str | None, dict[str, Any] | None]:
     """Validate query complexity to prevent DoS."""
     issues = []
+
+    # Validate that select and group_by contain only strings, not nested structures
+    for i, col in enumerate(select):
+        if not isinstance(col, str):
+            issues.append(f"Invalid select column at index {i}: expected string, got {type(col).__name__}. Columns must be strings like 'country_name', not nested structures.")
+
+    for i, col in enumerate(group_by):
+        if not isinstance(col, str):
+            issues.append(f"Invalid group_by column at index {i}: expected string, got {type(col).__name__}. Columns must be strings like 'country_name', not nested structures.")
+
+    # If we already have validation issues, return early to avoid unhashable type errors
+    if issues:
+        return False, "; ".join(issues), {
+            "max_columns": _MAX_QUERY_COMPLEXITY["max_columns"],
+            "max_filters": _MAX_QUERY_COMPLEXITY["max_filters"],
+        }
 
     # Check column count
     if len(select) > _MAX_QUERY_COMPLEXITY["max_columns"]:
@@ -321,7 +343,7 @@ def _validate_query_complexity(
     if len(group_by) > _MAX_QUERY_COMPLEXITY["max_columns"]:
         issues.append(f"Too many group_by columns (max {_MAX_QUERY_COMPLEXITY['max_columns']})")
 
-    # Validate all column names
+    # Validate all column names (safe now that we've confirmed they're strings)
     all_columns = set(select) | set(group_by)
     if order_by:
         order_col = order_by.split()[0]
@@ -357,7 +379,7 @@ def _validate_query_complexity(
 # Phase 3: Advanced Query Features (from mcp_server.py)
 # ---------------------------------------------------------------------
 
-def _validate_aggregation_function(func: str) -> Tuple[bool, Optional[str]]:
+def _validate_aggregation_function(func: str) -> tuple[bool, str | None]:
     """Validate aggregation function name."""
     valid_functions = {"sum", "avg", "mean", "min", "max", "count", "distinct", "std", "stddev", "variance"}
     if func.lower() not in valid_functions:
@@ -365,7 +387,7 @@ def _validate_aggregation_function(func: str) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def _build_aggregation_sql(aggregations: Dict[str, str], select: List[str]) -> Tuple[str, List[str]]:
+def _build_aggregation_sql(aggregations: dict[str, str], select: list[str]) -> tuple[str, list[str]]:
     """
     Build SQL for aggregations.
     Returns (SQL fragment, list of aggregated columns for SELECT).
@@ -422,7 +444,7 @@ def _build_aggregation_sql(aggregations: Dict[str, str], select: List[str]) -> T
     return sql_fragment, all_cols
 
 
-def _build_having_sql(having: Dict[str, Any]) -> Tuple[str, list]:
+def _build_having_sql(having: dict[str, Any]) -> tuple[str, list[Any]]:
     """
     Build SQL HAVING clause for post-aggregation filtering.
     Similar to WHERE but for aggregated columns.
@@ -478,16 +500,16 @@ def _build_having_sql(having: Dict[str, Any]) -> Tuple[str, list]:
 # ---------------------------------------------------------------------
 
 def _duckdb_pushdown(
-    file_meta: Dict[str, Any],
-    select: List[str],
-    where: Dict[str, Any],
-    group_by: List[str],
-    order_by: Optional[str],
-    limit: Optional[int],
-    offset: Optional[int] = 0,
-    aggregations: Optional[Dict[str, str]] = None,
-    having: Optional[Dict[str, Any]] = None
-) -> Optional[List[Dict[str, Any]]]:
+    file_meta: dict[str, Any],
+    select: list[str],
+    where: dict[str, Any],
+    group_by: list[str],
+    order_by: str | None,
+    limit: int | None,
+    offset: int | None = 0,
+    aggregations: dict[str, str] | None = None,
+    having: dict[str, Any] | None = None
+) -> list[dict[str, Any]] | None:
     """
     Pushdown query to DuckDB for maximum performance.
     Returns list of row dicts, or None if not DuckDB engine.
@@ -626,15 +648,15 @@ def _duckdb_pushdown(
 
 
 def _duckdb_yoy(
-    file_meta: Dict[str, Any],
+    file_meta: dict[str, Any],
     key_col: str,
     value_col: str,
     base_year: int,
     compare_year: int,
-    extra_where: Dict[str, Any],
+    extra_where: dict[str, Any],
     top_n: int,
     direction: str,
-) -> Optional[List[Dict[str, Any]]]:
+) -> list[dict[str, Any]] | None:
     """
     Optimized year-over-year calculation using DuckDB.
     Returns list of row dicts with YoY changes.
@@ -697,7 +719,7 @@ def _duckdb_yoy(
 # Note: Computed columns are complex and require pandas
 # They may not be needed for the MCP stdio server initially
 # Keeping stub for future implementation
-def _validate_computed_expression(expression: str, available_columns: List[str]) -> Tuple[bool, Optional[str]]:
+def _validate_computed_expression(expression: str, available_columns: list[str]) -> tuple[bool, str | None]:
     """
     Validate computed column expression for security.
     Placeholder for future implementation.
@@ -722,7 +744,7 @@ def _validate_computed_expression(expression: str, available_columns: List[str])
 # Phase 5: Suggestions & Intelligence (from mcp_server.py)
 # ---------------------------------------------------------------------
 
-def _get_distinct_values(file_meta: Dict[str, Any], column: str, limit: int = 100) -> List[str]:
+def _get_distinct_values(file_meta: dict[str, Any], column: str, limit: int = 100) -> list[str]:
     """
     Get distinct values for a column from a table.
     Returns list of distinct values (sorted, limited).
@@ -761,7 +783,7 @@ def _get_distinct_values(file_meta: Dict[str, Any], column: str, limit: int = 10
     return []
 
 
-def _fuzzy_match(query: str, options: List[str], limit: int = 5) -> List[str]:
+def _fuzzy_match(query: str, options: list[str], limit: int = 5) -> list[str]:
     """
     Find similar strings using simple string matching.
     Returns list of matching options sorted by similarity.
@@ -791,8 +813,12 @@ def _fuzzy_match(query: str, options: List[str], limit: int = 5) -> List[str]:
     return [opt for _, opt in scores[:limit]]
 
 
-def _get_suggestions_for_column(file_meta: Dict[str, Any], column: str,
-                                query: Optional[str] = None, limit: int = 10) -> Dict[str, Any]:
+def _get_suggestions_for_column(
+    file_meta: dict[str, Any],
+    column: str,
+    query: str | None = None,
+    limit: int = 10
+) -> dict[str, Any]:
     """
     Get suggestions for a column, optionally filtered by query string.
     Returns dict with suggestions and metadata.
@@ -822,7 +848,7 @@ def _get_suggestions_for_column(file_meta: Dict[str, Any], column: str,
     }
 
 
-def _get_cities_data_coverage() -> Dict[str, Any]:
+def _get_cities_data_coverage() -> dict[str, Any]:
     """Get cities dataset coverage information dynamically from database"""
     try:
         # Find a city-level dataset to query
@@ -894,7 +920,7 @@ def _get_cities_data_coverage() -> Dict[str, Any]:
         }
 
 
-def _get_cities_suggestions(country_name: str) -> Dict[str, Any]:
+def _get_cities_suggestions(country_name: str) -> dict[str, Any]:
     """Get smart suggestions for unavailable cities data"""
     # Get available countries dynamically
     coverage = _get_cities_data_coverage()
@@ -933,7 +959,7 @@ def _get_cities_suggestions(country_name: str) -> Dict[str, Any]:
 
 
 @lru_cache(maxsize=1)
-def _coverage_index() -> Dict[str, List[str]]:
+def _coverage_index() -> dict[str, list[str]]:
     """Build coverage index for all datasets (cached)"""
     idx = {"city": set(), "admin1": set(), "country": set()}
 
@@ -967,7 +993,7 @@ def _coverage_index() -> Dict[str, List[str]]:
     return {k: sorted(v) for k, v in idx.items()}
 
 
-def _normalize_entity_name(name: str, level: Optional[str] = None) -> str:
+def _normalize_entity_name(name: str, level: str | None = None) -> str:
     """
     Normalize entity names to match database values.
     Handles common aliases, abbreviations, and variations.
@@ -1214,7 +1240,7 @@ def _get_iso3_code(country_name: str) -> str | None:
     return ISO3_CODES.get(normalized)
 
 
-def _fuzzy_match_entity(name: str, candidates: List[str], threshold: float = 0.8) -> List[Tuple[str, float]]:
+def _fuzzy_match_entity(name: str, candidates: list[str], threshold: float = 0.8) -> list[tuple[str, float]]:
     """
     Find fuzzy matches for entity name using similarity scoring.
     Returns list of (candidate, similarity_score) tuples, sorted by score (descending).
@@ -1250,7 +1276,7 @@ def _fuzzy_match_entity(name: str, candidates: List[str], threshold: float = 0.8
     return matches
 
 
-def _detect_entity_level(entity: str, coverage: Optional[Dict[str, List[str]]] = None) -> Optional[str]:
+def _detect_entity_level(entity: str, coverage: dict[str, list[str]] | None = None) -> str | None:
     """
     Auto-detect whether entity is a country, admin1 (state/province), or city.
     Returns: "country", "admin1", "city", or None if not found.
@@ -1293,7 +1319,7 @@ def _detect_entity_level(entity: str, coverage: Optional[Dict[str, List[str]]] =
     return None
 
 
-def _smart_entity_resolution(entity: str, level: Optional[str] = None) -> Tuple[str, str, List[str]]:
+def _smart_entity_resolution(entity: str, level: str | None = None) -> tuple[str, str, list[str]]:
     """
     Resolve entity name with normalization, auto-detection, and fuzzy matching.
 
@@ -1336,7 +1362,7 @@ def _smart_entity_resolution(entity: str, level: Optional[str] = None) -> Tuple[
     return normalized, detected_level or "country", all_suggestions
 
 
-def _top_matches(name: str, pool: List[str], k: int = 5) -> List[str]:
+def _top_matches(name: str, pool: list[str], k: int = 5) -> list[str]:
     """Find top matching strings from a pool"""
     nm = (name or "").lower()
     scored = []
@@ -1352,25 +1378,25 @@ def _top_matches(name: str, pool: List[str], k: int = 5) -> List[str]:
 # Phase 2 & 4: Remaining Validation and Data Handling
 # ---------------------------------------------------------------------
 
-def _get_file_meta(file_id: str) -> Optional[Dict[str, Any]]:
+def _get_file_meta(file_id: str) -> dict[str, Any] | None:
     """Get file metadata from manifest"""
     return next((f for f in MANIFEST.get("files", []) if f.get("file_id") == file_id), None)
 
 
 def _validate_query_intent(
     file_id: str,
-    where: Dict[str, Any],
-    select: List[str],
-    file_meta: Optional[Dict[str, Any]] = None,
+    where: dict[str, Any],
+    select: list[str],
+    file_meta: dict[str, Any] | None = None,
     assist: bool = True
-) -> Tuple[bool, Optional[str], Optional[Dict[str, Any]], Optional[List[str]]]:
+) -> tuple[bool, str | None, dict[str, Any] | None, list[str] | None]:
     """
     Validate query and detect potential issues before execution.
     Returns: (is_valid, warning_message, suggestions_dict, suggestions_list)
     """
     warnings = []
-    suggestions_dict: Dict[str, Any] = {}
-    suggestions_list: List[str] = []
+    suggestions_dict: dict[str, Any] = {}
+    suggestions_list: list[str] = []
 
     if not file_meta:
         return False, "File metadata not found", None, ["Check available datasets"]
@@ -1422,11 +1448,11 @@ def _validate_query_intent(
 
 
 def _detect_query_patterns(
-    where: Dict[str, Any],
-    group_by: List[str],
-    order_by: Optional[str],
-    limit: Optional[int]
-) -> Dict[str, Any]:
+    where: dict[str, Any],
+    group_by: list[str],
+    order_by: str | None,
+    limit: int | None
+) -> dict[str, Any]:
     """Detect query patterns to provide better suggestions."""
     patterns = {
         "is_top_n": False,
@@ -1461,21 +1487,21 @@ def _detect_query_patterns(
 class QueryCache:
     """LRU cache for query results with TTL"""
     
-    def __init__(self, maxsize=1000, ttl_seconds=300):
-        self.maxsize = maxsize
-        self.ttl_seconds = ttl_seconds
-        self._cache = {}
-        self._timestamps = {}
-        self._lock = threading.Lock()
-        self.hits = 0
-        self.misses = 0
+    def __init__(self, maxsize: int = 1000, ttl_seconds: int = 300) -> None:
+        self.maxsize: int = maxsize
+        self.ttl_seconds: int = ttl_seconds
+        self._cache: dict[str, Any] = {}
+        self._timestamps: dict[str, float] = {}
+        self._lock: threading.Lock = threading.Lock()
+        self.hits: int = 0
+        self.misses: int = 0
     
-    def _get_cache_key(self, sql: str, params: list) -> str:
+    def _get_cache_key(self, sql: str, params: list[Any]) -> str:
         """Generate cache key from SQL and parameters"""
         cache_str = sql + json.dumps(params, sort_keys=True)
         return hashlib.md5(cache_str.encode()).hexdigest()
     
-    def get(self, sql: str, params: list):
+    def get(self, sql: str, params: list[Any]) -> Any | None:
         """Get cached result if exists and not expired"""
         with self._lock:
             key = self._get_cache_key(sql, params)
@@ -1494,7 +1520,7 @@ class QueryCache:
             self.hits += 1
             return self._cache[key]
     
-    def set(self, sql: str, params: list, result):
+    def set(self, sql: str, params: list[Any], result: Any) -> None:
         """Cache query result"""
         with self._lock:
             key = self._get_cache_key(sql, params)
@@ -1508,7 +1534,7 @@ class QueryCache:
             self._cache[key] = result
             self._timestamps[key] = time.time()
     
-    def clear(self):
+    def clear(self) -> None:
         """Clear all cached results"""
         with self._lock:
             self._cache.clear()
@@ -1516,7 +1542,7 @@ class QueryCache:
             self.hits = 0
             self.misses = 0
     
-    def get_stats(self):
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         total = self.hits + self.misses
         hit_rate = (self.hits / total * 100) if total > 0 else 0
@@ -1547,7 +1573,7 @@ class DuckDBConnectionPool:
     - Thread-safe operations
     """
 
-    def __init__(self, db_path: str, pool_size: int = 10, max_overflow: int = 5):
+    def __init__(self, db_path: str, pool_size: int = 10, max_overflow: int = 5) -> None:
         """
         Initialize connection pool.
 
@@ -1556,17 +1582,17 @@ class DuckDBConnectionPool:
             pool_size: Number of connections to maintain in pool
             max_overflow: Maximum connections above pool_size (total = pool_size + max_overflow)
         """
-        self.db_path = _resolve_db_path(db_path)
-        self.pool_size = pool_size
-        self.max_overflow = max_overflow
-        self.max_connections = pool_size + max_overflow
+        self.db_path: str = _resolve_db_path(db_path)
+        self.pool_size: int = pool_size
+        self.max_overflow: int = max_overflow
+        self.max_connections: int = pool_size + max_overflow
 
         # Connection pool (FIFO queue)
-        self._pool = Queue(maxsize=self.max_connections)
-        self._lock = threading.Lock()
-        self._connection_count = 0
-        self._connections_created = 0
-        self._connections_reused = 0
+        self._pool: Queue[duckdb.DuckDBPyConnection] = Queue(maxsize=self.max_connections)
+        self._lock: threading.Lock = threading.Lock()
+        self._connection_count: int = 0
+        self._connections_created: int = 0
+        self._connections_reused: int = 0
 
         # Pre-populate pool with initial connections
         logger.info(f"Initializing DuckDB connection pool: size={pool_size}, max_overflow={max_overflow}")
@@ -1644,7 +1670,7 @@ class DuckDBConnectionPool:
                     with self._lock:
                         self._connection_count -= 1
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics."""
         return {
             "pool_size": self.pool_size,
@@ -1656,7 +1682,7 @@ class DuckDBConnectionPool:
             "reuse_ratio": self._connections_reused / max(1, self._connections_created + self._connections_reused)
         }
 
-    def close_all(self):
+    def close_all(self) -> None:
         """Close all connections in pool."""
         logger.info("Closing all connections in pool")
         while not self._pool.empty():
@@ -1676,7 +1702,7 @@ POOL_MAX_OVERFLOW = int(os.getenv("DB_POOL_MAX_OVERFLOW", "5"))
 
 _connection_pool = DuckDBConnectionPool(DB_PATH, pool_size=POOL_SIZE, max_overflow=POOL_MAX_OVERFLOW)
 
-def _get_db_connection():
+def _get_db_connection() -> AbstractContextManager[duckdb.DuckDBPyConnection]:
     """
     Get a database connection from the pool.
 
@@ -1687,7 +1713,7 @@ def _get_db_connection():
     """
     return _connection_pool.get_connection()
 
-def execute_cached(conn, sql: str, params: list = None):
+def execute_cached(conn: duckdb.DuckDBPyConnection, sql: str, params: list[Any] | None = None) -> list[Any]:
     """
     Execute query with caching.
     
@@ -1713,22 +1739,22 @@ def execute_cached(conn, sql: str, params: list = None):
 # HELPER FUNCTIONS (from mcp_server.py)
 # ========================================
 
-def _validate_file_id(file_id: str) -> tuple[bool, Optional[str]]:
+def _validate_file_id(file_id: str) -> tuple[bool, str | None]:
     """Validate file_id format - calls enhanced version"""
     return _validate_file_id_enhanced(file_id)
 
-def _find_file_meta(file_id: str):
+def _find_file_meta(file_id: str) -> dict[str, Any] | None:
     """Find file metadata in manifest - calls _get_file_meta"""
     return _get_file_meta(file_id)
 
-def _get_table_name(file_meta: dict) -> Optional[str]:
+def _get_table_name(file_meta: dict[str, Any]) -> str | None:
     """Extract table name from file metadata"""
     path = file_meta.get("path", "")
     if path.startswith("duckdb://"):
         return path.split("#")[1] if "#" in path else None
     return None
 
-def _build_where_sql(where: dict[str, Any]) -> tuple[str, list]:
+def _build_where_sql(where: dict[str, Any]) -> tuple[str, list[Any]]:
     """
     Build WHERE clause SQL with parameterized queries (enhanced version).
     Supports: equality, in, between, comparisons, contains/ILIKE
@@ -1795,7 +1821,7 @@ def _build_where_sql(where: dict[str, Any]) -> tuple[str, list]:
     sql = " WHERE " + " AND ".join(conditions) if conditions else ""
     return sql, params
 
-def _validate_column_name(column: str, file_meta: dict) -> tuple[bool, Optional[str]]:
+def _validate_column_name(column: str, file_meta: dict[str, Any]) -> tuple[bool, str | None]:
     """Validate column name exists in dataset schema (prevents SQL injection)"""
     # First, do security validation
     valid, error = _validate_column_name_enhanced(column)
@@ -1878,6 +1904,11 @@ async def handle_list_tools() -> list[Tool]:
                     "aggregations": {
                         "type": "object",
                         "description": "Aggregations to apply (e.g., {'MtCO2': 'sum'})"
+                    },
+                    "assist": {
+                        "type": "boolean",
+                        "description": "Enable intelligent query assistance and auto-corrections (default: false)",
+                        "default": false
                     }
                 },
                 "required": ["file_id"]
@@ -2208,7 +2239,7 @@ async def handle_list_tools() -> list[Tool]:
                     "enable_fallback": {
                         "type": "boolean",
                         "description": "Enable fallback to higher levels if no data found (city→admin1→country) (default: true)",
-                        "default": True
+                        "default": true
                     }
                 },
                 "required": ["entity"]
@@ -2327,10 +2358,16 @@ async def handle_list_tools() -> list[Tool]:
 
 
 @app.call_tool()
-async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
+async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     """Handle tool calls"""
-    logger.info(f"Tool called: {name}")
-    logger.debug(f"Arguments: {json.dumps(arguments, default=str)[:200]}")
+    try:
+        logger.info(f"Tool called: {name}")
+        logger.debug(f"Arguments type: {type(arguments)}, value: {json.dumps(arguments, default=str)[:200]}")
+    except Exception as e:
+        logger.error(f"Error in handle_call_tool start: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return [TextContent(type="text", text=str(e))]
 
     if name == "list_emissions_datasets":
         files = []
@@ -2386,14 +2423,20 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         )]
     
     elif name == "query_emissions":
+        try:
+            logger.debug(f"query_emissions called with arguments type: {type(arguments)}")
+            logger.debug(f"query_emissions arguments: {json.dumps(arguments, default=str)[:500]}")
+        except Exception as log_err:
+            logger.error(f"Error logging arguments: {log_err}")
+
         file_id = arguments.get("file_id")
         if not file_id:
             return [TextContent(type="text", text=json.dumps({"error": "file_id required"}))]
-        
+
         valid, error = _validate_file_id(file_id)
         if not valid:
             return [TextContent(type="text", text=json.dumps({"error": error}))]
-        
+
         file_meta = _find_file_meta(file_id)
         if not file_meta:
             return [TextContent(
@@ -2403,7 +2446,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                     "file_id": file_id
                 })
             )]
-        
+
         # Get table name
         table = _get_table_name(file_meta)
         if not table:
@@ -2411,7 +2454,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                 type="text",
                 text=json.dumps({"error": "invalid_table_path", "path": file_meta.get("path")})
             )]
-        
+
         # Build query
         select = arguments.get("select")
         where = arguments.get("where") or {}
@@ -2419,12 +2462,35 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         order_by = arguments.get("order_by")
         limit = min(arguments.get("limit", 20), 1000)
         aggregations = arguments.get("aggregations")
-        
+
+        # Validate parameter types to prevent unhashable type errors
+        if select and not isinstance(select, list):
+            return [TextContent(
+                type="text",
+                text=json.dumps({"error": f"'select' must be a list of strings, got {type(select).__name__}"})
+            )]
+        if not isinstance(where, dict):
+            return [TextContent(
+                type="text",
+                text=json.dumps({"error": f"'where' must be a dictionary, got {type(where).__name__}"})
+            )]
+        if group_by and not isinstance(group_by, list):
+            return [TextContent(
+                type="text",
+                text=json.dumps({"error": f"'group_by' must be a list of strings, got {type(group_by).__name__}"})
+            )]
+
         try:
             # Build SELECT with validation
             if select:
                 select_list = select if isinstance(select, list) else [select]
-                # Validate each column name
+                # Validate each column name and ensure no nested structures
+                for i, col in enumerate(select_list):
+                    if not isinstance(col, str):
+                        return [TextContent(
+                            type="text",
+                            text=json.dumps({"error": f"Invalid select column at index {i}: expected string, got {type(col).__name__}. Columns must be strings like 'country_name', not nested structures."})
+                        )]
                 for col in select_list:
                     valid, error = _validate_column_name_enhanced(col)
                     if not valid:
@@ -2460,6 +2526,13 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             # GROUP BY with validation
             if group_by:
                 group_list = group_by if isinstance(group_by, list) else [group_by]
+                # Validate that group_by columns are strings, not nested structures
+                for i, col in enumerate(group_list):
+                    if not isinstance(col, str):
+                        return [TextContent(
+                            type="text",
+                            text=json.dumps({"error": f"Invalid group_by column at index {i}: expected string, got {type(col).__name__}. Columns must be strings like 'country_name', not nested structures."})
+                        )]
                 # Validate each group by column
                 for col in group_list:
                     valid, error = _validate_column_name_enhanced(col)
@@ -2510,7 +2583,9 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             )]
             
         except Exception as e:
+            import traceback
             logger.error(f"Query failed: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             error_response = {
                 "error": "query_failed",
                 "detail": str(e)
@@ -2518,6 +2593,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             # Only expose SQL in debug mode for security
             if os.getenv("DEBUG") == "true":
                 error_response["sql"] = sql if 'sql' in locals() else None
+                error_response["traceback"] = traceback.format_exc()
             return [TextContent(
                 type="text",
                 text=json.dumps(error_response)
@@ -3477,6 +3553,23 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         order_by = arguments.get("order_by")
         limit = arguments.get("limit", 20)
 
+        # Validate parameter types to prevent unhashable type errors
+        if not isinstance(select, list):
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response("invalid_select", f"'select' must be a list of strings, got {type(select).__name__}"))
+            )]
+        if not isinstance(where, dict):
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response("invalid_where", f"'where' must be a dictionary, got {type(where).__name__}"))
+            )]
+        if not isinstance(group_by, list):
+            return [TextContent(
+                type="text",
+                text=json.dumps(_error_response("invalid_group_by", f"'group_by' must be a list of strings, got {type(group_by).__name__}"))
+            )]
+
         if not file_id:
             return [TextContent(
                 type="text",
@@ -3982,7 +4075,7 @@ async def handle_list_prompts() -> list[Prompt]:
 
 
 @app.get_prompt()
-async def handle_get_prompt(name: str, arguments: dict) -> list[PromptMessage]:
+async def handle_get_prompt(name: str, arguments: dict[str, Any]) -> list[PromptMessage]:
     """Handle prompt generation"""
     
     if name == "analyze_emissions":

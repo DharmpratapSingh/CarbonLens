@@ -10,7 +10,7 @@ import time
 import requests
 import streamlit as st
 from dotenv import load_dotenv
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Literal, Callable
 import pandas as pd
 import altair as alt
 import logging
@@ -51,7 +51,7 @@ USA_FULL_NAME = "United States of America"
 DEFAULT_TIMEOUT = 30
 
 
-def validate_user_input(query: str) -> Dict[str, Any]:
+def validate_user_input(query: str) -> dict[str, Any]:
     """Enhanced user input validation with comprehensive security checks"""
     if not query or not query.strip():
         return {"valid": False, "error": "Query cannot be empty", "severity": "medium"}
@@ -88,7 +88,7 @@ def validate_user_input(query: str) -> Dict[str, Any]:
     
     return {"valid": True, "error": None, "severity": "low"}
 
-def safe_json_parse(json_str: str) -> Dict[str, Any]:
+def safe_json_parse(json_str: str) -> dict[str, Any]:
     """Safely parse JSON with comprehensive error handling"""
     try:
         return json.loads(json_str)
@@ -99,7 +99,7 @@ def safe_json_parse(json_str: str) -> Dict[str, Any]:
         logger.error(f"Unexpected error parsing JSON: {e}")
         return {"error": f"Unexpected error: {str(e)}"}
 
-def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs) -> Dict[str, Any]:
+def robust_request(url: str, method: str = "GET", max_retries: int = 3, **kwargs: Any) -> dict[str, Any]:
     """Make robust HTTP requests with retry logic and comprehensive error handling"""
     last_error = None
     
@@ -232,7 +232,7 @@ COMMON_CITIES = {
     "tokyo": {"city_name": "Tokyo", "country_name": "Japan"}
 }
 
-def detect_geo_entity(question: str) -> Dict[str, Any]:
+def detect_geo_entity(question: str) -> dict[str, Any]:
     """Detect admin1 or city from the free-text question.
     Returns a dict like {"level": "admin1"|"city", "where": {...}} or {} if none.
     """
@@ -256,7 +256,7 @@ def detect_geo_entity(question: str) -> Dict[str, Any]:
 
     return {}
 
-def apply_level_constraints_to_tool(tool_json: str, constraints: Dict[str, Any]) -> str:
+def apply_level_constraints_to_tool(tool_json: str, constraints: dict[str, Any]) -> str:
     """Force level-specific file_id and required where filters onto a single-tool JSON string.
     Best-effort parsing; returns updated JSON string (or original if parsing fails).
     """
@@ -321,15 +321,15 @@ def apply_level_constraints_to_tool(tool_json: str, constraints: Dict[str, Any])
 # Circuit breaker for MCP server calls
 class CircuitBreaker:
     """Thread-safe circuit breaker implementation"""
-    def __init__(self, max_failures: int = 5, timeout: int = 60):
-        self.max_failures = max_failures
-        self.timeout = timeout
-        self.failures = 0
-        self.last_failure_time = 0
-        self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
-        self._lock = threading.Lock()
+    def __init__(self, max_failures: int = 5, timeout: int = 60) -> None:
+        self.max_failures: int = max_failures
+        self.timeout: int = timeout
+        self.failures: int = 0
+        self.last_failure_time: float = 0.0
+        self.state: Literal["CLOSED", "OPEN", "HALF_OPEN"] = "CLOSED"
+        self._lock: threading.Lock = threading.Lock()
 
-    def call(self, func, *args, **kwargs):
+    def call(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         current_time = time.time()
 
         # Thread-safe state check and transition
@@ -377,12 +377,12 @@ mcp_circuit_breaker = CircuitBreaker()
 
 class SimpleLRUCache:
     """Thread-safe LRU cache implementation"""
-    def __init__(self, maxsize: int = 128):
-        self.maxsize = maxsize
-        self._store = OrderedDict()
-        self._lock = threading.Lock()
+    def __init__(self, maxsize: int = 128) -> None:
+        self.maxsize: int = maxsize
+        self._store: OrderedDict[str, Any] = OrderedDict()
+        self._lock: threading.Lock = threading.Lock()
 
-    def get(self, key: str):
+    def get(self, key: str) -> Any | None:
         """Get value from cache, moving to end (most recently used)"""
         with self._lock:
             try:
@@ -393,7 +393,7 @@ class SimpleLRUCache:
             except KeyError:
                 return None
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any) -> None:
         """Set value in cache, evicting oldest if necessary"""
         with self._lock:
             try:
@@ -412,7 +412,7 @@ class SimpleLRUCache:
 # Cache for tool call responses to avoid repeated MCP hits on retries/batch
 _TOOL_CACHE = SimpleLRUCache(maxsize=int(os.environ.get("MCP_TOOL_CACHE_SIZE", "256")))
 
-def exec_tool_call(tool_json: str) -> dict:
+def exec_tool_call(tool_json: str) -> dict[str, Any]:
     """Execute tool call against MCP server with caching"""
     # Clean the JSON string first
     cleaned_json = tool_json.strip()
@@ -642,7 +642,7 @@ def exec_tool_call(tool_json: str) -> dict:
         logger.error(f"Unexpected error in exec_tool_call: {e}")
         return {"error": f"Unexpected error: {str(e)}"}
 
-def process_climategpt_question(question: str, persona_key: str) -> Tuple[str, Dict[str, Any], str]:
+def process_climategpt_question(question: str, persona_key: str) -> tuple[str, dict[str, Any], str]:
     """Adapter that delegates persona handling to the shared persona engine."""
     answer, data_context, used_tool = process_persona_question(question, persona_key)
 
@@ -713,7 +713,7 @@ st.caption(
 ## (Data Coverage removed per request)
 
 # Conversation and performance management
-col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
 with col1:
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
@@ -753,10 +753,17 @@ with col2:
             st.warning("No conversation to export")
 
 with col3:
-    if st.button("🔄 Refresh App"):
+    if st.button("🧹 Clear Cache"):
+        st.cache_data.clear()
+        st.cache_resource.clear()
+        st.success("✅ Cache cleared! Refresh to see changes.")
         st.rerun()
 
 with col4:
+    if st.button("🔄 Refresh App"):
+        st.rerun()
+
+with col5:
     st.caption(f"💬 {len(st.session_state.messages)} messages", unsafe_allow_html=True)
 
 # Display chat messages
