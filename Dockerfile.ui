@@ -4,15 +4,18 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install UV package manager
+RUN pip install --no-cache-dir uv
+
 # Copy dependency files
-COPY requirements.txt pyproject.toml uv.lock* ./
+COPY pyproject.toml uv.lock* ./
 
-# Install Python dependencies using pip (fallback)
-# For UV-based builds, uncomment the UV section below
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies using UV (faster and more reliable)
+RUN uv pip install --system --no-cache -r pyproject.toml
 
-# Alternative: Use UV for faster dependency resolution (uncomment to use)
-# RUN pip install uv && uv pip install --system -r requirements.txt
+# Fallback: Also copy requirements.txt for compatibility
+COPY requirements.txt* ./
+RUN if [ -f requirements.txt ]; then uv pip install --system --no-cache -r requirements.txt; fi
 
 # Copy application code
 COPY . .

@@ -4,16 +4,18 @@ __pycache__/
 *.pyo
 
 # Documentation (keep docs/ directory committed)
+# All .md files in docs/ are tracked intentionally
 
 # Logs and run artifacts
-logs/
+logs/*.log
 *.log
 
-# Generated reports/results at repo root
-/*.json
+# Generated reports/results
 /comprehensive_test_results/
 /test_reports/
 /test_results/
+data/outputs/*.json
+data/outputs/*.csv
 
 # Notebooks
 .ipynb_checkpoints/
@@ -51,8 +53,9 @@ wheels/
 # Virtual environments
 # ----------------------------
 .venv/
+.venv*/
 venv/
-ven1/
+ven*/
 env/
 ENV/
 
@@ -97,12 +100,11 @@ bkl_*/
 *.tar
 *.tar.gz
 
-# Generated output files (images, CSVs at root)
+# Generated output files (images, CSVs)
 # ----------------------------
-/*.png
-/*.csv
-*.png
-output*.png
+data/outputs/*.png
+data/outputs/*.csv
+docs/images/output*.png
 
 # ----------------------------
 # Local test artifacts

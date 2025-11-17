@@ -12,6 +12,7 @@ Processes EDGAR v2024 Transport sector emissions data:
 import logging
 import sys
 from pathlib import Path
+from typing import Dict, List, Optional
 import xarray as xr
 import pandas as pd
 from datetime import datetime

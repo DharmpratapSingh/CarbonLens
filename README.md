@@ -545,23 +545,32 @@ If you encounter issues not covered here:
 ## Documentation
 
 Additional documentation is available in the `docs/` folder:
-- `docs/QUICK_START.md` - Detailed setup guide
+
+### Setup & Architecture
 - `docs/SYSTEM_REFERENCE.md` - System architecture and quick reference
-- `docs/TESTING_GUIDE.md` - Testing procedures and methodology
+- `docs/ARCHITECTURE.md` - Detailed system architecture
+- `docs/API.md` - API documentation
+- `docs/MCP_ARCHITECTURE.md` - MCP protocol details
+- `docs/DEPLOYMENT.md` - Deployment guide
+
+### Development & Testing
 - `docs/TESTING_RESULTS.md` - Testing results and LLM comparison findings
-- `docs/CI_CD_SETUP_GUIDE.md` - CI/CD deployment
-- `docs/README_MCP.md` - MCP protocol details
+- `docs/DEPENDENCY_AUDIT.md` - Dependency security and audit report
+- `testing/` - Automated testing tools and scripts
+
+### Reports & Analysis
+- `docs/reports/` - Comprehensive reports on improvements, security fixes, and implementation status
 
 For automated testing tools and scripts, see the `testing/` directory.
 
 ### Recent Improvements Documentation
 
 The following reports document recent enhancements and security improvements:
-- `CODE_REVIEW_REPORT.md` - Comprehensive code review and analysis (1,213 lines)
-- `SMART_QUERY_GUIDE.md` - Smart entity resolution system user guide
-- `FINAL_STATUS.md` - Final status report of all implemented improvements
-- `IMPROVEMENTS_SUMMARY.md` - Summary of all fixes and enhancements
-- `UNNECESSARY_FILES.md` - Repository cleanup recommendations
+- `docs/reports/CODE_REVIEW_REPORT.md` - Comprehensive code review and analysis (1,213 lines)
+- `docs/SMART_QUERY_GUIDE.md` - Smart entity resolution system user guide
+- `docs/reports/FINAL_STATUS.md` - Final status report of all implemented improvements
+- `docs/reports/IMPROVEMENTS_SUMMARY.md` - Summary of all fixes and enhancements
+- `docs/reports/REPOSITORY_STATUS.md` - Current repository status and structure
 
 **Latest Updates (v0.2.0):**
 - ✅ Smart entity resolution with alias normalization and fuzzy matching
