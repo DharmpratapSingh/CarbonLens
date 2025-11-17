@@ -10,7 +10,7 @@ import time
 import requests
 import streamlit as st
 from dotenv import load_dotenv
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Callable
 import pandas as pd
 import altair as alt
 import logging
