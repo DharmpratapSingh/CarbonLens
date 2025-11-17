@@ -24,7 +24,8 @@ SECTORS = {
         "description": "Aviation, maritime, and road transport emissions",
         "raw_pattern": "v2024_FT2023_*.0.1x0.1.nc",
         "time_range": (2000, 2023),
-        "subsectors": ["aviation", "maritime", "road"]
+        "subsectors": ["aviation", "maritime", "road"],
+        "priority": 1  # High priority
     },
     "power-industry": {
         "name": "Power Industry",
@@ -32,7 +33,17 @@ SECTORS = {
         "description": "Power generation and industrial energy emissions",
         "raw_pattern": "v2024_ENE_*.0.1x0.1.nc",
         "time_range": (2000, 2023),
-        "subsectors": ["coal", "gas", "oil"]
+        "subsectors": ["coal", "gas", "oil"],
+        "priority": 1  # High priority
+    },
+    "agriculture": {
+        "name": "Agriculture",
+        "edgar_code": "AGR",
+        "description": "Agricultural emissions (livestock, rice, soil, manure)",
+        "raw_pattern": "v2024_AGR_*.0.1x0.1.nc",
+        "time_range": (2000, 2023),
+        "subsectors": ["livestock", "rice", "soil", "manure"],
+        "priority": 2  # Medium priority
     },
     "waste": {
         "name": "Waste",
@@ -40,15 +51,44 @@ SECTORS = {
         "description": "Waste treatment and disposal emissions",
         "raw_pattern": "v2024_WAS_*.0.1x0.1.nc",
         "time_range": (2000, 2023),
-        "subsectors": []
+        "subsectors": ["solid_waste", "wastewater"],
+        "priority": 2  # Medium priority
     },
-    "agriculture": {
-        "name": "Agriculture",
-        "edgar_code": "AGR",
-        "description": "Agricultural emissions",
-        "raw_pattern": "v2024_AGR_*.0.1x0.1.nc",
+    "buildings": {
+        "name": "Buildings",
+        "edgar_code": "RCO",
+        "description": "Residential and commercial building emissions",
+        "raw_pattern": "v2024_RCO_*.0.1x0.1.nc",
         "time_range": (2000, 2023),
-        "subsectors": []
+        "subsectors": ["residential", "commercial"],
+        "priority": 2  # Medium priority
+    },
+    "fuel-exploitation": {
+        "name": "Fuel Exploitation",
+        "edgar_code": "PRO",
+        "description": "Fugitive emissions from fuel extraction and production",
+        "raw_pattern": "v2024_PRO_*.0.1x0.1.nc",
+        "time_range": (2000, 2023),
+        "subsectors": ["oil_gas", "coal_mining"],
+        "priority": 3  # Lower priority
+    },
+    "industrial-combustion": {
+        "name": "Industrial Combustion",
+        "edgar_code": "IND",
+        "description": "Industrial combustion and manufacturing emissions",
+        "raw_pattern": "v2024_IND_*.0.1x0.1.nc",
+        "time_range": (2000, 2023),
+        "subsectors": ["iron_steel", "chemicals", "other"],
+        "priority": 2  # Medium priority
+    },
+    "industrial-processes": {
+        "name": "Industrial Processes",
+        "edgar_code": "IPR",
+        "description": "Process emissions from industrial activities",
+        "raw_pattern": "v2024_IPR_*.0.1x0.1.nc",
+        "time_range": (2000, 2023),
+        "subsectors": ["cement", "chemicals", "metals"],
+        "priority": 3  # Lower priority
     }
 }
 
