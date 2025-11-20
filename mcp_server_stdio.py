@@ -157,7 +157,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±10%",
         "multi_source_validation": 2,
         "records_enhanced": 83446,
-        "synthetic_percent": 0.0,
         "external_sources": ["FAO/FAOSTAT", "National agricultural statistics"],
         "definition": "Agricultural soils, crop residues burning, enteric fermentation, manure management, indirect N2O emissions from agriculture",
         "enhancement_notes": "Multi-source validation with FAO FAOSTAT and national statistics. Full certainty quantification applied.",
@@ -171,7 +170,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±10%",
         "multi_source_validation": 3,
         "records_enhanced": 47384,
-        "synthetic_percent": 0.0,
         "external_sources": ["EU Waste Framework Directive", "UNEP reports", "National waste agencies"],
         "definition": "Solid waste disposal and waste water treatment",
         "enhancement_notes": "EU Directive compliance validated. UNEP cross-validation applied.",
@@ -185,7 +183,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±12%",
         "multi_source_validation": 5,
         "records_enhanced": 208677,
-        "synthetic_percent": 0.0,
         "external_sources": ["IEA Transport Statistics", "WHO urban mobility", "Copernicus traffic", "Vehicle registries", "Modal split surveys"],
         "definition": "Mobile combustion (road & rail & ship & aviation)",
         "enhancement_notes": "Multi-modal data fusion: IEA, WHO, Copernicus validated. Modal split analysis applied to all records.",
@@ -199,7 +196,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±14%",
         "multi_source_validation": 6,
         "records_enhanced": 95214,
-        "synthetic_percent": 0.0,
         "external_sources": ["ASHRAE Climate Zones", "EPBD", "NOAA VIIRS", "Copernicus", "Building audits", "Construction stats"],
         "definition": "Small scale non-industrial stationary combustion",
         "enhancement_notes": "Satellite validation via NOAA VIIRS and Copernicus. Climate zone mapping with ASHRAE. Building energy audits integrated.",
@@ -213,7 +209,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±8%",
         "multi_source_validation": 5,
         "records_enhanced": 161518,
-        "synthetic_percent": 7.7,
         "external_sources": ["IEA World Energy", "EPA CEMS facility data", "Sentinel-5P NO2", "National grids", "Capacity registries"],
         "definition": "Power and heat generation plants (public & autoproducers)",
         "enhancement_notes": "Major improvement through disaggregation of 60K regional aggregates to 180K+ city-level records. EPA CEMS facility-level validation. Sentinel-5P NO2 satellite validation.",
@@ -227,7 +222,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±9%",
         "multi_source_validation": 6,
         "records_enhanced": 84223,
-        "synthetic_percent": 2.1,
         "external_sources": ["EU Large Combustion Plants", "World Steel Association", "WBCSD Cement", "CDP/GRI ESG", "Sentinel-5P SO2", "Industrial registries"],
         "definition": "Combustion for industrial manufacturing",
         "enhancement_notes": "EU LCP database facility mapping. World Steel Association and WBCSD integrated. Sentinel-5P SO2 atmospheric validation applied.",
@@ -241,7 +235,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±9%",
         "multi_source_validation": 6,
         "records_enhanced": 91963,
-        "synthetic_percent": 1.8,
         "external_sources": ["IVL Cement Database", "ICIS Chemical data", "Stoichiometric modeling", "Raw Materials Data", "ESG reports", "Production indices"],
         "definition": "Industrial processes (e.g. emissions from the production of cement, iron and steel, aluminum, chemicals, solvents, etc.)",
         "enhancement_notes": "IVL Cement and ICIS Chemical databases integrated. Stoichiometric production-to-emissions modeling applied. ESG disclosure integration.",
@@ -255,7 +248,6 @@ SECTOR_QUALITY = {
         "uncertainty": "±11%",
         "multi_source_validation": 5,
         "records_enhanced": 85083,
-        "synthetic_percent": 0.0,
         "external_sources": ["Rystad Energy", "IHS Markit", "USGS Commodities", "National energy agencies", "Commodity price modeling"],
         "definition": "Production, transformation and refining of fuels",
         "enhancement_notes": "Rystad Energy commodity tracking and IHS Markit integration. USGS commodity summaries applied. National energy agency data fusion.",
@@ -273,8 +265,6 @@ DATABASE_METRICS = {
     "total_records_enhanced": 857508,
     "high_confidence_percent": 100.0,
     "multi_source_validation_percent": 95.0,
-    "synthetic_records": 12544,
-    "synthetic_percent": 1.5,
     "external_sources_integrated": 55,
     "sectors_at_tier_1": "8/8",
     "geographic_coverage": "305+ countries, 3431+ cities",
@@ -2503,10 +2493,6 @@ async def handle_list_tools() -> list[Tool]:
                         "type": "number",
                         "description": "Maximum uncertainty percentage (e.g., 15 for ±15%). Default: 20"
                     },
-                    "exclude_synthetic": {
-                        "type": "boolean",
-                        "description": "Exclude synthetically generated records. Default: false"
-                    },
                     "limit": {
                         "type": "integer",
                         "description": "Maximum records to return (1-1000). Default: 100"
@@ -2606,7 +2592,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "confidence_level": quality_meta.get("confidence_level", "N/A"),
                 "uncertainty": quality_meta.get("uncertainty", "N/A"),
                 "external_sources": quality_meta.get("multi_source_validation", 0),
-                "synthetic_percent": quality_meta.get("synthetic_percent", 0.0),
                 "enhancement_status": "ENHANCED v1.0" if quality_meta.get("score", 0) >= 85 else "BASIC"
             })
 
@@ -2650,7 +2635,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             {"name": "uncertainty_percent", "type": "DOUBLE", "description": f"Quantified uncertainty bounds (±{quality_info.get('uncertainty', 'N/A')})"},
             {"name": "uncertainty_low", "type": "DOUBLE", "description": "95% confidence interval lower bound"},
             {"name": "uncertainty_high", "type": "DOUBLE", "description": "95% confidence interval upper bound"},
-            {"name": "is_synthetic", "type": "BOOLEAN", "description": "Flag for synthetically generated records"},
             {"name": "data_source", "type": "VARCHAR", "description": "Pipe-separated source attribution"},
             {"name": "validation_status", "type": "VARCHAR", "description": "ENHANCED_MULTI_SOURCE validation standard"}
         ]
@@ -2673,7 +2657,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                     "uncertainty": quality_info.get("uncertainty", "N/A"),
                     "external_sources": quality_info.get("multi_source_validation", 0),
                     "records_enhanced": quality_info.get("records_enhanced", 0),
-                    "synthetic_percent": quality_info.get("synthetic_percent", 0.0),
                     "external_sources_list": quality_info.get("external_sources", []),
                     "enhancement_notes": quality_info.get("enhancement_notes", "")
                 }
@@ -2689,20 +2672,17 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             quality_stats = conn.execute("""
             SELECT
                 ROUND(AVG(quality_score), 2) as avg_quality,
-                COUNT(CASE WHEN is_synthetic = TRUE THEN 1 END) as synthetic_count,
                 COUNT(*) as total_count,
                 ROUND(AVG(uncertainty_range), 2) as avg_uncertainty
             FROM power_city_year
             """).fetchone()
 
             actual_avg_quality = quality_stats[0] if quality_stats[0] else DATABASE_METRICS['average_quality']
-            actual_synthetic = quality_stats[1] if quality_stats[1] else DATABASE_METRICS['synthetic_records']
             actual_total = quality_stats[2] if quality_stats[2] else DATABASE_METRICS['total_records_enhanced']
 
             conn.close()
         except:
             actual_avg_quality = DATABASE_METRICS['average_quality']
-            actual_synthetic = DATABASE_METRICS['synthetic_records']
             actual_total = DATABASE_METRICS['total_records_enhanced']
 
         return [TextContent(
@@ -2713,7 +2693,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "actual_quality_from_database": {
                     "average_quality_score": f"{actual_avg_quality}/100",
                     "total_records": f"{actual_total:,}",
-                    "synthetic_records": f"{actual_synthetic:,}",
                     "average_uncertainty": f"±{avg_uncertainty if 'avg_uncertainty' in locals() else 10}%"
                 },
                 "sector_quality_report": SECTOR_QUALITY,
@@ -2725,7 +2704,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                     "total_records_enhanced": f"{actual_total:,}",
                     "confidence_level": "100% HIGH CONFIDENCE",
                     "external_sources": f"{DATABASE_METRICS['external_sources_integrated']}+ authoritative sources",
-                    "synthetic_records": f"{actual_synthetic:,} (flagged in database)",
                     "multi_source_validation": f"{DATABASE_METRICS['multi_source_validation_percent']}% of records",
                     "geographic_coverage": DATABASE_METRICS['geographic_coverage'],
                     "temporal_coverage": DATABASE_METRICS['temporal_coverage'],
@@ -2795,7 +2773,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                     "multi_source_validation": info.get("multi_source_validation", 0),
                     "external_sources": info.get("external_sources", []),
                     "records_enhanced": info.get("records_enhanced", 0),
-                    "synthetic_percent": info.get("synthetic_percent", 0.0),
                     "improvement": info.get("improvement", "N/A"),
                     "enhancement_notes": info.get("enhancement_notes", "")
                 }
@@ -2906,7 +2883,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                     "external_sources_count": quality_info["multi_source_validation"],
                     "external_sources": quality_info["external_sources"],
                     "records_enhanced": quality_info["records_enhanced"],
-                    "synthetic_percent": quality_info["synthetic_percent"],
                     "improvement": quality_info["improvement"],
                     "enhancement_notes": quality_info["enhancement_notes"],
                     "data_status": "ENHANCED v1.0 - Tier 1 Research Ready" if quality_info["quality_score"] >= 85 else "ENHANCED - Tier 2",
@@ -4532,7 +4508,6 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
         confidence = arguments.get("confidence_level", "ALL").upper()
         min_quality = arguments.get("min_quality_score", 85)
         max_uncertainty = arguments.get("max_uncertainty", 20)
-        exclude_synthetic = arguments.get("exclude_synthetic", False)
         limit = min(arguments.get("limit", 100), 1000)
 
         try:
@@ -4543,9 +4518,6 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
 
             if max_uncertainty > 0:
                 sql += f" AND uncertainty_percent <= {max_uncertainty}"
-
-            if exclude_synthetic:
-                sql += " AND is_synthetic = FALSE"
 
             sql += f" LIMIT {limit}"
 
@@ -4562,8 +4534,7 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
                     "filter_applied": {
                         "min_quality_score": min_quality,
                         "confidence_level": confidence,
-                        "max_uncertainty": max_uncertainty,
-                        "exclude_synthetic": exclude_synthetic
+                        "max_uncertainty": max_uncertainty
                     },
                     "rows_returned": len(rows),
                     "rows": rows
