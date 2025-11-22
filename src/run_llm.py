@@ -3,6 +3,32 @@ from typing import Any, Literal
 from dotenv import load_dotenv
 from pathlib import Path
 from requests.auth import HTTPBasicAuth
+import argparse
+
+# Import baseline knowledge components
+try:
+    from src.utils.baseline_context import (
+        BaselineContextProvider,
+        PolicyContextAugmenter,
+        SectorStrategyAugmenter,
+        EducationalContextAugmenter
+    )
+    BASELINE_AVAILABLE = True
+except ImportError:
+    BASELINE_AVAILABLE = False
+
+# Persona framework cache (global singleton)
+_PERSONA_PROVIDER = None
+
+def get_persona_provider():
+    """
+    Get cached BaselineContextProvider instance.
+    Created once and reused for performance.
+    """
+    global _PERSONA_PROVIDER
+    if _PERSONA_PROVIDER is None and BASELINE_AVAILABLE:
+        _PERSONA_PROVIDER = BaselineContextProvider()
+    return _PERSONA_PROVIDER
 
 # Load .env
 load_dotenv()
@@ -34,11 +60,51 @@ if not SYSTEM.strip():
     5. For comparisons/complex queries, return multiple tool calls (see MULTIPLE TOOL CALLS section)
     6. For arrays: Return on ONE LINE like [{"tool":...},{"tool":...}] NOT on separate lines
 
+    ⚡ TOOL ROUTING OPTIMIZATION - FOLLOW THIS FLOW ⚡
+
+    Question Pattern → Recommended Tool → Why
+    ────────────────────────────────────────────────────
+
+    "What/Show me [entity] [sector] [year]?"
+      → query tool ✓ BEST
+      → Most efficient for single entity lookups
+      → Example: "Germany power 2023?" → query with where={country:Germany, year:2023}
+
+    "Compare X and Y [sector] [year]"
+      → query tool (2× calls) ✓ BEST
+      → Return as array: [query_X, query_Y]
+      → Example: "Germany vs France power 2023?" → [query_germany, query_france]
+
+    "Top/Highest/Lowest [N] [sector]"
+      → query tool ✓ BEST
+      → Use order_by + limit
+      → Example: "Top 5 countries" → query with order_by DESC, limit 5
+
+    "How much change [sector] [year1→year2]?"
+      → metrics.yoy tool ✓ BEST
+      → Use when specifically asking about year-over-year change percentage
+      → Example: "How much emissions increased 2022→2023?" → metrics.yoy
+
+    "Seasonal/monthly pattern [entity] [year]"
+      → query tool with month ✓ BEST
+      → Use file_id with -month grain
+      → Example: "Germany power by month 2023?" → query power-country-month
+
+    "Total across sectors [entity] [year]"
+      → query tool (multi-call) ✓ BEST
+      → Query each sector separately, sum in response
+      → Return as array with multiple sectors
+
+    AVOID:
+      ❌ metrics.yoy for single year (use query instead)
+      ❌ query for trend analysis spanning 5+ years (use metrics.yoy)
+      ❌ Multiple queries when single query with aggregation works
+
     AVAILABLE TOOLS:
-      - "list_files" - List available datasets
-      - "get_schema" - Get columns for a specific file_id
-      - "query" - Query emissions data
-      - "metrics.yoy" - Calculate year-over-year changes
+      - "list_files" - List available datasets (rarely needed)
+      - "get_schema" - Get columns for a specific file_id (rarely needed)
+      - "query" - Query emissions data ⭐ USE THIS 95% OF THE TIME
+      - "metrics.yoy" - Calculate year-over-year changes (use for trend %)
 
     EXACT COLUMN NAMES (use these exactly):
       - Location columns: country_name, admin1_name, city_name
@@ -165,6 +231,117 @@ if not SYSTEM.strip():
     - For rankings: use order_by + limit (NO group_by)
     - DO NOT use group_by unless doing aggregation with SUM/COUNT/AVG
     """.strip()
+
+
+def classify_question(question: str) -> str:
+    """
+    Classify question type: BASELINE, MCP, or HYBRID
+
+    BASELINE: Conceptual/policy/mechanism questions (no data needed)
+    MCP: Quantitative/specific data questions (needs database)
+    HYBRID: Questions needing both data and interpretation
+    """
+
+    # Convert to lowercase for matching
+    q_lower = question.lower()
+
+    # BASELINE indicators (conceptual/policy/mechanism)
+    baseline_keywords = [
+        "what is", "how does", "explain", "define",
+        "mechanism", "process", "work", "difference",
+        "greenhouse", "climate change", "tipping point",
+        "carbon cycle", "albedo", "feedback loop",
+        "paris agreement", "net zero", "scope 1",
+        "describe", "discuss", "why is", "what are the"
+    ]
+
+    # MCP indicators (quantitative/specific data)
+    mcp_keywords = [
+        "emissions", "tonnes", "mtco2", "how much",
+        "which country", "which state", "which city",
+        "ranking", "rank", "top ", "highest", "lowest",
+        "increase", "decrease", "change", "comparison",
+        "compare", "vs ", "between", "more than", "less than",
+        "2023", "2022", "2021", "2020", "2019", "year"
+    ]
+
+    # Count keyword matches
+    baseline_matches = sum(1 for kw in baseline_keywords if kw in q_lower)
+    mcp_matches = sum(1 for kw in mcp_keywords if kw in q_lower)
+
+    # Classification logic
+    if baseline_matches > 0 and mcp_matches == 0:
+        return "BASELINE"
+    elif mcp_matches > 0 and baseline_matches == 0:
+        return "MCP"
+    elif mcp_matches > 0 and baseline_matches > 0:
+        return "HYBRID"
+    else:
+        # Default to HYBRID (safest choice)
+        return "HYBRID"
+
+
+def get_baseline_answer(question: str, persona: str = "Climate Analyst") -> str:
+    """
+    Get answer using baseline knowledge only (for conceptual questions).
+    Tailored to the specific persona for relevant emphasis.
+    """
+    focus = get_persona_focus(persona)
+    tone = get_persona_tone(persona)
+
+    # Persona-specific instructions
+    persona_instructions = {
+        "Climate Analyst": """
+You are responding to a Climate Analyst. Focus on:
+- Policy implications and climate frameworks
+- Actionable mitigation strategies
+- Which entities/sectors should prioritize action
+- Connection to climate goals (Paris Agreement, net zero)
+
+Be strategic and action-oriented in your explanation.""",
+        "Research Scientist": """
+You are responding to a Research Scientist. Focus on:
+- Scientific rigor and empirical evidence
+- Methodologies and data sources
+- Uncertainty ranges and limitations
+- Peer-reviewed research and validation
+
+Be precise, methodological, and emphasize evidence-based reasoning.""",
+        "Financial Analyst": """
+You are responding to a Financial Analyst. Focus on:
+- Economic implications and financial risks
+- Market dynamics and investment implications
+- Transition risks and opportunities
+- Quantifiable metrics and concentration
+
+Be concise and directional, emphasizing material financial impacts.""",
+        "Student": """
+You are responding to a Student. Focus on:
+- Clear, accessible explanations
+- Real-world analogies and relatable examples
+- Why this matters for climate and society
+- Foundational concepts and definitions
+
+Be friendly, educational, and make complex topics understandable."""
+    }
+
+    persona_instruction = persona_instructions.get(persona, persona_instructions["Climate Analyst"])
+
+    baseline_system_prompt = f"""You are ClimateGPT, an expert in climate science, emissions, and climate policy.
+You have deep knowledge about:
+- Climate science fundamentals (greenhouse effect, tipping points, feedback loops)
+- Climate policy frameworks (Paris Agreement, net zero, NDCs)
+- Emissions concepts (scopes, sectors, decarbonization strategies)
+- Climate solutions and mitigation approaches
+
+{persona_instruction}
+
+Answer the user's question clearly and comprehensively using your baseline knowledge.
+Be accurate and cite policy frameworks, scientific concepts, and mechanisms where relevant.
+For conceptual/explanatory questions, provide detailed, informative answers."""
+
+    answer = chat(baseline_system_prompt, question, temperature=0.2)
+    return answer
 
 
 def chat(system: str, user: str, temperature: float = 0.2) -> str:
@@ -347,8 +524,12 @@ def _ensure_mt(df_rows: Any) -> Any:
         pass
     return df_rows
 
-def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str) -> str:
-    """Summarize query result(s) into natural language answer."""
+def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str, question_type: str = "MCP", persona: str = "Climate Analyst") -> str:
+    """
+    Summarize query result(s) into natural language answer.
+
+    For HYBRID questions, enriches MCP data with baseline context and interpretation.
+    """
 
     # Handle multiple results (from multiple tool calls)
     if isinstance(result, list):
@@ -397,8 +578,79 @@ def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str) -> s
 
         source_str = f"Source: {result.get('meta',{}).get('table_id','?')}, EDGAR v2024"
 
-    # Use a different system prompt for summarization (not tool calling)
-    summary_system_prompt = """You are a helpful assistant that provides clear, concise answers based ONLY on the data provided.
+    # Prepare baseline enrichment for HYBRID questions (using cached provider)
+    baseline_context_str = ""
+    if question_type == "HYBRID" and BASELINE_AVAILABLE:
+        try:
+            provider = get_persona_provider()
+            if provider:
+                # Build context dict for enrichment
+                mcp_data_for_enrichment = {"rows": combined_data if isinstance(result, list) else preview_obj.get("rows", [])}
+                enriched = provider.enrich_response(
+                    mcp_data=mcp_data_for_enrichment,
+                    question=question,
+                    persona=persona
+                )
+
+                if enriched.get("baseline_context"):
+                    context = enriched["baseline_context"]
+                    baseline_context_str = "\n\nBASELINE CONTEXT TO ENHANCE ANSWER:\n"
+                    if "sector_explanation" in context:
+                        baseline_context_str += f"[Sector Context] {context['sector_explanation']}\n"
+                    if "country_context" in context:
+                        baseline_context_str += f"[Country Context] {context['country_context']}\n"
+                    if "trend_context" in context:
+                        baseline_context_str += f"[Trend Context] {context['trend_context']}\n"
+        except Exception as e:
+            pass  # Silently fail if baseline enrichment unavailable
+
+    # Use appropriate system prompt based on question type
+    if question_type == "HYBRID":
+        summary_system_prompt = f"""You are a helpful climate expert assistant providing data-driven answers with expert interpretation.
+
+RESPONSE STRUCTURE:
+1. [FACTUAL DATA] State emissions values precisely from the JSON data
+2. [BASELINE INTERPRETATION] Add context, policy implications, and scientific meaning
+3. [STRATEGIC INSIGHTS] Provide actionable insights relevant to {persona} persona
+
+CRITICAL RULES:
+1. Always cite specific numbers from the data with sources (EDGAR v2024)
+2. Add meaningful interpretation from baseline knowledge
+3. For {persona}: Focus on {get_persona_focus(persona)}
+4. Keep response balanced - 40% data, 60% interpretation
+5. Do not fabricate values - only use provided data
+
+Persona: {persona}
+Response tone: {get_persona_tone(persona)}"""
+    elif question_type == "MCP":
+        # Add light persona interpretation even for data-only questions
+        focus = get_persona_focus(persona)
+        tone = get_persona_tone(persona)
+
+        summary_system_prompt = f"""You are a helpful assistant providing emissions data to a {persona}.
+
+PERSONA CONTEXT:
+- Audience: {persona}
+- Focus areas: {focus}
+- Tone: {tone}
+
+RESPONSE STRUCTURE:
+1. Present the data clearly with values and units (MtCO₂, tonnes)
+2. Add a brief (1-2 sentence) interpretation relevant to {persona}'s interests
+3. Cite source: EDGAR v2024
+
+CRITICAL RULES:
+1. ONLY report facts present in the JSON data
+2. For {persona}, highlight what matters to them without fabricating context
+3. NEVER add explanations not supported by the data
+4. NEVER fabricate or guess values
+5. For comparisons, clearly state values for each entity
+6. Keep interpretation brief - data-focused response (70% data, 30% interpretation)
+
+Focus on: {focus}
+Tone: {tone}"""
+    else:
+        summary_system_prompt = """You are a helpful assistant that provides clear, concise answers based ONLY on the data provided.
 
 CRITICAL RULES:
 1. ONLY report facts present in the JSON data
@@ -412,8 +664,6 @@ CRITICAL RULES:
     prompt = textwrap.dedent(f"""
     Question: {question}
 
-    IMPORTANT: Use ONLY the data in the JSON below. Do NOT add any context, explanations, or information not present in this data.
-
     Tasks:
     - State the emissions value(s) from the data
     - Convert to MtCO₂ if the value is large (divide tonnes by 1,000,000)
@@ -421,23 +671,89 @@ CRITICAL RULES:
     - For comparisons, clearly compare the values
     - Cite source: "{source_str}"
     - Be concise (2-4 sentences)
-    - Do NOT add policy context, trends, or explanations not in the data
+    {"- Add expert interpretation and policy context" if question_type == "HYBRID" else "- Do NOT add policy context, trends, or explanations not in the data"}
 
     Data (JSON):
     {rows_preview}
+    {baseline_context_str}
     """).strip()
 
     return chat(summary_system_prompt, prompt, temperature=0.2)
 
+
+def get_persona_focus(persona: str) -> str:
+    """Get focus areas for persona"""
+    focus_map = {
+        "Climate Analyst": "mitigation priorities, policy implications, and actionable strategies",
+        "Research Scientist": "methodology, data quality, uncertainty, and scientific rigor",
+        "Financial Analyst": "risk signals, concentration, momentum, and material changes",
+        "Student": "understanding, definitions, real-world meaning, and simplicity"
+    }
+    return focus_map.get(persona, "relevant insights")
+
+
+def get_persona_tone(persona: str) -> str:
+    """Get appropriate tone for persona"""
+    tone_map = {
+        "Climate Analyst": "strategic, action-oriented, policy-focused",
+        "Research Scientist": "precise, methodological, evidence-based",
+        "Financial Analyst": "concise, directional, risk-aware",
+        "Student": "friendly, educational, clear"
+    }
+    return tone_map.get(persona, "informative")
+
 def main() -> None:
-    if len(sys.argv) < 2:
-        print('Usage: uv run python run_llm.py "<your question>"')
-        print('Example: uv run python run_llm.py "Which US state had the biggest drop in 2020 vs 2019?"')
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="ClimateGPT - Climate data Q&A with baseline knowledge enrichment")
+    parser.add_argument("question", help="Your question about climate/emissions data")
+    parser.add_argument("--persona", default="No Persona",
+                       choices=["No Persona", "Climate Analyst", "Research Scientist", "Financial Analyst", "Student"],
+                       help="Response persona (default: No Persona for neutral responses)")
+    parser.add_argument("--no-baseline", action="store_true", help="Disable baseline knowledge enrichment")
+    parser.add_argument("--verbose", action="store_true", help="Show classification and intermediate results")
+
+    try:
+        args = parser.parse_args()
+    except SystemExit:
+        print('Usage: python run_llm.py "<your question>" [--persona PERSONA] [--no-baseline] [--verbose]')
+        print('Example: python run_llm.py "How did Germany power emissions change 2022-2023?" --persona "Climate Analyst"')
+        print('Personas: Climate Analyst, Research Scientist, Financial Analyst, Student')
         sys.exit(1)
 
-    question = sys.argv[1]
+    question = args.question
+    persona = args.persona
 
-    # 1) Ask the model to return ONLY a tool call JSON (or array of tool calls)
+    # Handle "No Persona" option (treat as no persona optimization)
+    if persona.lower() == "no persona":
+        use_baseline = not args.no_baseline and BASELINE_AVAILABLE
+        persona = "Climate Analyst"  # Use as default for context, but won't be applied
+        use_no_persona_mode = True
+    else:
+        use_baseline = not args.no_baseline and BASELINE_AVAILABLE
+        use_no_persona_mode = False
+
+    # STEP 1: Classify question
+    question_type = classify_question(question)
+
+    if args.verbose:
+        print(f"\n[CLASSIFICATION] Question Type: {question_type}")
+        print(f"[CONFIG] Persona: {persona}, Baseline Enabled: {use_baseline}")
+
+    # STEP 2: Handle BASELINE-only questions
+    if question_type == "BASELINE" and use_baseline:
+        if args.verbose:
+            print(f"[ROUTING] Using baseline knowledge (no MCP query needed)")
+        # Use persona for baseline unless in no_persona_mode
+        baseline_persona = "Climate Analyst" if use_no_persona_mode else persona
+        answer = get_baseline_answer(question, baseline_persona)
+        print("\n=== ANSWER (Baseline Knowledge) ===")
+        print(answer)
+        return
+
+    # STEP 3: For MCP and HYBRID questions, get tool call
+    if args.verbose:
+        print(f"[ROUTING] Querying MCP database...")
+
     tool_call = chat(
         SYSTEM,
         question + "\n\nReturn ONLY a tool call JSON (or array of tool calls for comparisons) as per the schema. Do not include any prose."
@@ -453,7 +769,7 @@ def main() -> None:
     print("\n--- TOOL CALL ---")
     print(tool_call)
 
-    # 2) Execute tool call(s)
+    # STEP 4: Execute tool call(s)
     result = exec_tool_call(tool_call)
 
     print("\n--- TOOL RESULT (first 10 rows per query) ---")
@@ -474,10 +790,20 @@ def main() -> None:
         # Single tool call with error or other result
         print(json.dumps(result, indent=2)[:2000])
 
-    # 3) Summarize via LLM
-    answer = summarize(result, question)
+    # STEP 5: Summarize via LLM with optional baseline enrichment
+    if args.verbose:
+        enrichment_status = "with baseline enrichment" if question_type == "HYBRID" and use_baseline else "data-only"
+        no_persona_suffix = " (no persona mode)" if use_no_persona_mode else ""
+        print(f"[SUMMARIZATION] Generating answer ({enrichment_status}){no_persona_suffix}...")
+
+    # Use neutral persona for no_persona_mode
+    summary_persona = "Climate Analyst" if use_no_persona_mode else persona
+    answer = summarize(result, question, question_type=question_type, persona=summary_persona)
     print("\n=== ANSWER ===")
     print(answer)
+
+    if args.verbose:
+        print(f"\n[COMPLETE] Question processing finished")
 
 if __name__ == "__main__":
     main()

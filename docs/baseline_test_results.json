@@ -1,0 +1,38 @@
+{
+  "test1_routing": {
+    "conceptual_detected_as_baseline": 0,
+    "quantitative_detected_as_mcp": 0,
+    "hybrid_detected_as_both": 0,
+    "failures": [
+      "Q1: Error - Expecting value: line 1 column 1 (char 0)",
+      "Q2: Error - Expecting value: line 1 column 1 (char 0)",
+      "Q3: Error - Expecting value: line 1 column 1 (char 0)",
+      "Q1: Error - Expecting value: line 1 column 1 (char 0)",
+      "Q2: Error - Expecting value: line 1 column 1 (char 0)",
+      "Q3: Error - Expecting value: line 1 column 1 (char 0)"
+    ]
+  },
+  "test2_hallucination": {
+    "correct_caveats": 0,
+    "hallucinated": 0,
+    "failures": [
+      "Test 1: Expecting value: line 1 column 1 (char 0)",
+      "Test 2: Expecting value: line 1 column 1 (char 0)"
+    ]
+  },
+  "test3_mcp_vs_baseline": {
+    "mcp_provides_data": 1,
+    "mcp_cites_source": 1,
+    "baseline_caveats": 0,
+    "discrepancies": []
+  },
+  "test4_persona": {
+    "analyst_uses_context": true,
+    "scientist_discusses_methodology": false,
+    "student_uses_analogies": false,
+    "financial_discusses_risk": false,
+    "details": [
+      "Analyst context keys: ['sector_explanation', 'country_context', 'interpretation_focus']"
+    ]
+  }
+}

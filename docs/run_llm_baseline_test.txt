@@ -1,0 +1,28 @@
+================================================================================
+RUN_LLM.PY BASELINE KNOWLEDGE USAGE TEST
+================================================================================
+
+Tests Passed: 1/3
+Tests Failed: 2/3
+
+Status: ⚠ BASELINE KNOWLEDGE PARTIALLY INTEGRATED
+
+Findings:
+  - Test 1: MCP data present when not expected
+  - Test 3: Baseline context missing
+
+Test Details:
+[
+  {
+    "test": "Pure Conceptual (should use baseline)",
+    "answer_snippet": "The greenhouse effect is a natural process that occurs when certain gases in the Earth's atmosphere trap heat from the sun, keeping the planet warm enough to support life. However, human activities su"
+  },
+  {
+    "test": "Pure Quantitative (should use MCP)",
+    "answer_snippet": "Germany's power emissions in 2023 were 175.97 MtCO\u2082. This value is derived from the country's total emissions of 175,970,633.26 tonnes, which is equivalent to 175.97 MtCO\u2082 when converted by dividing t"
+  },
+  {
+    "test": "Hybrid (should use both)",
+    "answer_snippet": "The provided JSON data is incomplete and cannot be used to answer the question. The data appears to be corrupted or missing, making it impossible to determine the changes in Germany's power emissions "
+  }
+]

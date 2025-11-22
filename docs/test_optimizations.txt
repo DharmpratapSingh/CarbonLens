@@ -1,0 +1,45 @@
+==============================================
+OPTIMIZATION TEST RESULTS
+==============================================
+
+Test 1: Same Query Twice (Cache Test)
+-------------------------------------
+Query 1 (cache miss):
+--- TOOL CALL ---
+=== ANSWER ===
+
+Query 2 (cache hit - should be faster):
+--- TOOL CALL ---
+=== ANSWER ===
+
+Cache Stats After:
+{
+    "status": "cache_enabled",
+    "stats": {
+        "hits": 1,
+        "misses": 1,
+        "total_requests": 2,
+        "hit_rate_percent": 50.0,
+        "cached_queries": 1,
+        "ttl_seconds": 3600
+    }
+}
+
+Health Check:
+{
+    "status": "healthy",
+    "mcp_server": "running",
+    "cache": {
+        "hits": 1,
+        "misses": 1,
+        "total_requests": 2,
+        "hit_rate_percent": 50.0,
+        "cached_queries": 1,
+        "ttl_seconds": 3600
+    },
+    "rate_limiter": {
+        "enabled": true,
+        "max_requests_per_window": 100,
+        "window_seconds": 60
+    }
+}

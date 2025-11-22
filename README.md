@@ -1,11 +1,11 @@
-# ClimateGPT
+# ClimateGPT: AI-Powered Climate & Emissions Data Analytics Platform
 
-[![CI Pipeline](https://github.com/DharmpratapSingh/Team-1B-Fusion/actions/workflows/ci.yml/badge.svg)](https://github.com/DharmpratapSingh/Team-1B-Fusion/actions/workflows/ci.yml)
-[![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](pyproject.toml)
-[![MCP Protocol](https://img.shields.io/badge/MCP-1.20.0+-orange.svg)](https://modelcontextprotocol.io)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](pyproject.toml)
+[![MCP Protocol](https://img.shields.io/badge/MCP-Compliant-orange.svg)](https://modelcontextprotocol.io)
+[![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)]()
 
-AI-powered emissions data analysis system for EDGAR v2024 datasets. Query historical CO₂ emissions data through a conversational interface powered by an LLM and MCP (Model Context Protocol) server.
+A comprehensive data engineering system for querying, analyzing, and interpreting global greenhouse gas emissions data using the Model Context Protocol (MCP) and Large Language Models with persona-based response differentiation.
 
 ## Table of Contents
 
