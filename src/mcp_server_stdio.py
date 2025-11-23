@@ -109,8 +109,8 @@ def _resolve_db_path(db_path: str) -> str:
     """Resolve database path (relative or absolute)"""
     if Path(db_path).is_absolute():
         return db_path
-    # Get project root (parent of this file)
-    project_root = Path(__file__).parent
+    # Get project root (parent of src/ directory since this file is in src/)
+    project_root = Path(__file__).parent.parent
     resolved = project_root / db_path
     return str(resolved)
 
@@ -126,8 +126,8 @@ else:
 # ---------------------------------------------------------------------
 # Security and Input Validation (from mcp_server.py)
 # ---------------------------------------------------------------------
-# Project root for path resolution
-_PROJECT_ROOT = Path(__file__).parent
+# Project root for path resolution (parent of src/ directory)
+_PROJECT_ROOT = Path(__file__).parent.parent
 
 # Valid characters for identifiers (file_id, column names)
 _IDENTIFIER_PATTERN = re.compile(r'^[a-zA-Z0-9_\-\.]+$')
