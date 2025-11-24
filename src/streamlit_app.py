@@ -170,15 +170,13 @@ if submit_button:
                 if show_details:
                     cmd.append("--verbose")
 
-                # Change to the correct directory
-                os.chdir(Path(__file__).parent)
-
-                # Run the query
+                # Run the query with correct working directory
                 result = subprocess.run(
                     cmd,
                     capture_output=True,
                     text=True,
-                    timeout=120
+                    timeout=120,
+                    cwd=Path(__file__).parent
                 )
 
                 output = result.stdout + result.stderr
