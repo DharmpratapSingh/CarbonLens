@@ -33,7 +33,7 @@ dependencies = [
   "tqdm==4.67.1",
   "click==8.3.0",
   "rtree==1.4.1",
-  "shapely==2.1.1",
+  "shapely==2.1.2",
   "pydeck==0.9.1",
   "streamlit==1.50.0",
   "uvicorn[standard]==0.37.0",
