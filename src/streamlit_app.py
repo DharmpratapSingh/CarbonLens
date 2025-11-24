@@ -170,13 +170,20 @@ if submit_button:
                 if show_details:
                     cmd.append("--verbose")
 
-                # Run the query with correct working directory
+                # Run the query with correct working directory and environment
+                env = os.environ.copy()
+                # Ensure MCP_MANIFEST_PATH is set
+                if "MCP_MANIFEST_PATH" not in env:
+                    project_root = Path(__file__).parent.parent
+                    env["MCP_MANIFEST_PATH"] = str(project_root / "data/curated-2/manifest_mcp_duckdb.json")
+
                 result = subprocess.run(
                     cmd,
                     capture_output=True,
                     text=True,
                     timeout=120,
-                    cwd=Path(__file__).parent
+                    cwd=Path(__file__).parent,
+                    env=env
                 )
 
                 output = result.stdout + result.stderr
