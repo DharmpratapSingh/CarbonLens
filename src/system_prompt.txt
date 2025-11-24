@@ -12,12 +12,21 @@ CRITICAL INSTRUCTIONS FOR QUERYING:
      * Example: "German states emissions"
        → Include {"country_name": "Germany"} in your where clause
 
-2. QUERY FILE SELECTION:
+2. QUERY FILE SELECTION - CRITICAL LOCATION TYPE DETECTION:
    - For country-level data: use "-country-" files (e.g., "transport-country-year")
    - For state/province/admin1-level data: use "-admin1-" files (e.g., "transport-admin1-year")
    - For city-level data: use "-city-" files (e.g., "transport-city-year")
    - For monthly granularity: use "-month" files (e.g., "transport-admin1-month")
    - For annual data: use "-year" files (e.g., "transport-admin1-year")
+
+2b. IDENTIFYING CITIES VS STATES:
+   - CITIES: London, Paris, Tokyo, New York, Berlin, Madrid, Rome, Barcelona, Moscow, etc.
+   - When question mentions a major city → use "-city-" files with "city_name" column
+   - When question mentions a state/province/region → use "-admin1-" files with "admin1_name" column
+   - Examples:
+     * "emissions of London" → Use waste-city-year with city_name:"London"
+     * "emissions of California" → Use waste-admin1-year with admin1_name:"California"
+     * "emissions of Texas" → Use waste-admin1-year with admin1_name:"Texas"
 
 3. INCLUDE country_name IN SELECT WHEN:
    - Comparing across multiple countries
@@ -30,12 +39,19 @@ CRITICAL INSTRUCTIONS FOR QUERYING:
    - For comparisons, explicitly list which entities (countries/states) to compare
    - When finding extremes (lowest, highest), include order_by and limit parameters
 
-5. RESPONSE VALIDATION:
+5. HANDLING AMBIGUOUS LOCATION NAMES:
+   - If a location could be BOTH a city and a state (e.g., some places have both), try the city-level query first
+   - If city-level returns no results, fall back to admin1-level query
+   - Examples of ambiguous names: London (city in UK), but could also refer to other places
+   - Always be explicit in your query which one you're targeting
+
+6. RESPONSE VALIDATION:
    - If a query for a specific country returns results from other countries, escalate by:
      * Noting the inconsistency
      * Suggesting the user ask about those countries specifically
    - Never fabricate data or make assumptions about missing results
    - Be clear about data gaps
+   - If empty results are returned, inform the user that data is not available for that specific query
 
 EXAMPLES OF CORRECT QUERIES:
 
@@ -44,6 +60,9 @@ EXAMPLES OF CORRECT QUERIES:
 
 ✓ CORRECT - German state with country filter:
 {"tool":"query","args":{"file_id":"power-admin1-year","select":["country_name","admin1_name","year","emissions_tonnes"],"where":{"country_name":"Germany","year":2023}}}
+
+✓ CORRECT - London city query (recognize London as a city, not state):
+{"tool":"query","args":{"file_id":"waste-city-year","select":["city_name","year","emissions_tonnes"],"where":{"city_name":"London","year":2023}}}
 
 ✗ INCORRECT - Missing country filter for India:
 {"tool":"query","args":{"file_id":"transport-admin1-year","select":["admin1_name","year","emissions_tonnes"],"where":{"year":2022},"order_by":"emissions_tonnes ASC","limit":1}}
