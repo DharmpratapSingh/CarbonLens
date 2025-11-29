@@ -1,0 +1,51 @@
+
+================================================================================
+COMPREHENSIVE TEST REPORT
+================================================================================
+
+Generated: 2025-11-27T11:20:54.630201
+
+SUMMARY
+----------------------------------------
+Total Tests:   10
+Passed:        10 ✅
+Failed:        0 ❌
+Skipped:       0 ⏭️
+Errored:       0 ⚠️
+Success Rate:  100.0%
+
+
+INTEGRATION
+----------------------------------------
+✅ Integration Setup                        [0.00s]
+   → All components present
+
+LLM RUNNER
+----------------------------------------
+✅ LLM Runner Import                        [0.00s]
+   → All required components present
+✅ Baseline Context                         [0.00s]
+   → All context providers available
+✅ OpenAI Config                            [0.00s]
+   → OpenAI configuration valid
+
+MCP BRIDGE
+----------------------------------------
+✅ MCP Bridge Import                        [0.00s]
+   → All required components present
+✅ FastAPI Dependencies                     [0.08s]
+   → FastAPI 0.117.1 OK
+
+MCP SERVER
+----------------------------------------
+✅ MCP Server Import                        [0.00s]
+   → All required functions present
+✅ Database Connectivity                    [0.02s]
+   → Connected. Found 94 tables
+✅ Config Loading                           [0.00s]
+   → All config variables loaded
+
+SETUP
+----------------------------------------
+✅ Environment Setup                        [0.02s]
+   → Python 3.11, DuckDB OK

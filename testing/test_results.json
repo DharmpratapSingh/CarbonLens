@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-11-27T11:20:54.630395",
+  "total_tests": 10,
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "test_name": "Environment Setup",
+      "category": "Setup",
+      "status": "PASS",
+      "duration": 0.020785808563232422,
+      "message": "Python 3.11, DuckDB OK",
+      "error_details": ""
+    },
+    {
+      "test_name": "MCP Server Import",
+      "category": "MCP Server",
+      "status": "PASS",
+      "duration": 0.0002930164337158203,
+      "message": "All required functions present",
+      "error_details": ""
+    },
+    {
+      "test_name": "Database Connectivity",
+      "category": "MCP Server",
+      "status": "PASS",
+      "duration": 0.02112293243408203,
+      "message": "Connected. Found 94 tables",
+      "error_details": ""
+    },
+    {
+      "test_name": "Config Loading",
+      "category": "MCP Server",
+      "status": "PASS",
+      "duration": 0.0003921985626220703,
+      "message": "All config variables loaded",
+      "error_details": ""
+    },
+    {
+      "test_name": "MCP Bridge Import",
+      "category": "MCP Bridge",
+      "status": "PASS",
+      "duration": 0.0001461505889892578,
+      "message": "All required components present",
+      "error_details": ""
+    },
+    {
+      "test_name": "FastAPI Dependencies",
+      "category": "MCP Bridge",
+      "status": "PASS",
+      "duration": 0.0821530818939209,
+      "message": "FastAPI 0.117.1 OK",
+      "error_details": ""
+    },
+    {
+      "test_name": "LLM Runner Import",
+      "category": "LLM Runner",
+      "status": "PASS",
+      "duration": 8.797645568847656e-05,
+      "message": "All required components present",
+      "error_details": ""
+    },
+    {
+      "test_name": "Baseline Context",
+      "category": "LLM Runner",
+      "status": "PASS",
+      "duration": 0.0002968311309814453,
+      "message": "All context providers available",
+      "error_details": ""
+    },
+    {
+      "test_name": "OpenAI Config",
+      "category": "LLM Runner",
+      "status": "PASS",
+      "duration": 3.409385681152344e-05,
+      "message": "OpenAI configuration valid",
+      "error_details": ""
+    },
+    {
+      "test_name": "Integration Setup",
+      "category": "Integration",
+      "status": "PASS",
+      "duration": 4.887580871582031e-05,
+      "message": "All components present",
+      "error_details": ""
+    }
+  ]
+}

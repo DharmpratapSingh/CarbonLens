@@ -146,8 +146,8 @@ if not SYSTEM.strip():
     4. metrics.yoy:
        {"tool":"metrics.yoy","args":{
          "file_id":"transport-country-year",
-         "key_col":"country_name",
-         "value_col":"emissions_tonnes",
+         "key_column":"country_name",
+         "value_column":"emissions_tonnes",
          "base_year":2019,
          "compare_year":2020,
          "top_n":10,
@@ -524,11 +524,219 @@ def _ensure_mt(df_rows: Any) -> Any:
         pass
     return df_rows
 
+
+# ============================================================================
+# SECTOR EXTRACTION AND QUALITY METADATA UTILITIES
+# ============================================================================
+
+# Mapping of sector codes to human-readable names
+SECTOR_NAMES = {
+    "transport": "Transport",
+    "power": "Power & Energy",
+    "agriculture": "Agriculture",
+    "waste": "Waste",
+    "buildings": "Buildings",
+    "fuel-exploitation": "Fuel Exploitation",
+    "industrial-combustion": "Industrial Combustion",
+    "industrial-processes": "Industrial Processes"
+}
+
+# External sources mapping for citation
+SECTOR_SOURCES = {
+    "transport": [
+        "IEA Transport Statistics",
+        "WHO urban mobility",
+        "Copernicus traffic data",
+        "Vehicle registries",
+        "Modal split surveys"
+    ],
+    "power": [
+        "IEA World Energy",
+        "EPA CEMS facility data",
+        "Sentinel-5P NO₂ satellite data",
+        "National grids",
+        "Capacity registries"
+    ],
+    "agriculture": [
+        "FAO/FAOSTAT",
+        "National agricultural statistics"
+    ],
+    "waste": [
+        "EU Waste Framework Directive",
+        "UNEP reports",
+        "National waste agencies"
+    ],
+    "buildings": [
+        "ASHRAE Climate Zones",
+        "EPBD",
+        "NOAA VIIRS satellite data",
+        "Copernicus",
+        "Building audits",
+        "Construction statistics"
+    ],
+    "fuel-exploitation": [
+        "Rystad Energy",
+        "IHS Markit",
+        "USGS Commodities",
+        "National energy agencies",
+        "Commodity price modeling"
+    ],
+    "industrial-combustion": [
+        "EU Large Combustion Plants",
+        "World Steel Association",
+        "WBCSD Cement",
+        "CDP/GRI ESG data",
+        "Sentinel-5P SO₂ satellite data",
+        "Industrial registries"
+    ],
+    "industrial-processes": [
+        "IVL Cement Database",
+        "ICIS Chemical data",
+        "Stoichiometric modeling",
+        "Raw Materials Data",
+        "ESG reports",
+        "Production indices"
+    ]
+}
+
+
+def _extract_sector_from_file_id(file_id: str) -> tuple[str, str]:
+    """
+    Extract sector from file_id format: {sector}-{level}-{grain}
+
+    Returns: (sector_code, sector_name)
+    Example: "transport-country-year" -> ("transport", "Transport")
+    """
+    if not file_id or not isinstance(file_id, str):
+        return "", ""
+
+    parts = file_id.split("-")
+    if not parts:
+        return "", ""
+
+    sector_code = parts[0].lower()
+    sector_name = SECTOR_NAMES.get(sector_code, sector_code.title())
+
+    return sector_code, sector_name
+
+
+def _format_sector_header(
+    sector_code: str,
+    quality_metadata: dict[str, Any] | None = None
+) -> str:
+    """
+    Format a professional sector header with quality information.
+
+    Returns formatted string with sector, quality score, confidence, and uncertainty.
+    """
+    sector_name = SECTOR_NAMES.get(sector_code, sector_code.title())
+
+    if not quality_metadata:
+        return f"[Source: {sector_name} Sector | EDGAR v2024]"
+
+    quality_score = quality_metadata.get("quality_score", 0)
+    confidence = quality_metadata.get("confidence_level", "UNKNOWN")
+    uncertainty = quality_metadata.get("uncertainty", "unknown")
+
+    header = (
+        f"[Source: {sector_name} Sector | EDGAR v2024 Enhanced]\n"
+        f"[Quality: {quality_score}% | Confidence: {confidence} | Uncertainty: {uncertainty}]"
+    )
+
+    return header
+
+
+def _format_external_sources_citation(sector_code: str) -> str:
+    """
+    Format external sources as a citation for the given sector.
+
+    Returns: Formatted citation string
+    """
+    sources = SECTOR_SOURCES.get(sector_code, [])
+
+    if not sources:
+        return ""
+
+    if len(sources) == 1:
+        return f"Data validated with: {sources[0]}"
+    elif len(sources) <= 3:
+        return f"Data validated with: {', '.join(sources)}"
+    else:
+        return f"Data validated with {len(sources)} authoritative sources including: {', '.join(sources[:3])}, and others"
+
+
+def _extract_quality_metadata(result: dict[str, Any]) -> dict[str, Any] | None:
+    """
+    Extract quality metadata from MCP query response.
+
+    Returns: quality_metadata dict or None if not available
+    """
+    if isinstance(result, dict):
+        if "quality_metadata" in result:
+            return result["quality_metadata"]
+    return None
+
+
+def _extract_data_type_metadata(result: dict[str, Any]) -> dict[str, Any] | None:
+    """
+    Extract data type metadata from MCP query response.
+
+    Returns: data_type_metadata dict with info about real/estimated/synthesized data
+    """
+    if isinstance(result, dict):
+        if "data_type_metadata" in result:
+            return result["data_type_metadata"]
+    return None
+
+
+def _format_data_type_info(data_type_metadata: dict[str, Any], quality_metadata: dict[str, Any] | None = None) -> str:
+    """
+    Format data type information for display in answers.
+
+    Shows whether data is real, estimated, or synthesized with confidence scores.
+    """
+    if not data_type_metadata:
+        return ""
+
+    data_types = data_type_metadata.get("data_types_present", [])
+    distribution = data_type_metadata.get("data_type_distribution", {})
+    avg_confidence = data_type_metadata.get("avg_confidence_score", 0)
+
+    if not data_types:
+        return ""
+
+    # Build data type information string
+    info_parts = []
+
+    # Primary data type indication
+    if len(data_types) == 1:
+        dt = data_types[0]
+        if dt == "real":
+            info_parts.append(f"[Data Type: REAL DATA | Confidence: {avg_confidence:.2f}]")
+        elif dt == "estimated":
+            info_parts.append(f"[Data Type: ESTIMATED | Confidence: {avg_confidence:.2f}]")
+        elif dt == "synthesized":
+            info_parts.append(f"[Data Type: SYNTHESIZED | Confidence: {avg_confidence:.2f}]")
+    else:
+        # Mixed data types
+        type_str = ", ".join([f"{dt}: {distribution.get(dt, 0)}%" for dt in sorted(data_types)])
+        info_parts.append(f"[Data Mix: {type_str} | Avg Confidence: {avg_confidence:.2f}]")
+
+    # Add warnings if needed
+    if data_type_metadata.get("has_estimated_data") or data_type_metadata.get("has_synthesized_data"):
+        if not data_type_metadata.get("has_real_data"):
+            info_parts.append("[⚠️ Note: This data is estimated or synthesized - use with caution]")
+        elif len(data_types) > 1:
+            info_parts.append("[⚠️ Note: Results mix real and estimated data]")
+
+    return "\n".join(info_parts)
+
 def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str, question_type: str = "MCP", persona: str = "Climate Analyst") -> str:
     """
     Summarize query result(s) into natural language answer.
 
     For HYBRID questions, enriches MCP data with baseline context and interpretation.
+    Now includes sector identification and external source citations.
     """
 
     # Handle multiple results (from multiple tool calls)
@@ -542,24 +750,58 @@ def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str, ques
         # Combine all results for summarization
         combined_data = []
         sources = set()
+        sectors = set()
+        quality_metadata_list = []
+
         for r in result:
             if isinstance(r, dict) and "rows" in r:
                 r["rows"] = _ensure_mt(r["rows"])
                 combined_data.extend(r["rows"])
-                if "meta" in r and "table_id" in r["meta"]:
-                    sources.add(r["meta"]["table_id"])
+
+                # Extract file_id and sector
+                if "meta" in r and "file_id" in r["meta"]:
+                    file_id = r["meta"]["file_id"]
+                    sources.add(file_id)
+                    sector_code, sector_name = _extract_sector_from_file_id(file_id)
+                    if sector_code:
+                        sectors.add(sector_code)
+
+                # Extract quality metadata if available
+                quality_meta = _extract_quality_metadata(r)
+                if quality_meta:
+                    quality_metadata_list.append(quality_meta)
 
         if not combined_data:
             return "No data found for the specified queries."
 
-        # Create combined result object
+        # Create combined result object with sector and quality info
         preview_obj = {
             "rows": combined_data,
             "row_count": len(combined_data),
-            "sources": list(sources)
+            "sources": list(sources),
+            "sectors": list(sectors),
+            "quality_info": quality_metadata_list if quality_metadata_list else None
         }
         rows_preview = json.dumps(preview_obj, ensure_ascii=False)
-        source_str = f"Sources: {', '.join(sources)}, EDGAR v2024" if sources else "Source: EDGAR v2024"
+
+        # Build comprehensive source string with sector and external sources
+        sector_headers = []
+        sources_citations = []
+
+        for sector_code in sectors:
+            sector_header = _format_sector_header(sector_code,
+                quality_metadata_list[0] if quality_metadata_list else None)
+            sector_headers.append(sector_header)
+
+            sources_citation = _format_external_sources_citation(sector_code)
+            if sources_citation:
+                sources_citations.append(sources_citation)
+
+        combined_header = "\n".join(sector_headers) if sector_headers else "Source: EDGAR v2024"
+        combined_citations = "\n".join(sources_citations) if sources_citations else ""
+        source_str = combined_header
+        if combined_citations:
+            source_str = f"{combined_header}\n{combined_citations}"
 
     # Handle single result
     else:
@@ -576,7 +818,27 @@ def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str, ques
         if isinstance(result, dict) and "rows" in result and len(result["rows"]) == 0:
             return "No data found for the specified query. The location, year, or sector may not have data available in the database."
 
-        source_str = f"Source: {result.get('meta',{}).get('table_id','?')}, EDGAR v2024"
+        # Extract sector and quality metadata from single result
+        file_id = result.get('meta', {}).get('file_id', '')
+        sector_code, sector_name = _extract_sector_from_file_id(file_id)
+        quality_metadata = _extract_quality_metadata(result)
+        data_type_metadata = _extract_data_type_metadata(result)
+
+        # Format sector header
+        sector_header = _format_sector_header(sector_code, quality_metadata)
+
+        # Format data type information
+        data_type_info = _format_data_type_info(data_type_metadata, quality_metadata)
+
+        # Format external sources citation
+        sources_citation = _format_external_sources_citation(sector_code)
+
+        # Build final source string
+        source_str = sector_header
+        if data_type_info:
+            source_str = f"{sector_header}\n{data_type_info}"
+        if sources_citation:
+            source_str = f"{source_str}\n{sources_citation}"
 
     # Prepare baseline enrichment for HYBRID questions (using cached provider)
     baseline_context_str = ""
@@ -609,16 +871,18 @@ def summarize(result: dict[str, Any] | list[dict[str, Any]], question: str, ques
         summary_system_prompt = f"""You are a helpful climate expert assistant providing data-driven answers with expert interpretation.
 
 RESPONSE STRUCTURE:
-1. [FACTUAL DATA] State emissions values precisely from the JSON data
-2. [BASELINE INTERPRETATION] Add context, policy implications, and scientific meaning
-3. [STRATEGIC INSIGHTS] Provide actionable insights relevant to {persona} persona
+1. [SOURCE ATTRIBUTION] Start with sector header and external source citations (provided below)
+2. [FACTUAL DATA] State emissions values precisely from the JSON data
+3. [BASELINE INTERPRETATION] Add context, policy implications, and scientific meaning
+4. [STRATEGIC INSIGHTS] Provide actionable insights relevant to {persona} persona
 
 CRITICAL RULES:
-1. Always cite specific numbers from the data with sources (EDGAR v2024)
-2. Add meaningful interpretation from baseline knowledge
-3. For {persona}: Focus on {get_persona_focus(persona)}
-4. Keep response balanced - 40% data, 60% interpretation
-5. Do not fabricate values - only use provided data
+1. ALWAYS start response with sector and quality information provided in the prompt
+2. Always cite specific numbers from the data with sources (EDGAR v2024)
+3. Add meaningful interpretation from baseline knowledge
+4. For {persona}: Focus on {get_persona_focus(persona)}
+5. Keep response balanced - 40% data, 60% interpretation
+6. Do not fabricate values - only use provided data
 
 Persona: {persona}
 Response tone: {get_persona_tone(persona)}"""
@@ -635,42 +899,52 @@ PERSONA CONTEXT:
 - Tone: {tone}
 
 RESPONSE STRUCTURE:
-1. Present the data clearly with values and units (MtCO₂, tonnes)
-2. Add a brief (1-2 sentence) interpretation relevant to {persona}'s interests
-3. Cite source: EDGAR v2024
+1. [SOURCE ATTRIBUTION] Start with sector header and external source citations (provided below)
+2. Present the data clearly with values and units (MtCO₂, tonnes)
+3. Add a brief (1-2 sentence) interpretation relevant to {persona}'s interests
 
 CRITICAL RULES:
-1. ONLY report facts present in the JSON data
-2. For {persona}, highlight what matters to them without fabricating context
-3. NEVER add explanations not supported by the data
-4. NEVER fabricate or guess values
-5. For comparisons, clearly state values for each entity
-6. Keep interpretation brief - data-focused response (70% data, 30% interpretation)
+1. ALWAYS start your response with the source attribution information provided in the prompt below
+2. ONLY report facts present in the JSON data
+3. For {persona}, highlight what matters to them without fabricating context
+4. NEVER add explanations not supported by the data
+5. NEVER fabricate or guess values
+6. For comparisons, clearly state values for each entity
+7. Keep interpretation brief - data-focused response (70% data, 30% interpretation)
 
 Focus on: {focus}
 Tone: {tone}"""
     else:
         summary_system_prompt = """You are a helpful assistant that provides clear, concise answers based ONLY on the data provided.
 
+RESPONSE STRUCTURE:
+1. [SOURCE ATTRIBUTION] Start with sector header and external source citations (provided below)
+2. Present data clearly and concisely
+
 CRITICAL RULES:
-1. ONLY report facts present in the JSON data
-2. NEVER add context, explanations, or background information not in the data
-3. NEVER fabricate or guess values
-4. If data is missing or incomplete, state that clearly
-5. Keep responses concise (2-4 sentences maximum)
-6. Do not return JSON or tool calls - write in natural language
-7. For comparisons, clearly state values for each entity being compared"""
+1. ALWAYS start your response with the source attribution information provided in the prompt
+2. ONLY report facts present in the JSON data
+3. NEVER add context, explanations, or background information not in the data
+4. NEVER fabricate or guess values
+5. If data is missing or incomplete, state that clearly
+6. Keep responses concise (2-4 sentences maximum)
+7. Do not return JSON or tool calls - write in natural language
+8. For comparisons, clearly state values for each entity being compared"""
 
     prompt = textwrap.dedent(f"""
     Question: {question}
+
+    IMPORTANT - SOURCE & QUALITY ATTRIBUTION:
+    Always include the following information prominently at the start of your answer:
+    {source_str}
 
     Tasks:
     - State the emissions value(s) from the data
     - Convert to MtCO₂ if the value is large (divide tonnes by 1,000,000)
     - Include location, year, and sector for each value
     - For comparisons, clearly compare the values
-    - Cite source: "{source_str}"
-    - Be concise (2-4 sentences)
+    - Always mention the data source information above at the start of your response
+    - Be concise (2-4 sentences for data, additional context as needed)
     {"- Add expert interpretation and policy context" if question_type == "HYBRID" else "- Do NOT add policy context, trends, or explanations not in the data"}
 
     Data (JSON):

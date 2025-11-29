@@ -1,0 +1,30 @@
+
+================================================================================
+MCP FUNCTIONAL TEST REPORT
+================================================================================
+
+SUMMARY
+----------------------------------------
+Total Tests:   6
+Passed:        6 ✅
+Failed:        0 ❌
+Skipped:       0 ⏭️
+Success Rate:  100.0%
+
+
+DETAILED RESULTS
+----------------------------------------
+✅ Database Tables                          [0.04s]
+   → Found 94 tables total. Pattern matches: [('transport', 9), ('power', 12), ('waste', 11), ('agriculture', 11), ('buildings', 11)]
+   • total_tables: 94
+   • patterns: [('transport', 9), ('power', 12), ('waste', 11), ('agriculture', 11), ('buildings', 11)]
+✅ Query Capability                         [0.02s]
+   → Successfully queried transport_admin1_month, got 5 rows
+✅ Entity Resolution                        [0.00s]
+   → Tested 3 entities successfully
+✅ Aggregation Capability                   [0.02s]
+   → Aggregation on agriculture_admin1_month: 949128 rows, 165 countries
+✅ Caching Mechanism                        [0.00s]
+   → QueryCache class found in MCP server
+✅ Error Handling                           [0.02s]
+   → Invalid queries properly raise exceptions

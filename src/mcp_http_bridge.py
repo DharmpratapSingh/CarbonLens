@@ -507,8 +507,8 @@ async def query_data(request: QueryRequest) -> dict[str, Any]:
 
 class YoYMetricsRequest(BaseModel):
     file_id: str
-    key_col: str
-    value_col: str
+    key_column: str
+    value_column: str
     base_year: int
     compare_year: int
     top_n: int | None = 10

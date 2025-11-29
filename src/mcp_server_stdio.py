@@ -1947,6 +1947,30 @@ def _validate_column_name(column: str, file_meta: dict) -> tuple[bool, Optional[
     return True, None
 
 # ========================================
+def _get_data_type_distribution(rows: List[Dict[str, Any]]) -> Dict[str, float]:
+    """
+    Calculate the distribution of data types in the result rows.
+    Returns percentages for each data type found.
+    """
+    if not rows:
+        return {}
+
+    data_type_counts = {}
+    total = len(rows)
+
+    for row in rows:
+        if "data_type" in row:
+            dt = row["data_type"]
+            data_type_counts[dt] = data_type_counts.get(dt, 0) + 1
+
+    # Convert counts to percentages
+    distribution = {}
+    for dt, count in data_type_counts.items():
+        distribution[dt] = round((count / total) * 100, 1)
+
+    return distribution
+
+
 # TOOLS - Functions LLM can call
 # ========================================
 
@@ -2856,12 +2880,45 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                 # Get column description first
                 desc_cursor = conn.execute(sql, params)
                 columns = [desc[0] for desc in desc_cursor.description]
-                
+
                 # Use cached execution for better performance
                 result = execute_cached(conn, sql, params)
 
                 # Convert to dict
                 rows = [dict(zip(columns, row)) for row in result]
+
+                # ENHANCEMENT: Automatically fetch metadata columns if not already selected
+                # This ensures data_type, confidence_score, etc. are always available
+                metadata_columns = ["data_type", "confidence_score", "synthetic_probability",
+                                   "quality_flag", "estimation_method", "estimation_notes"]
+                selected_columns = set(columns)
+                missing_metadata = [col for col in metadata_columns if col not in selected_columns]
+
+                if missing_metadata and rows:
+                    # Get primary key column(s) for the table to rejoin metadata
+                    try:
+                        # Build a SELECT for just the missing metadata columns using WHERE clause
+                        # We'll add metadata by re-querying for these columns
+                        metadata_select = ", ".join(missing_metadata)
+
+                        # Get the WHERE clause to match the same rows
+                        metadata_sql = f"SELECT {metadata_select} FROM {table}"
+                        metadata_sql += where_sql
+                        metadata_sql += f" LIMIT {limit}"
+
+                        metadata_result = execute_cached(conn, metadata_sql, params)
+                        metadata_columns_list = [desc[0] for desc in conn.execute(metadata_sql, params).description]
+                        metadata_rows = [dict(zip(metadata_columns_list, row)) for row in metadata_result]
+
+                        # Merge metadata into existing rows
+                        if len(metadata_rows) == len(rows):
+                            for i, row in enumerate(rows):
+                                for col in missing_metadata:
+                                    if col in metadata_rows[i]:
+                                        row[col] = metadata_rows[i][col]
+                    except Exception as e:
+                        # If metadata fetch fails, continue without it
+                        logger.debug(f"Could not fetch metadata columns: {e}")
 
             response_data = {
                 "rows": rows,
@@ -2893,6 +2950,29 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
                         "Machine learning"
                     ] if quality_info["quality_score"] >= 85 else ["Trend analysis only"]
                 }
+
+            # Add data type metadata if rows contain it
+            if rows and len(rows) > 0:
+                # Extract data type information from first row
+                first_row = rows[0]
+                data_types = set()
+                confidence_scores = []
+
+                for row in rows:
+                    if "data_type" in row:
+                        data_types.add(row["data_type"])
+                    if "confidence_score" in row:
+                        confidence_scores.append(row["confidence_score"])
+
+                if data_types:
+                    response_data["data_type_metadata"] = {
+                        "data_types_present": list(data_types),
+                        "data_type_distribution": _get_data_type_distribution(rows),
+                        "avg_confidence_score": sum(confidence_scores) / len(confidence_scores) if confidence_scores else None,
+                        "has_real_data": "real" in data_types,
+                        "has_estimated_data": "estimated" in data_types,
+                        "has_synthesized_data": "synthesized" in data_types
+                    }
 
             return [TextContent(
                 type="text",
