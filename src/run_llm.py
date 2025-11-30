@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from requests.auth import HTTPBasicAuth
 import argparse
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Import baseline knowledge components
 try:
@@ -344,7 +345,18 @@ For conceptual/explanatory questions, provide detailed, informative answers."""
     return answer
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    reraise=True
+)
 def chat(system: str, user: str, temperature: float = 0.2) -> str:
+    """
+    Send a chat request to the LLM with automatic retry logic.
+
+    Implements exponential backoff: 2s base, max 10s, 3 attempts.
+    Transient network errors (timeout, connection) trigger automatic retries.
+    """
     payload = {
         "model": MODEL,
         "messages": [

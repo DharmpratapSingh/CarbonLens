@@ -4602,9 +4602,9 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
             sql += f" LIMIT {limit}"
 
             with _get_db_connection() as conn:
-                result = execute_cached(conn, sql, [])
-                desc_cursor = conn.execute(sql, [])
-                columns = [desc[0] for desc in desc_cursor.description]
+                cursor = conn.execute(sql, [])
+                columns = [desc[0] for desc in cursor.description]
+                result = cursor.fetchall()
                 rows = [dict(zip(columns, row)) for row in result]
 
             return [TextContent(
@@ -4649,11 +4649,14 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
         try:
             sql = f"SELECT city_name, country_name, year, emissions_tonnes, data_source, quality_score, confidence_level FROM {table}"
             where_conditions = []
+            params = []
 
             if location:
-                where_conditions.append(f"(city_name ILIKE '%{location}%' OR country_name ILIKE '%{location}%')")
+                where_conditions.append("(city_name ILIKE ? OR country_name ILIKE ?)")
+                params.extend([f"%{location}%", f"%{location}%"])
             if year:
-                where_conditions.append(f"year = {year}")
+                where_conditions.append("year = ?")
+                params.append(year)
 
             if where_conditions:
                 sql += " WHERE " + " AND ".join(where_conditions)
@@ -4661,9 +4664,10 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
             sql += f" LIMIT {limit}"
 
             with _get_db_connection() as conn:
-                result = execute_cached(conn, sql, [])
-                desc_cursor = conn.execute(sql, [])
-                columns = [desc[0] for desc in desc_cursor.description]
+                # Execute query and get column information
+                cursor = conn.execute(sql, params)
+                columns = [desc[0] for desc in cursor.description]
+                result = cursor.fetchall()
                 rows = [dict(zip(columns, row)) for row in result]
 
             # Parse data_source to count sources
@@ -4726,18 +4730,21 @@ Use the analyze_monthly_trends tool with file_id='{sector}-country-month' for de
                 MIN(uncertainty_low) as min_confidence_lower,
                 MAX(uncertainty_high) as max_confidence_upper
             FROM {table}
-            WHERE year >= {year_start} AND year <= {year_end}
+            WHERE year >= ? AND year <= ?
             """
+            params = [year_start, year_end]
 
             if location:
-                sql += f" AND (city_name ILIKE '%{location}%' OR country_name ILIKE '%{location}%')"
+                sql += " AND (city_name ILIKE ? OR country_name ILIKE ?)"
+                params.extend([f"%{location}%", f"%{location}%"])
 
             sql += " GROUP BY year ORDER BY year"
 
             with _get_db_connection() as conn:
-                result = execute_cached(conn, sql, [])
-                desc_cursor = conn.execute(sql, [])
-                columns = [desc[0] for desc in desc_cursor.description]
+                # Execute query and get column information
+                cursor = conn.execute(sql, params)
+                columns = [desc[0] for desc in cursor.description]
+                result = cursor.fetchall()
                 rows = [dict(zip(columns, row)) for row in result]
 
             return [TextContent(
