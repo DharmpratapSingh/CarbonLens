@@ -46,7 +46,7 @@ jobs:
           pip-audit --requirement requirements.txt
 
       - name: Upload vulnerability reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: vulnerability-reports
@@ -84,7 +84,7 @@ jobs:
           semgrep --config=auto . || true
 
       - name: Upload security scan results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: code-security-reports
