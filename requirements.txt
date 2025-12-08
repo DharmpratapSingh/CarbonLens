@@ -12,7 +12,7 @@ streamlit==1.50.0
 altair==5.5.0
 
 # Database and Data Processing
-duckdb==1.4.1
+duckdb==1.4.2
 pandas==2.3.2
 numpy==2.3.3
 xarray==2025.9.0
