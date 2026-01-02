@@ -51,7 +51,7 @@ SYSTEM = Path("system_prompt.txt").read_text(encoding="utf-8") if os.path.exists
 
 if not SYSTEM.strip():
     SYSTEM = """
-    You are ClimateGPT, a data-grounded assistant that must control tools by returning JSON object(s).
+    You are CarbonLens, a data-grounded assistant that must control tools by returning JSON object(s).
 
     CRITICAL RULES:
     1. Return ONLY JSON - no explanations or prose
@@ -328,7 +328,7 @@ Be friendly, educational, and make complex topics understandable."""
 
     persona_instruction = persona_instructions.get(persona, persona_instructions["Climate Analyst"])
 
-    baseline_system_prompt = f"""You are ClimateGPT, an expert in climate science, emissions, and climate policy.
+    baseline_system_prompt = f"""You are CarbonLens, an expert in climate science, emissions, and climate policy.
 You have deep knowledge about:
 - Climate science fundamentals (greenhouse effect, tipping points, feedback loops)
 - Climate policy frameworks (Paris Agreement, net zero, NDCs)
@@ -990,7 +990,7 @@ def get_persona_tone(persona: str) -> str:
 
 def main() -> None:
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="ClimateGPT - Climate data Q&A with baseline knowledge enrichment")
+    parser = argparse.ArgumentParser(description="CarbonLens - Climate data Q&A with baseline knowledge enrichment")
     parser.add_argument("question", help="Your question about climate/emissions data")
     parser.add_argument("--persona", default="No Persona",
                        choices=["No Persona", "Climate Analyst", "Research Scientist", "Financial Analyst", "Student"],

@@ -1,11 +1,27 @@
-# ClimateGPT: AI-Powered Climate & Emissions Data Analytics Platform
+# CarbonLens: Production-Ready Emissions Analytics Platform
 
-[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](pyproject.toml)
+[![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](pyproject.toml)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Compliant-orange.svg)](https://modelcontextprotocol.io)
 [![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)]()
 
-A comprehensive data engineering system for querying, analyzing, and interpreting global greenhouse gas emissions data using the Model Context Protocol (MCP) and Large Language Models with persona-based response differentiation.
+## Overview
+
+**CarbonLens** is a production-ready platform for analyzing global greenhouse gas emissions. Query 25 years of EDGAR v2024 data using natural language, powered by the Model Context Protocol (MCP) and large language models.
+
+**Key Capabilities:**
+- 🌍 **Multi-level geography**: Cities, states/provinces, countries
+- 📊 **8 emission sectors**: Transport, power, industry, agriculture, and more
+- 📅 **Historical analysis**: Monthly and yearly data (2000-2024)
+- 💬 **Natural language queries**: Ask questions in plain English
+- 🔒 **Enterprise-ready**: Security hardened, Docker deployable, API-first
+
+**Why CarbonLens?**
+
+CarbonLens transforms complex climate data into actionable insights. Built on the Model Context Protocol (MCP), it provides a standardized, production-grade interface for emissions analytics. Whether you're a researcher analyzing trends, a policy maker comparing regions, or a developer building climate applications, CarbonLens delivers precise, reliable data with natural language simplicity.
+
+**Technical Foundation:**
+Production-ready emissions analytics platform combining EDGAR v2024 datasets, Model Context Protocol (MCP) integration, and LLM-powered natural language queries. Analyze multi-sector greenhouse gas data with geographic granularity from cities to countries, 2000-2024.
 
 ## Table of Contents
 
@@ -129,7 +145,7 @@ The system now intelligently handles various name formats and aliases:
 
 The bridge automatically spawns `mcp_server_stdio.py` on startup and relays JSON-RPC traffic between HTTP clients (UI, automation) and the MCP server. This keeps existing HTTP integrations working while using the canonical MCP runtime under the hood.
 
-### UI (`enhanced_climategpt_with_personas.py`)
+### UI (`streamlit_app.py`)
 
 Streamlit chat interface with:
 - Multiple persona modes (Analyst, Technical, Policy Advisor)
@@ -560,6 +576,8 @@ Additional documentation is available in the `docs/` folder:
 
 ### Reports & Analysis
 - `docs/reports/` - Comprehensive reports on improvements, security fixes, and implementation status
+- `docs/visualizations/` - Generated charts and interactive visualizations
+- `docs/presentations/` - Presentation materials and project summaries
 
 For automated testing tools and scripts, see the `testing/` directory.
 
@@ -587,7 +605,7 @@ The following reports document recent enhancements and security improvements:
 .
 ├── mcp_http_bridge.py                     # HTTP bridge that wraps the MCP stdio server
 ├── mcp_server_stdio.py                    # MCP stdio protocol server (source of truth)
-├── enhanced_climategpt_with_personas.py   # Streamlit UI
+├── streamlit_app.py                        # Streamlit UI
 ├── run_llm.py                             # LLM integration harness
 ├── src/
 │   ├── pipelines/                         # Data processing pipelines

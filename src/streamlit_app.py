@@ -1,5 +1,5 @@
 """
-ClimateGPT Streamlit UI - Interactive Climate Data Q&A with EDGAR Dataset
+CarbonLens Streamlit UI - Interactive Climate Data Q&A with EDGAR Dataset
 """
 import streamlit as st
 import subprocess
@@ -14,7 +14,7 @@ load_dotenv()
 
 # Page configuration
 st.set_page_config(
-    page_title="ClimateGPT",
+    page_title="CarbonLens",
     page_icon="🌍",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -73,16 +73,16 @@ st.markdown("""
 # Header
 st.markdown("""
     <div class="header-container">
-        <div class="header-title">🌍 ClimateGPT</div>
+        <div class="header-title">🌍 CarbonLens</div>
         <div class="header-subtitle">Ask questions about emissions data from EDGAR v2024 Dataset</div>
     </div>
 """, unsafe_allow_html=True)
 
 # Sidebar for information
 with st.sidebar:
-    st.markdown("### 📊 About ClimateGPT")
+    st.markdown("### 📊 About CarbonLens")
     st.markdown("""
-    ClimateGPT is an AI-powered assistant that answers questions about:
+    CarbonLens is an AI-powered assistant that answers questions about:
     - **Emissions data** from the EDGAR v2024 dataset
     - **Climate science** fundamentals
     - **Policy frameworks** and climate goals
@@ -143,7 +143,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Submit button
 submit_button = st.button(
-    "🚀 Ask ClimateGPT",
+    "🚀 Ask CarbonLens",
     type="primary",
     use_container_width=True,
     key="submit_button"
@@ -278,7 +278,7 @@ if submit_button:
             except subprocess.TimeoutExpired:
                 st.error("❌ Request timed out (>120 seconds). Please try a simpler question or check if the MCP server is running.")
             except FileNotFoundError:
-                st.error("❌ Could not find run_llm.py. Make sure you're running Streamlit from the src/ directory of the ClimateGPT project.")
+                st.error("❌ Could not find run_llm.py. Make sure you're running Streamlit from the src/ directory of the CarbonLens project.")
             except Exception as e:
                 st.error(f"❌ Unexpected error: {str(e)}")
                 st.code(str(e), language="text")
@@ -289,7 +289,7 @@ if submit_button:
 st.markdown("---")
 st.markdown("""
     <div style="text-align: center; color: #999; font-size: 0.9rem;">
-        <p>ClimateGPT © 2025 | Powered by EDGAR v2024 Emissions Database</p>
+        <p>CarbonLens © 2026 | Powered by EDGAR v2024 Emissions Database</p>
         <p>Data Quality: Tier 1 - Research Ready | Confidence: HIGH</p>
     </div>
 """, unsafe_allow_html=True)

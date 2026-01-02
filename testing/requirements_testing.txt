@@ -14,7 +14,47 @@ numpy>=1.24.0             # Numerical operations
 matplotlib>=3.7.0         # Plotting
 seaborn>=0.12.0           # Statistical visualizations
 
-# Development tools (optional)
+# Testing framework and tools
 pytest>=7.4.0             # Testing framework
+pytest-cov>=4.1.0         # Code coverage support
+pytest-xdist>=3.3.0       # Parallel test execution
+pytest-asyncio>=0.21.0    # Async test support
+pytest-mock>=3.11.0       # Mocking support
+responses>=0.23.0         # HTTP request mocking
+hypothesis>=6.82.0        # Property-based testing
+
+# Development tools (optional)
 ipython>=8.14.0           # Interactive shell
 jupyter>=1.0.0            # Notebooks for analysis
+
+# Profiling and monitoring
+memory-profiler>=0.61.0   # Memory profiling
+py-spy>=0.3.14            # CPU profiling
+
+# AI/ML Features
+openai>=1.0.0              # GPT-4 integration
+anthropic>=0.15.0          # Claude integration
+scikit-learn>=1.0.0        # ML models
+numpy>=1.24.0              # Numerical operations
+
+# Observability & Distributed Tracing
+opentelemetry-api>=1.15.0  # Distributed tracing API
+opentelemetry-sdk>=1.15.0  # Tracing SDK
+prometheus-client>=0.17.0  # Metrics collection
+
+# Notifications & Communication
+slack-sdk>=3.20.0          # Slack integration
+python-telegram-bot>=20.0  # Telegram notifications
+
+# Security Scanning
+bandit>=1.7.0              # Security vulnerability scanning
+pip-audit>=2.4.0           # Dependency security audit
+
+# UI/UX Enhancements
+rich>=13.0.0               # Rich CLI formatting
+questionary>=1.10.0        # Interactive CLI prompts
+watchfiles>=0.18.0         # File watching for auto-run
+click>=8.0.0               # CLI framework
+
+# Load Testing
+locust>=2.0.0              # Load testing framework

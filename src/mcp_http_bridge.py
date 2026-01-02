@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 # FastAPI app
 app = FastAPI(
-    title="ClimateGPT MCP Bridge",
-    description="HTTP-to-MCP protocol bridge for ClimateGPT",
+    title="CarbonLens MCP Bridge",
+    description="HTTP-to-MCP protocol bridge for CarbonLens",
     version="1.0.0"
 )
 
@@ -335,7 +335,7 @@ async def send_mcp_request(method: str, params: dict[str, Any]) -> dict[str, Any
 
 
 # ============================================================================
-# HTTP Endpoints (REST API compatibility with existing ClimateGPT UI)
+# HTTP Endpoints (REST API compatibility with existing CarbonLens UI)
 # ============================================================================
 
 @app.get("/health", response_model=None)
@@ -641,7 +641,7 @@ async def startup_event() -> None:
             "protocolVersion": "2024-11-05",
             "capabilities": {},
             "clientInfo": {
-                "name": "climategpt-http-bridge",
+                "name": "carbonlens-http-bridge",
                 "version": "1.0.0"
             }
         })
@@ -680,7 +680,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", "8010"))
 
-    logger.info(f"🌍 Starting ClimateGPT MCP Bridge on port {port}")
+    logger.info(f"🌍 Starting CarbonLens MCP Bridge on port {port}")
 
     uvicorn.run(
         app,

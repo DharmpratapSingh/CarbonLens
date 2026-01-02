@@ -3,11 +3,11 @@ import os
 import sys
 import click
 
-REQUIRED_ENV = "ClimateGPT_Key"
+REQUIRED_ENV = "CarbonLens_Key"
 
 @click.group()
 def cli():
-    """Command-line entrypoint for ClimateGPT tasks."""
+    """Command-line entrypoint for CarbonLens tasks."""
     pass
 
 @cli.command(name="viirs_etl")
@@ -19,7 +19,7 @@ def viirs_etl():
 @click.option("--port", default=8080, show_default=True, help="Port to expose the MCP server on.")
 def mcp_viirs(port: int):
     """
-    Start the MCP server for ClimateGPT. Requires CLIMATEGPT_API_KEY in the environment.
+    Start the MCP server for CarbonLens. Requires CARBONLENS_API_KEY in the environment.
     Exposes a lightweight HTTP server with /healthz and /metadata endpoints.
     """
     api_key = os.getenv(REQUIRED_ENV)
@@ -47,11 +47,11 @@ import os
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-app = FastAPI(title="ClimateGPT MCP - VIIRS", version="0.1.0")
+app = FastAPI(title="CarbonLens MCP - VIIRS", version="0.1.0")
 
 @app.get("/healthz")
 def healthz():
-    api_present = bool(os.getenv("CLIMATEGPT_API_KEY"))
+    api_present = bool(os.getenv("CARBONLENS_API_KEY"))
     return JSONResponse({"status": "ok", "api_key_present": api_present})
 
 @app.get("/metadata")

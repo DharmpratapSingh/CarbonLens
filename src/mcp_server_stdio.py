@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ClimateGPT MCP Server (TRUE MCP Protocol)
+CarbonLens MCP Server (TRUE MCP Protocol)
 Communicates via stdio using MCP protocol
 """
 import asyncio

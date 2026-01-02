@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple, Optional
 class LocationResolver:
     """Resolves location names to their type and optimal query parameters."""
 
-    def __init__(self, db_path: str = "data/warehouse/climategpt.duckdb"):
+    def __init__(self, db_path: str = "data/warehouse/carbonlens.duckdb"):
         """Initialize the resolver with database connection."""
         self.db_path = Path(db_path)
         self.conn = None

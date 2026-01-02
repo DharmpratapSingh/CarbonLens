@@ -3,9 +3,9 @@ requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "climategpt"
+name = "carbonlens"
 version = "0.2.0"
-description = "ClimateGPT - Complete EDGAR v2024 Multi-Sector Emissions Analysis System"
+description = "Production-ready emissions analytics platform combining EDGAR v2024 datasets, Model Context Protocol (MCP) integration, and LLM-powered natural language queries. Analyze multi-sector greenhouse gas data with geographic granularity from cities to countries, 2000-2024."
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 

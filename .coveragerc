@@ -1,0 +1,43 @@
+[run]
+branch = True
+source = src,testing
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    */__pycache__/*
+    */tests/*
+    */test_*.py
+    setup.py
+    */.venv/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+    if 0:
+    if False:
+    if not TYPE_CHECKING:
+    @overload
+    \.\.\.$
+    pass
+
+precision = 2
+skip_covered = False
+skip_empty = True
+
+[html]
+directory = htmlcov
+
+[paths]
+source =
+    src
+    */site-packages
+
+[fail_under]
+precision = 2

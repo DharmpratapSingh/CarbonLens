@@ -1,30 +1,6 @@
-# Byte-compiled / cache
-__pycache__/
-*.py[cod]
-*.pyo
-
-# Documentation (keep docs/ directory committed)
-# All .md files in docs/ are tracked intentionally
-
-# Logs and run artifacts
-logs/*.log
-*.log
-
-# Generated reports/results
-/comprehensive_test_results/
-/test_reports/
-/test_results/
-data/outputs/*.json
-data/outputs/*.csv
-
-# Notebooks
-.ipynb_checkpoints/
-
-# Large data artifacts
-data/warehouse/*.duckdb
-
-# Misc generated files
-_readme.html
+# ============================================================================
+# CarbonLens .gitignore
+# ============================================================================
 
 # ----------------------------
 # Python cache / build files
@@ -35,10 +11,8 @@ __pycache__/
 *.pyd
 *.so
 *.dll
-*.log
-*.tmp
-*.pid
-*.pid.lock
+*.pyc
+.Python
 
 # Build / distribution
 build/
@@ -48,6 +22,8 @@ wheels/
 .eggs/
 *.manifest
 *.spec
+pip-log.txt
+pip-delete-this-directory.txt
 
 # ----------------------------
 # Virtual environments
@@ -58,6 +34,8 @@ venv/
 ven*/
 env/
 ENV/
+env.bak/
+venv.bak/
 
 # ----------------------------
 # Environment variables & secrets
@@ -67,6 +45,9 @@ ENV/
 *.key
 *.pem
 *.crt
+*.secret
+secrets/
+*.env.local
 
 # ----------------------------
 # IDE / Editor settings
@@ -75,15 +56,25 @@ ENV/
 .vscode/
 *.swp
 *.swo
+*~
+.~*
+.DS_Store
+*.sublime-project
+*.sublime-workspace
 
 # ----------------------------
-# Docker / Containers
+# Logs and run artifacts
 # ----------------------------
-docker-compose.override.yml
+logs/
 *.log
+*.log.*
+mcp_bridge.log
+mcp_server.log
+metadata_migration.log
+estimated_data_marking.log
 *.pid
-*.seed
 *.pid.lock
+*.seed
 
 # ----------------------------
 # Data files (large datasets)
@@ -94,56 +85,97 @@ data/curated/*
 data/csv_datasets/
 data/geo/
 data/warehouse/
+data/processed/
+*.duckdb
+*.db
+*.sqlite
+*.sqlite3
 bkl_*/
 *.nc
+*.h5
+*.hdf5
+
+# Archives (keep small ones, ignore large data archives)
 *.zip
 *.tar
 *.tar.gz
-
-# Generated output files (images, CSVs)
-# ----------------------------
-data/outputs/*.png
-data/outputs/*.csv
-docs/images/*.png
-docs/images/*.jpg
-docs/images/*.jpeg
-testing/test_results/*.png
-testing/test_results/*.csv
+*.tar.bz2
+*.rar
+!docs/archive/*.zip  # Allow archived docs
 
 # ----------------------------
-# Local test artifacts
+# Generated output files
 # ----------------------------
-.DS_Store
-*.db
+data/outputs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.pdf
+*.html
+*.csv
+*.xlsx
+*.xls
+
+# Keep documentation visualizations
+!docs/visualizations/*.html
+!docs/visualizations/*.png
+
+# ----------------------------
+# Testing results and artifacts
+# ----------------------------
+testing/test_results/
+testing/test_results_root/
+test_results/
+test_results_root/
+*.coverage
+.coverage.*
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.pytest_cache/
+.tox/
+.hypothesis/
+.nox/
+
+# ----------------------------
+# Notebooks
+# ----------------------------
+.ipynb_checkpoints/
 notebooks/.ipynb_checkpoints/
-__snapshots__/
+*.ipynb_checkpoints/
+
+# ----------------------------
+# Cache and temporary files
+# ----------------------------
+.cache/
+*.tmp
+*.temp
 *.bak
 *.backup
 *.bak[0-9]
 *.bak[0-9][0-9]
+*.swp
+*.swo
 *~
 .~*
 
-# Testing results (should not be committed)
-testing/test_results/*.txt
-testing/test_results/*.json
-testing/test_results/*.csv
+# ----------------------------
+# OS files
+# ----------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
 # ----------------------------
-# Output / Reports / Cache
-# ----------------------------
-outputs/
-reports/
-cache/
-logs/
-*.sqlite3
-coverage/
-*.coverage
-*.pytest_cache/
-.pytest_cache/
-
-# ----------------------------
-# uv / dependency management
+# Dependency management
 # ----------------------------
 .uv/
 .pytype/
@@ -151,17 +183,29 @@ coverage/
 .dmypy.json
 .typing/
 .pdm.toml
+poetry.lock
+Pipfile.lock
 
 # ----------------------------
-# Streamlit & FastAPI runs
+# Streamlit & FastAPI
 # ----------------------------
 .streamlit/
+.streamlit_cache/
 *.mp4
 *.webm
 
 # ----------------------------
-# CLEANUP: Temporary Analysis & Implementation Files
+# Docker
 # ----------------------------
+docker-compose.override.yml
+.dockerignore.local
+
+# ----------------------------
+# Project-specific ignores
+# ----------------------------
+
+# Analysis reports that are now in docs/reports/ (keep the organized ones)
+# But ignore any temporary analysis files in root
 ANALYSIS_SUMMARY_INDEX.md
 BEFORE_AFTER_COMPARISON_*.txt
 CITY_COVERAGE_AND_DATA_QUALITY_ANALYSIS.md
@@ -197,17 +241,17 @@ SECTOR_QUALITY_RATINGS_EXPLAINED.txt
 database_analysis_summary.md
 master_implementation_output.txt
 
-# Temporary helper scripts (not part of core)
+# Temporary helper scripts (moved to scripts/)
 analyze_db.py
 test_mcp_quality.py
 verify_outliers.py
-scripts/database/*.py
-scripts/analysis/*.py
 
-# Redundant temporary documentation
+# Temporary documentation (now organized in docs/)
 CLEANUP_COMPLETE.md
 FINAL_VERIFICATION.md
-docs/reports/
+PERFECT_SCORE_ACHIEVED.md
+
+# Keep organized docs but ignore old patterns
 docs/BASELINE_*.md
 docs/CLIMATEGPT_INNOVATION_ROADMAP.md
 docs/DEPENDENCY_AUDIT.md
@@ -219,4 +263,39 @@ docs/SMART_QUERY_GUIDE.md
 docs/SYSTEM_REFERENCE.md
 docs/TESTING_RESULTS.md
 docs/persona_testing_presentation.md
+
+# Ignore notebooks directory (if not using)
 notebooks/
+
+# ----------------------------
+# Jupyter Notebook outputs
+# ----------------------------
+*.ipynb
+!docs/**/*.ipynb  # Allow docs notebooks if needed
+
+# ----------------------------
+# Database files
+# ----------------------------
+*.duckdb
+*.db
+*.sqlite
+*.sqlite3
+
+# ----------------------------
+# Large data files
+# ----------------------------
+*.nc
+*.h5
+*.hdf5
+*.parquet
+*.arrow
+
+# ----------------------------
+# Lock files (keep uv.lock, ignore others)
+# ----------------------------
+package-lock.json
+yarn.lock
+
+# ============================================================================
+# End of .gitignore
+# ============================================================================
