@@ -37,7 +37,7 @@ pydeck==0.9.1
 
 # Data Processing
 pyarrow==21.0.0
-h5netcdf==1.6.4
+h5netcdf==1.7.3
 h5py==3.14.0
 
 # Utilities

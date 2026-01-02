@@ -16,7 +16,7 @@ dependencies = [
   "fastapi==0.117.1",
   "pydantic==2.11.9",
   "geopandas==1.1.1",
-  "h5netcdf==1.6.4",
+  "h5netcdf==1.7.3",
   "h5py==3.14.0",
   "netcdf4>=1.6.0", # Added for NetCDF file processing
   "numpy==2.3.3",
