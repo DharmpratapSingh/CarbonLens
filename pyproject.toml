@@ -14,7 +14,7 @@ dependencies = [
   "altair>=5.5.0",
   "duckdb>=1.4.1",
   "fastapi==0.117.1",
-  "pydantic==2.11.9",
+  "pydantic==2.12.5",
   "geopandas==1.1.1",
   "h5netcdf==1.6.4",
   "h5py==3.14.0",
